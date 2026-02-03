@@ -1,0 +1,1031 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../prisma-whoscored/whoscored-client-types"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model BestXI {
+  id           Int            @id @default(autoincrement())
+  tournamentId Int
+  timeframe    String
+  startDate    DateTime
+  endDate      DateTime
+  formation    String         @default("4-4-2")
+  createdAt    DateTime       @default(now())
+  Tournament   Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  BestXIPlayer BestXIPlayer[]
+
+  @@unique([tournamentId, timeframe, startDate, endDate])
+}
+
+model BestXIPlayer {
+  id            Int     @id @default(autoincrement())
+  bestXIId      Int
+  teamId        Int
+  playerName    String
+  rating        Float
+  positionLabel String
+  positionIndex Int
+  playerId      Int?
+  BestXI        BestXI  @relation(fields: [bestXIId], references: [id], onDelete: Cascade)
+  Player        Player? @relation(fields: [playerId], references: [id])
+  Team          Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+model Country {
+  id               Int                @id @default(autoincrement())
+  name             String?
+  code             String?            @unique
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  Player           Player[]
+  Team             Team[]
+  TeamInTournament TeamInTournament[]
+  Tournament       Tournament[]
+}
+
+model Player {
+  id                                                                Int                              @id
+  name                                                              String
+  countryId                                                         Int?
+  createdAt                                                         DateTime                         @default(now())
+  updatedAt                                                         DateTime
+  minId                                                             Int?
+  BestXIPlayer                                                      BestXIPlayer[]
+  Country                                                           Country?                         @relation(fields: [countryId], references: [id])
+  PlayerTableDefensive                                              PlayerTableDefensive[]
+  PlayerTableOffensive                                              PlayerTableOffensive[]
+  PlayerTablePassing                                                PlayerTablePassing[]
+  PlayerTableSummary                                                PlayerTableSummary[]
+  PlayerTableXG                                                     PlayerTableXG[]
+  TopPlayerAggression                                               TopPlayerAggression[]
+  TopPlayerAssist                                                   TopPlayerAssist[]
+  TopPlayerGoalContribution                                         TopPlayerGoalContribution[]
+  TopPlayerRating                                                   TopPlayerRating[]
+  TopPlayerShot                                                     TopPlayerShot[]
+  TournamentAssistToGoal_TournamentAssistToGoal_assistantIdToPlayer TournamentAssistToGoal[]         @relation("TournamentAssistToGoal_assistantIdToPlayer")
+  TournamentAssistToGoal_TournamentAssistToGoal_scorerIdToPlayer    TournamentAssistToGoal[]         @relation("TournamentAssistToGoal_scorerIdToPlayer")
+  TournamentPlayerTableDefensive                                    TournamentPlayerTableDefensive[]
+  TournamentPlayerTableOffensive                                    TournamentPlayerTableOffensive[]
+  TournamentPlayerTablePassing                                      TournamentPlayerTablePassing[]
+  TournamentPlayerTableSummary                                      TournamentPlayerTableSummary[]
+  TournamentPlayerTableXG                                           TournamentPlayerTableXG[]
+}
+
+model PlayerTableDefensive {
+  id              Int           @id @default(autoincrement())
+  typeId          Int
+  categoryId      Int
+  playerId        Int
+  teamId          Int
+  rank            Int
+  apps            Int
+  minsPlayed      Int
+  tackles         Float
+  interceptions   Float
+  fouls           Float
+  offsidesSaved   Float
+  clearances      Float
+  dribbledPast    Float
+  outfielderBlock Float
+  ownGoals        Float
+  rating          Float
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  TableCategory   TableCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Player          Player        @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  Team            Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  TableType       TableType     @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@unique([typeId, categoryId, playerId])
+}
+
+model PlayerTableOffensive {
+  id            Int           @id @default(autoincrement())
+  typeId        Int
+  categoryId    Int
+  playerId      Int
+  teamId        Int
+  rank          Int
+  apps          Int
+  minsPlayed    Int
+  shotsPerGame  Float
+  shotsOnTarget Float
+  keyPasses     Float
+  dribbles      Float
+  fouled        Float
+  offsides      Float
+  dispossessed  Float
+  turnover      Float
+  rating        Float
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  TableCategory TableCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Player        Player        @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  Team          Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  TableType     TableType     @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@unique([typeId, categoryId, playerId])
+}
+
+model PlayerTablePassing {
+  id            Int           @id @default(autoincrement())
+  typeId        Int
+  categoryId    Int
+  playerId      Int
+  teamId        Int
+  rank          Int
+  apps          Int
+  minsPlayed    Int
+  keyPasses     Float
+  passes        Float
+  passSuccess   Float
+  crosses       Float
+  longBalls     Float
+  throughBalls  Float
+  rating        Float
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  TableCategory TableCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Player        Player        @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  Team          Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  TableType     TableType     @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@unique([typeId, categoryId, playerId])
+}
+
+model PlayerTableSummary {
+  id            Int           @id @default(autoincrement())
+  typeId        Int
+  categoryId    Int
+  playerId      Int
+  teamId        Int
+  rank          Int
+  apps          Int
+  minsPlayed    Int
+  goals         Int
+  assists       Int
+  yellow        Int
+  red           Int
+  shotsPerGame  Float
+  passSuccess   Float
+  aerialsWon    Float
+  motm          Int
+  rating        Float
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  TableCategory TableCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Player        Player        @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  Team          Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  TableType     TableType     @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@unique([typeId, categoryId, playerId])
+}
+
+model PlayerTableXG {
+  id            Int           @id @default(autoincrement())
+  typeId        Int
+  categoryId    Int
+  sectionId     Int
+  playerId      Int
+  teamId        Int
+  rank          Int
+  apps          String
+  minsPlayed    Int
+  xG            Float
+  rating        Float
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  goals         Int
+  shots         Int
+  xG90          Float
+  xGDiff        Float
+  xGPerShot     Float
+  TableCategory TableCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Player        Player        @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  TableSection  TableSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  Team          Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  TableType     TableType     @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@unique([typeId, categoryId, sectionId, playerId])
+}
+
+model Region {
+  id         Int          @id
+  name       String       @unique
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime
+  Tournament Tournament[]
+}
+
+model Season {
+  id               Int                @id @default(autoincrement())
+  name             String             @unique
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  TeamInTournament TeamInTournament[]
+}
+
+model TableCategory {
+  id                             Int                              @id @default(autoincrement())
+  name                           String                           @unique
+  createdAt                      DateTime                         @default(now())
+  updatedAt                      DateTime
+  PlayerTableDefensive           PlayerTableDefensive[]
+  PlayerTableOffensive           PlayerTableOffensive[]
+  PlayerTablePassing             PlayerTablePassing[]
+  PlayerTableSummary             PlayerTableSummary[]
+  PlayerTableXG                  PlayerTableXG[]
+  TableDefensive                 TableDefensive[]
+  TableOffensive                 TableOffensive[]
+  TableSummary                   TableSummary[]
+  TableXG                        TableXG[]
+  TournamentPlayerTableDefensive TournamentPlayerTableDefensive[]
+  TournamentPlayerTableOffensive TournamentPlayerTableOffensive[]
+  TournamentPlayerTablePassing   TournamentPlayerTablePassing[]
+  TournamentPlayerTableSummary   TournamentPlayerTableSummary[]
+  TournamentPlayerTableXG        TournamentPlayerTableXG[]
+  TournamentTableDefensive       TournamentTableDefensive[]
+  TournamentTableOffensive       TournamentTableOffensive[]
+  TournamentTableSummary         TournamentTableSummary[]
+  TournamentTableXG              TournamentTableXG[]
+}
+
+model TableDefensive {
+  id              Int           @id(map: "TableDefense_pkey") @default(autoincrement())
+  typeId          Int
+  categoryId      Int
+  teamId          Int
+  tournamentId    Int
+  rank            Int
+  shotsPg         Int
+  tacklesPg       Int
+  interceptionsPg Int
+  foulsPg         Int
+  offsidesPg      Int
+  rating          Float
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  tableSectionId  Int?
+  TableCategory   TableCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade, map: "TableDefense_categoryId_fkey")
+  Team            Team          @relation(fields: [teamId], references: [id], onDelete: Cascade, map: "TableDefense_teamId_fkey")
+  Tournament      Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade, map: "TableDefense_tournamentId_fkey")
+  TableType       TableType     @relation(fields: [typeId], references: [id], onDelete: Cascade, map: "TableDefense_typeId_fkey")
+  TableSection    TableSection? @relation(fields: [tableSectionId], references: [id])
+
+  @@unique([typeId, categoryId, teamId], map: "TableDefense_typeId_categoryId_teamId_key")
+}
+
+model TableOffensive {
+  id             Int           @id @default(autoincrement())
+  typeId         Int
+  categoryId     Int
+  teamId         Int
+  tournamentId   Int
+  rank           Int
+  shotsPg        Int
+  shotsOTpg      Int
+  dribblesPg     Int
+  fouledPg       Int
+  rating         Float
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  tableSectionId Int?
+  TableCategory  TableCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  TableSection   TableSection? @relation(fields: [tableSectionId], references: [id])
+  Team           Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament     Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType      TableType     @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@unique([typeId, categoryId, teamId])
+}
+
+model TableSection {
+  id                             Int                              @id @default(autoincrement())
+  name                           String                           @unique
+  createdAt                      DateTime                         @default(now())
+  updatedAt                      DateTime
+  PlayerTableXG                  PlayerTableXG[]
+  TableDefensive                 TableDefensive[]
+  TableOffensive                 TableOffensive[]
+  TableSummary                   TableSummary[]
+  TableXG                        TableXG[]
+  TeamPositionalStat             TeamPositionalStat[]
+  TeamSituationalStat            TeamSituationalStat[]
+  TournamentPlayerTableDefensive TournamentPlayerTableDefensive[]
+  TournamentPlayerTableOffensive TournamentPlayerTableOffensive[]
+  TournamentPlayerTablePassing   TournamentPlayerTablePassing[]
+  TournamentPlayerTableSummary   TournamentPlayerTableSummary[]
+  TournamentPlayerTableXG        TournamentPlayerTableXG[]
+  TournamentTableDefensive       TournamentTableDefensive[]
+  TournamentTableOffensive       TournamentTableOffensive[]
+  TournamentTableSummary         TournamentTableSummary[]
+  TournamentTableXG              TournamentTableXG[]
+}
+
+model TableSummary {
+  id             Int           @id @default(autoincrement())
+  typeId         Int
+  categoryId     Int
+  teamId         Int
+  tournamentId   Int
+  rank           Int
+  goals          Int
+  shotsPg        Int
+  yellow         Int
+  red            Int
+  possession     Int
+  pass           Int
+  aerialsWon     Int
+  rating         Float
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  tableSectionId Int?
+  TableCategory  TableCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  TableSection   TableSection? @relation(fields: [tableSectionId], references: [id])
+  Team           Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament     Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType      TableType     @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@unique([typeId, categoryId, teamId])
+}
+
+model TableType {
+  id                                                                                  Int                              @id @default(autoincrement())
+  name                                                                                String                           @unique
+  createdAt                                                                           DateTime                         @default(now())
+  updatedAt                                                                           DateTime
+  PlayerTableDefensive                                                                PlayerTableDefensive[]
+  PlayerTableOffensive                                                                PlayerTableOffensive[]
+  PlayerTablePassing                                                                  PlayerTablePassing[]
+  PlayerTableSummary                                                                  PlayerTableSummary[]
+  PlayerTableXG                                                                       PlayerTableXG[]
+  TableDefensive                                                                      TableDefensive[]
+  TableOffensive                                                                      TableOffensive[]
+  TableSummary                                                                        TableSummary[]
+  TableXG                                                                             TableXG[]
+  TeamPerformanceStat                                                                 TeamPerformanceStat[]
+  TeamPositionalStat                                                                  TeamPositionalStat[]
+  TeamSituationalStat                                                                 TeamSituationalStat[]
+  TeamStreakStat                                                                      TeamStreakStat[]
+  TopPlayerAggression                                                                 TopPlayerAggression[]
+  TopPlayerAssist                                                                     TopPlayerAssist[]
+  TopPlayerGoalContribution                                                           TopPlayerGoalContribution[]
+  TopPlayerRating                                                                     TopPlayerRating[]
+  TopPlayerShot                                                                       TopPlayerShot[]
+  TopTeamStat                                                                         TopTeamStat[]
+  TournamentAssistToGoal                                                              TournamentAssistToGoal[]
+  TournamentPlayerTableDefensive_TournamentPlayerTableDefensive_typeIdToTableType     TournamentPlayerTableDefensive[] @relation("TournamentPlayerTableDefensive_typeIdToTableType")
+  TournamentPlayerTableDefensive_TournamentPlayerTableDefensive_viewTypeIdToTableType TournamentPlayerTableDefensive[] @relation("TournamentPlayerTableDefensive_viewTypeIdToTableType")
+  TournamentPlayerTableOffensive_TournamentPlayerTableOffensive_typeIdToTableType     TournamentPlayerTableOffensive[] @relation("TournamentPlayerTableOffensive_typeIdToTableType")
+  TournamentPlayerTableOffensive_TournamentPlayerTableOffensive_viewTypeIdToTableType TournamentPlayerTableOffensive[] @relation("TournamentPlayerTableOffensive_viewTypeIdToTableType")
+  TournamentPlayerTablePassing_TournamentPlayerTablePassing_typeIdToTableType         TournamentPlayerTablePassing[]   @relation("TournamentPlayerTablePassing_typeIdToTableType")
+  TournamentPlayerTablePassing_TournamentPlayerTablePassing_viewTypeIdToTableType     TournamentPlayerTablePassing[]   @relation("TournamentPlayerTablePassing_viewTypeIdToTableType")
+  TournamentPlayerTableSummary_TournamentPlayerTableSummary_typeIdToTableType         TournamentPlayerTableSummary[]   @relation("TournamentPlayerTableSummary_typeIdToTableType")
+  TournamentPlayerTableSummary_TournamentPlayerTableSummary_viewTypeIdToTableType     TournamentPlayerTableSummary[]   @relation("TournamentPlayerTableSummary_viewTypeIdToTableType")
+  TournamentPlayerTableXG_TournamentPlayerTableXG_typeIdToTableType                   TournamentPlayerTableXG[]        @relation("TournamentPlayerTableXG_typeIdToTableType")
+  TournamentPlayerTableXG_TournamentPlayerTableXG_viewTypeIdToTableType               TournamentPlayerTableXG[]        @relation("TournamentPlayerTableXG_viewTypeIdToTableType")
+  TournamentTableDefensive_TournamentTableDefensive_typeIdToTableType                 TournamentTableDefensive[]       @relation("TournamentTableDefensive_typeIdToTableType")
+  TournamentTableDefensive_TournamentTableDefensive_viewTypeIdToTableType             TournamentTableDefensive[]       @relation("TournamentTableDefensive_viewTypeIdToTableType")
+  TournamentTableOffensive_TournamentTableOffensive_typeIdToTableType                 TournamentTableOffensive[]       @relation("TournamentTableOffensive_typeIdToTableType")
+  TournamentTableOffensive_TournamentTableOffensive_viewTypeIdToTableType             TournamentTableOffensive[]       @relation("TournamentTableOffensive_viewTypeIdToTableType")
+  TournamentTableSummary_TournamentTableSummary_typeIdToTableType                     TournamentTableSummary[]         @relation("TournamentTableSummary_typeIdToTableType")
+  TournamentTableSummary_TournamentTableSummary_viewTypeIdToTableType                 TournamentTableSummary[]         @relation("TournamentTableSummary_viewTypeIdToTableType")
+  TournamentTableXG_TournamentTableXG_typeIdToTableType                               TournamentTableXG[]              @relation("TournamentTableXG_typeIdToTableType")
+  TournamentTableXG_TournamentTableXG_viewTypeIdToTableType                           TournamentTableXG[]              @relation("TournamentTableXG_viewTypeIdToTableType")
+}
+
+model TableXG {
+  id            Int           @id @default(autoincrement())
+  typeId        Int
+  categoryId    Int
+  sectionId     Int
+  teamId        Int
+  tournamentId  Int
+  order         String
+  xG            Float
+  goals         Int
+  xGDiff        Float
+  shots         Int
+  xGShots       Float
+  rating        Float
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  rank          Int
+  TableCategory TableCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  TableSection  TableSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  Team          Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament    Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType     TableType     @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@unique([typeId, categoryId, sectionId, teamId])
+}
+
+model Team {
+  id                             Int                              @id
+  name                           String
+  countryId                      Int
+  createdAt                      DateTime                         @default(now())
+  updatedAt                      DateTime
+  minId                          Int?
+  BestXIPlayer                   BestXIPlayer[]
+  PlayerTableDefensive           PlayerTableDefensive[]
+  PlayerTableOffensive           PlayerTableOffensive[]
+  PlayerTablePassing             PlayerTablePassing[]
+  PlayerTableSummary             PlayerTableSummary[]
+  PlayerTableXG                  PlayerTableXG[]
+  TableDefensive                 TableDefensive[]
+  TableOffensive                 TableOffensive[]
+  TableSummary                   TableSummary[]
+  TableXG                        TableXG[]
+  Country                        Country                          @relation(fields: [countryId], references: [id])
+  TeamInTournament               TeamInTournament[]
+  TeamPerformanceStat            TeamPerformanceStat[]
+  TeamPositionalStat             TeamPositionalStat[]
+  TeamSituationalStat            TeamSituationalStat[]
+  TeamStreakStat                 TeamStreakStat[]
+  TopPlayerAggression            TopPlayerAggression[]
+  TopPlayerAssist                TopPlayerAssist[]
+  TopPlayerGoalContribution      TopPlayerGoalContribution[]
+  TopPlayerRating                TopPlayerRating[]
+  TopPlayerShot                  TopPlayerShot[]
+  TopTeamStat                    TopTeamStat[]
+  TournamentAssistToGoal         TournamentAssistToGoal[]
+  TournamentPlayerTableDefensive TournamentPlayerTableDefensive[]
+  TournamentPlayerTableOffensive TournamentPlayerTableOffensive[]
+  TournamentPlayerTablePassing   TournamentPlayerTablePassing[]
+  TournamentPlayerTableSummary   TournamentPlayerTableSummary[]
+  TournamentPlayerTableXG        TournamentPlayerTableXG[]
+  TournamentTableDefensive       TournamentTableDefensive[]
+  TournamentTableOffensive       TournamentTableOffensive[]
+  TournamentTableSummary         TournamentTableSummary[]
+  TournamentTableXG              TournamentTableXG[]
+
+  @@unique([name, countryId])
+}
+
+model TeamInTournament {
+  id           Int        @id @default(autoincrement())
+  teamId       Int
+  countryId    Int
+  tournamentId Int
+  seasonId     Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  Country      Country    @relation(fields: [countryId], references: [id])
+  Season       Season     @relation(fields: [seasonId], references: [id])
+  Team         Team       @relation(fields: [teamId], references: [id])
+  Tournament   Tournament @relation(fields: [tournamentId], references: [id])
+
+  @@unique([teamId, countryId, tournamentId, seasonId])
+}
+
+model TeamPerformanceStat {
+  id             Int        @id @default(autoincrement())
+  tournamentId   Int
+  teamId         Int
+  category       String
+  rank           Int
+  matchesPlayed  Int
+  winPercentage  Int
+  drawPercentage Int
+  lossPercentage Int
+  goalsForPg     Float
+  goalsAgainstPg Float
+  pointsPg       Float
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime
+  mode           String     @default("all")
+  viewTypeId     Int
+  Team           Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament     Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType      TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, teamId, category, mode, viewTypeId])
+}
+
+model TeamPositionalStat {
+  id           Int           @id @default(autoincrement())
+  tournamentId Int
+  teamId       Int
+  category     String
+  leftSide     Float?
+  middle       Float?
+  rightSide    Float?
+  sixYardBox   Float?
+  penaltyArea  Float?
+  outsideBox   Float?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime
+  viewTypeId   Int
+  sectionId    Int?
+  TableSection TableSection? @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  Team         Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament   Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType    TableType     @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, teamId, category, sectionId, viewTypeId])
+}
+
+model TeamSituationalStat {
+  id             Int           @id @default(autoincrement())
+  tournamentId   Int
+  teamId         Int
+  category       String
+  openPlay       Int?
+  counterAttack  Int?
+  setPiece       Int?
+  penalty        Int?
+  ownGoal        Int?
+  crosses        Int?
+  longBalls      Int?
+  throughBalls   Int?
+  shortPasses    Int?
+  fouls          Int?
+  unprofessional Int?
+  other          Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  viewTypeId     Int
+  sectionId      Int?
+  TableSection   TableSection? @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  Team           Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament     Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType      TableType     @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, teamId, category, sectionId, viewTypeId])
+}
+
+model TeamStreakStat {
+  id            Int        @id @default(autoincrement())
+  tournamentId  Int
+  teamId        Int
+  streakType    String
+  scope         String     @default("Current")
+  rank          Int
+  streakCount   Int
+  matchesPlayed Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime
+  mode          String     @default("all")
+  viewTypeId    Int
+  Team          Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType     TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, teamId, streakType, mode, scope, viewTypeId])
+}
+
+model TopPlayerAggression {
+  id           Int        @id @default(autoincrement())
+  tournamentId Int
+  teamId       Int
+  playerId     Int
+  rank         Int?
+  yellowCards  Int?
+  redCards     Int?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  viewTypeId   Int
+  Player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  Team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType    TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, playerId, viewTypeId])
+}
+
+model TopPlayerAssist {
+  id           Int        @id @default(autoincrement())
+  tournamentId Int
+  teamId       Int
+  playerId     Int
+  rank         Int?
+  assists      Int?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  viewTypeId   Int
+  Player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  Team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType    TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, playerId, viewTypeId])
+}
+
+model TopPlayerGoalContribution {
+  id                  Int        @id @default(autoincrement())
+  tournamentId        Int
+  teamId              Int
+  playerId            Int
+  rank                Int?
+  goals               Int?
+  teamGoalsTotal      Int?
+  contributionPercent Float?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime
+  viewTypeId          Int
+  Player              Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  Team                Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament          Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType           TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, playerId, viewTypeId])
+}
+
+model TopPlayerRating {
+  id           Int        @id @default(autoincrement())
+  tournamentId Int
+  teamId       Int
+  playerId     Int
+  rank         Int?
+  rating       Float?
+  apps         String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  viewTypeId   Int
+  Player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  Team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType    TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, playerId, viewTypeId])
+}
+
+model TopPlayerShot {
+  id           Int        @id @default(autoincrement())
+  tournamentId Int
+  teamId       Int
+  playerId     Int
+  rank         Int?
+  shotsPerGame Float?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  viewTypeId   Int
+  Player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  Team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType    TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, playerId, viewTypeId])
+}
+
+model TopTeamStat {
+  id           Int        @id @default(autoincrement())
+  tournamentId Int
+  teamId       Int
+  statType     String
+  rank         Int?
+  value        Float?
+  subValue1    Int?
+  subValue2    Int?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  viewTypeId   Int
+  Team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType    TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, teamId, statType, viewTypeId])
+}
+
+model Tournament {
+  id                             Int                              @id
+  name                           String
+  slug                           String                           @unique
+  regionId                       Int
+  countryId                      Int
+  createdAt                      DateTime                         @default(now())
+  updatedAt                      DateTime
+  minId                          Int?
+  BestXI                         BestXI[]
+  TableDefensive                 TableDefensive[]
+  TableOffensive                 TableOffensive[]
+  TableSummary                   TableSummary[]
+  TableXG                        TableXG[]
+  TeamInTournament               TeamInTournament[]
+  TeamPerformanceStat            TeamPerformanceStat[]
+  TeamPositionalStat             TeamPositionalStat[]
+  TeamSituationalStat            TeamSituationalStat[]
+  TeamStreakStat                 TeamStreakStat[]
+  TopPlayerAggression            TopPlayerAggression[]
+  TopPlayerAssist                TopPlayerAssist[]
+  TopPlayerGoalContribution      TopPlayerGoalContribution[]
+  TopPlayerRating                TopPlayerRating[]
+  TopPlayerShot                  TopPlayerShot[]
+  TopTeamStat                    TopTeamStat[]
+  Country                        Country                          @relation(fields: [countryId], references: [id])
+  Region                         Region                           @relation(fields: [regionId], references: [id])
+  TournamentAssistToGoal         TournamentAssistToGoal[]
+  TournamentPlayerTableDefensive TournamentPlayerTableDefensive[]
+  TournamentPlayerTableOffensive TournamentPlayerTableOffensive[]
+  TournamentPlayerTablePassing   TournamentPlayerTablePassing[]
+  TournamentPlayerTableSummary   TournamentPlayerTableSummary[]
+  TournamentPlayerTableXG        TournamentPlayerTableXG[]
+  TournamentTableDefensive       TournamentTableDefensive[]
+  TournamentTableOffensive       TournamentTableOffensive[]
+  TournamentTableSummary         TournamentTableSummary[]
+  TournamentTableXG              TournamentTableXG[]
+
+  @@unique([name, countryId])
+}
+
+model TournamentAssistToGoal {
+  id                                                Int        @id @default(autoincrement())
+  tournamentId                                      Int
+  teamId                                            Int
+  rank                                              Int
+  count                                             Int
+  scorerName                                        String
+  scorerId                                          Int?
+  assistantName                                     String
+  assistantId                                       Int?
+  createdAt                                         DateTime   @default(now())
+  updatedAt                                         DateTime
+  viewTypeId                                        Int
+  Player_TournamentAssistToGoal_assistantIdToPlayer Player?    @relation("TournamentAssistToGoal_assistantIdToPlayer", fields: [assistantId], references: [id])
+  Player_TournamentAssistToGoal_scorerIdToPlayer    Player?    @relation("TournamentAssistToGoal_scorerIdToPlayer", fields: [scorerId], references: [id])
+  Team                                              Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament                                        Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType                                         TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, teamId, scorerName, assistantName, viewTypeId])
+}
+
+model TournamentPlayerTableDefensive {
+  id                                                             Int            @id @default(autoincrement())
+  tournamentId                                                   Int
+  playerId                                                       Int
+  teamId                                                         Int
+  categoryId                                                     Int?
+  typeId                                                         Int?
+  sectionId                                                      Int?
+  rank                                                           Int
+  apps                                                           String
+  minsPlayed                                                     Int
+  tackles                                                        Float
+  interceptions                                                  Float
+  fouls                                                          Float
+  offsidesSaved                                                  Float
+  clearances                                                     Float
+  dribbledPast                                                   Float
+  outfielderBlock                                                Float
+  ownGoals                                                       Float
+  rating                                                         Float
+  createdAt                                                      DateTime       @default(now())
+  updatedAt                                                      DateTime
+  viewTypeId                                                     Int
+  TableCategory                                                  TableCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Player                                                         Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  TableSection                                                   TableSection?  @relation(fields: [sectionId], references: [id])
+  Team                                                           Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament                                                     Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType_TournamentPlayerTableDefensive_typeIdToTableType     TableType?     @relation("TournamentPlayerTableDefensive_typeIdToTableType", fields: [typeId], references: [id], onDelete: Cascade)
+  TableType_TournamentPlayerTableDefensive_viewTypeIdToTableType TableType      @relation("TournamentPlayerTableDefensive_viewTypeIdToTableType", fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, playerId, viewTypeId, categoryId])
+}
+
+model TournamentPlayerTableOffensive {
+  id                                                             Int            @id @default(autoincrement())
+  tournamentId                                                   Int
+  playerId                                                       Int
+  teamId                                                         Int
+  categoryId                                                     Int?
+  typeId                                                         Int?
+  sectionId                                                      Int?
+  rank                                                           Int
+  apps                                                           String
+  minsPlayed                                                     Int
+  shotsPerGame                                                   Float
+  shotsOnTarget                                                  Float
+  keyPasses                                                      Float
+  dribbles                                                       Float
+  fouled                                                         Float
+  offsides                                                       Float
+  dispossessed                                                   Float
+  turnover                                                       Float
+  rating                                                         Float
+  createdAt                                                      DateTime       @default(now())
+  updatedAt                                                      DateTime
+  viewTypeId                                                     Int
+  TableCategory                                                  TableCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Player                                                         Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  TableSection                                                   TableSection?  @relation(fields: [sectionId], references: [id])
+  Team                                                           Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament                                                     Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType_TournamentPlayerTableOffensive_typeIdToTableType     TableType?     @relation("TournamentPlayerTableOffensive_typeIdToTableType", fields: [typeId], references: [id], onDelete: Cascade)
+  TableType_TournamentPlayerTableOffensive_viewTypeIdToTableType TableType      @relation("TournamentPlayerTableOffensive_viewTypeIdToTableType", fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, playerId, viewTypeId, categoryId])
+}
+
+model TournamentPlayerTablePassing {
+  id                                                           Int            @id @default(autoincrement())
+  tournamentId                                                 Int
+  playerId                                                     Int
+  teamId                                                       Int
+  categoryId                                                   Int?
+  typeId                                                       Int?
+  sectionId                                                    Int?
+  rank                                                         Int
+  apps                                                         String
+  minsPlayed                                                   Int
+  keyPasses                                                    Float
+  passes                                                       Float
+  passSuccess                                                  Float
+  crosses                                                      Float
+  longBalls                                                    Float
+  throughBalls                                                 Float
+  rating                                                       Float
+  createdAt                                                    DateTime       @default(now())
+  updatedAt                                                    DateTime
+  viewTypeId                                                   Int
+  TableCategory                                                TableCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Player                                                       Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  TableSection                                                 TableSection?  @relation(fields: [sectionId], references: [id])
+  Team                                                         Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament                                                   Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType_TournamentPlayerTablePassing_typeIdToTableType     TableType?     @relation("TournamentPlayerTablePassing_typeIdToTableType", fields: [typeId], references: [id], onDelete: Cascade)
+  TableType_TournamentPlayerTablePassing_viewTypeIdToTableType TableType      @relation("TournamentPlayerTablePassing_viewTypeIdToTableType", fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, playerId, viewTypeId, categoryId])
+}
+
+model TournamentPlayerTableSummary {
+  id                                                           Int            @id @default(autoincrement())
+  tournamentId                                                 Int
+  playerId                                                     Int
+  teamId                                                       Int
+  categoryId                                                   Int?
+  typeId                                                       Int?
+  sectionId                                                    Int?
+  rank                                                         Int
+  apps                                                         String
+  minsPlayed                                                   Int
+  goals                                                        Int
+  assists                                                      Int
+  yellow                                                       Int
+  red                                                          Int
+  shotsPerGame                                                 Float
+  passSuccess                                                  Float
+  aerialsWon                                                   Float
+  motm                                                         Int
+  rating                                                       Float
+  createdAt                                                    DateTime       @default(now())
+  updatedAt                                                    DateTime
+  viewTypeId                                                   Int
+  TableCategory                                                TableCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Player                                                       Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  TableSection                                                 TableSection?  @relation(fields: [sectionId], references: [id])
+  Team                                                         Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament                                                   Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType_TournamentPlayerTableSummary_typeIdToTableType     TableType?     @relation("TournamentPlayerTableSummary_typeIdToTableType", fields: [typeId], references: [id], onDelete: Cascade)
+  TableType_TournamentPlayerTableSummary_viewTypeIdToTableType TableType      @relation("TournamentPlayerTableSummary_viewTypeIdToTableType", fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, playerId, viewTypeId, categoryId])
+}
+
+model TournamentPlayerTableXG {
+  id                                                      Int            @id @default(autoincrement())
+  tournamentId                                            Int
+  playerId                                                Int
+  teamId                                                  Int
+  categoryId                                              Int?
+  typeId                                                  Int?
+  sectionId                                               Int?
+  rank                                                    Int
+  apps                                                    String
+  minsPlayed                                              Int
+  xG                                                      Float
+  npxG                                                    Float
+  xGAssist                                                Float
+  xGChain                                                 Float
+  xGBuildup                                               Float
+  rating                                                  Float
+  createdAt                                               DateTime       @default(now())
+  updatedAt                                               DateTime
+  viewTypeId                                              Int
+  TableCategory                                           TableCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Player                                                  Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  TableSection                                            TableSection?  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  Team                                                    Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament                                              Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType_TournamentPlayerTableXG_typeIdToTableType     TableType?     @relation("TournamentPlayerTableXG_typeIdToTableType", fields: [typeId], references: [id], onDelete: Cascade)
+  TableType_TournamentPlayerTableXG_viewTypeIdToTableType TableType      @relation("TournamentPlayerTableXG_viewTypeIdToTableType", fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, playerId, viewTypeId, categoryId, sectionId])
+}
+
+model TournamentTableDefensive {
+  id                                                       Int            @id @default(autoincrement())
+  tournamentId                                             Int
+  teamId                                                   Int
+  categoryId                                               Int?
+  typeId                                                   Int?
+  sectionId                                                Int?
+  rank                                                     Int
+  shotsPg                                                  Float
+  tacklesPg                                                Float
+  interceptionsPg                                          Float
+  foulsPg                                                  Float
+  offsidesPg                                               Float
+  rating                                                   Float
+  createdAt                                                DateTime       @default(now())
+  updatedAt                                                DateTime
+  viewTypeId                                               Int
+  TableCategory                                            TableCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  TableSection                                             TableSection?  @relation(fields: [sectionId], references: [id])
+  Team                                                     Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament                                               Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType_TournamentTableDefensive_typeIdToTableType     TableType?     @relation("TournamentTableDefensive_typeIdToTableType", fields: [typeId], references: [id], onDelete: Cascade)
+  TableType_TournamentTableDefensive_viewTypeIdToTableType TableType      @relation("TournamentTableDefensive_viewTypeIdToTableType", fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, teamId, viewTypeId, categoryId])
+}
+
+model TournamentTableOffensive {
+  id                                                       Int            @id @default(autoincrement())
+  tournamentId                                             Int
+  teamId                                                   Int
+  categoryId                                               Int?
+  typeId                                                   Int?
+  sectionId                                                Int?
+  rank                                                     Int
+  shotsPg                                                  Float
+  shotsOTpg                                                Float
+  dribblesPg                                               Float
+  fouledPg                                                 Float
+  rating                                                   Float
+  createdAt                                                DateTime       @default(now())
+  updatedAt                                                DateTime
+  viewTypeId                                               Int
+  TableCategory                                            TableCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  TableSection                                             TableSection?  @relation(fields: [sectionId], references: [id])
+  Team                                                     Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament                                               Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType_TournamentTableOffensive_typeIdToTableType     TableType?     @relation("TournamentTableOffensive_typeIdToTableType", fields: [typeId], references: [id], onDelete: Cascade)
+  TableType_TournamentTableOffensive_viewTypeIdToTableType TableType      @relation("TournamentTableOffensive_viewTypeIdToTableType", fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, teamId, viewTypeId, categoryId])
+}
+
+model TournamentTableSummary {
+  id                                                     Int            @id @default(autoincrement())
+  tournamentId                                           Int
+  teamId                                                 Int
+  categoryId                                             Int?
+  typeId                                                 Int?
+  sectionId                                              Int?
+  rank                                                   Int
+  goals                                                  Int
+  shotsPg                                                Float
+  yellow                                                 Int
+  red                                                    Int
+  possession                                             Float
+  pass                                                   Float
+  aerialsWon                                             Float
+  rating                                                 Float
+  createdAt                                              DateTime       @default(now())
+  updatedAt                                              DateTime
+  viewTypeId                                             Int
+  TableCategory                                          TableCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  TableSection                                           TableSection?  @relation(fields: [sectionId], references: [id])
+  Team                                                   Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament                                             Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType_TournamentTableSummary_typeIdToTableType     TableType?     @relation("TournamentTableSummary_typeIdToTableType", fields: [typeId], references: [id], onDelete: Cascade)
+  TableType_TournamentTableSummary_viewTypeIdToTableType TableType      @relation("TournamentTableSummary_viewTypeIdToTableType", fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, teamId, viewTypeId, categoryId])
+}
+
+model TournamentTableXG {
+  id                                                Int            @id @default(autoincrement())
+  tournamentId                                      Int
+  teamId                                            Int
+  categoryId                                        Int?
+  typeId                                            Int?
+  sectionId                                         Int?
+  rank                                              Int
+  order                                             String?
+  xG                                                Float
+  goals                                             Int
+  xGDiff                                            Float
+  shots                                             Int
+  xGShots                                           Float
+  rating                                            Float
+  createdAt                                         DateTime       @default(now())
+  updatedAt                                         DateTime
+  viewTypeId                                        Int
+  TableCategory                                     TableCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  TableSection                                      TableSection?  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  Team                                              Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament                                        Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType_TournamentTableXG_typeIdToTableType     TableType?     @relation("TournamentTableXG_typeIdToTableType", fields: [typeId], references: [id], onDelete: Cascade)
+  TableType_TournamentTableXG_viewTypeIdToTableType TableType      @relation("TournamentTableXG_viewTypeIdToTableType", fields: [viewTypeId], references: [id])
+
+  @@unique([tournamentId, teamId, viewTypeId, categoryId, sectionId])
+}

@@ -3,13 +3,32 @@
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun run --watch src/index.ts",
+    "postinstall": "npx prisma generate --schema ./prisma-minuto/schema.prisma && npx prisma generate --schema ./prisma-whoscored/schema.prisma",
+    "generate": "npx prisma generate --schema ./prisma-minuto/schema.prisma && npx prisma generate --schema ./prisma-whoscored/schema.prisma",
+    "migrate": "npx prisma migrate dev --schema ./prisma-minuto/schema.prisma && npx prisma migrate dev --schema ./prisma-whoscored/schema.prisma",
+    "deploy": "npx prisma migrate deploy --schema ./prisma-minuto/schema.prisma && npx prisma migrate deploy --schema ./prisma-whoscored/schema.prisma",
+    "studio": "npx prisma studio --schema ./prisma-minuto/schema.prisma --port 5555 & npx prisma studio --schema ./prisma-whoscored/schema.prisma --port 5556"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@elysiajs/openapi": "^1.4.14",
+    "@elysiajs/swagger": "^1.3.1",
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "cronbake": "^0.4.0",
+    "dotenv": "^17.2.3",
+    "elysia": "latest",
+    "pg": "^8.18.0",
+    "prismabox": "^1.1.26",
+    "tsx": "^4.21.0",
+    "web-push": "^3.6.7",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "@types/pg": "^8.16.0",
+    "@types/web-push": "^3.6.4",
+    "bun-types": "latest",
+    "prisma": "^7.3.0"
   },
   "module": "src/index.js"
 }
