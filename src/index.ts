@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 // import { pushRoutes } from "./features/push/presentation/routes";
-// import { footballRoutes } from "./features/football/presentation/routes";
+import { footballRoutes } from "./features/sports/football/presentation/routes";
 import { statsRoutes } from "./features/stats/presentation/routes";
 
 const app = new Elysia()
@@ -17,6 +17,8 @@ const app = new Elysia()
           { name: "Teams", description: "Team statistics endpoints" },
           { name: "Tournaments", description: "Tournament statistics endpoints" },
           { name: "All", description: "Universal endpoints" },
+          { name: "Statistics", description: "Statistics endpoints for teams and players" },
+          { name: "Football", description: "Football matches and seasons endpoints" },
         ],
       },
       path: "/swagger",
@@ -24,7 +26,7 @@ const app = new Elysia()
     })
   )
   // .use(pushRoutes)
-  // .use(footballRoutes)
+  .use(footballRoutes)
   .use(statsRoutes)
   .listen(4500);
 

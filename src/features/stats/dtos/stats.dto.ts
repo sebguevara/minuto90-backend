@@ -146,6 +146,10 @@ export const tournamentBestXIQuerySchema = z.object({
 // ==================== TYPE EXPORTS ====================
 
 export type PaginationQuery = z.infer<typeof paginationSchema>;
+export type PaginationOptions = {
+  limit?: number;
+  offset?: number;
+};
 export type MinIdParam = z.infer<typeof minIdParamSchema>;
 export type ModeEnum = z.infer<typeof modeEnum>;
 export type ScopeEnum = z.infer<typeof scopeEnum>;
