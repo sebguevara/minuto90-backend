@@ -91,7 +91,14 @@ export const ModelName = {
   TournamentTableDefensive: 'TournamentTableDefensive',
   TournamentTableOffensive: 'TournamentTableOffensive',
   TournamentTableSummary: 'TournamentTableSummary',
-  TournamentTableXG: 'TournamentTableXG'
+  TournamentTableXG: 'TournamentTableXG',
+  TeamCharacteristic: 'TeamCharacteristic',
+  TeamSituationalWidget: 'TeamSituationalWidget',
+  TeamStyleOfPlay: 'TeamStyleOfPlay',
+  TeamTopStatDefensive: 'TeamTopStatDefensive',
+  TeamTopStatOffensive: 'TeamTopStatOffensive',
+  TeamTopStatSummary: 'TeamTopStatSummary',
+  TeamTopStatXG: 'TeamTopStatXG'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -880,6 +887,128 @@ export const TournamentTableXGScalarFieldEnum = {
 } as const
 
 export type TournamentTableXGScalarFieldEnum = (typeof TournamentTableXGScalarFieldEnum)[keyof typeof TournamentTableXGScalarFieldEnum]
+
+
+export const TeamCharacteristicScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  kind: 'kind',
+  label: 'label',
+  area: 'area',
+  levelText: 'levelText',
+  level: 'level',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeamCharacteristicScalarFieldEnum = (typeof TeamCharacteristicScalarFieldEnum)[keyof typeof TeamCharacteristicScalarFieldEnum]
+
+
+export const TeamSituationalWidgetScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  category: 'category',
+  view: 'view',
+  side: 'side',
+  type: 'type',
+  value: 'value',
+  effectPct: 'effectPct',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeamSituationalWidgetScalarFieldEnum = (typeof TeamSituationalWidgetScalarFieldEnum)[keyof typeof TeamSituationalWidgetScalarFieldEnum]
+
+
+export const TeamStyleOfPlayScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  label: 'label',
+  area: 'area',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeamStyleOfPlayScalarFieldEnum = (typeof TeamStyleOfPlayScalarFieldEnum)[keyof typeof TeamStyleOfPlayScalarFieldEnum]
+
+
+export const TeamTopStatDefensiveScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  tournamentId: 'tournamentId',
+  viewTypeId: 'viewTypeId',
+  apps: 'apps',
+  shotsConcededPg: 'shotsConcededPg',
+  tacklesPg: 'tacklesPg',
+  interceptionsPg: 'interceptionsPg',
+  foulsPg: 'foulsPg',
+  offsidesPg: 'offsidesPg',
+  rating: 'rating',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeamTopStatDefensiveScalarFieldEnum = (typeof TeamTopStatDefensiveScalarFieldEnum)[keyof typeof TeamTopStatDefensiveScalarFieldEnum]
+
+
+export const TeamTopStatOffensiveScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  tournamentId: 'tournamentId',
+  viewTypeId: 'viewTypeId',
+  apps: 'apps',
+  shotsPg: 'shotsPg',
+  shotsOTpg: 'shotsOTpg',
+  dribblesPg: 'dribblesPg',
+  fouledPg: 'fouledPg',
+  rating: 'rating',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeamTopStatOffensiveScalarFieldEnum = (typeof TeamTopStatOffensiveScalarFieldEnum)[keyof typeof TeamTopStatOffensiveScalarFieldEnum]
+
+
+export const TeamTopStatSummaryScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  tournamentId: 'tournamentId',
+  viewTypeId: 'viewTypeId',
+  apps: 'apps',
+  goals: 'goals',
+  shotsPg: 'shotsPg',
+  yellow: 'yellow',
+  red: 'red',
+  possession: 'possession',
+  passSuccess: 'passSuccess',
+  aerialsWonPg: 'aerialsWonPg',
+  rating: 'rating',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeamTopStatSummaryScalarFieldEnum = (typeof TeamTopStatSummaryScalarFieldEnum)[keyof typeof TeamTopStatSummaryScalarFieldEnum]
+
+
+export const TeamTopStatXGScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  tournamentId: 'tournamentId',
+  viewTypeId: 'viewTypeId',
+  side: 'side',
+  pensMode: 'pensMode',
+  apps: 'apps',
+  xG: 'xG',
+  goalsExcOwn: 'goalsExcOwn',
+  xGDiff: 'xGDiff',
+  shots: 'shots',
+  xGPerShot: 'xGPerShot',
+  rating: 'rating',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeamTopStatXGScalarFieldEnum = (typeof TeamTopStatXGScalarFieldEnum)[keyof typeof TeamTopStatXGScalarFieldEnum]
 
 
 export const SortOrder = {

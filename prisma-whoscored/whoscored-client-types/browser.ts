@@ -222,3 +222,38 @@ export type TournamentTableSummary = Prisma.TournamentTableSummaryModel
  * 
  */
 export type TournamentTableXG = Prisma.TournamentTableXGModel
+/**
+ * Model TeamCharacteristic
+ * 
+ */
+export type TeamCharacteristic = Prisma.TeamCharacteristicModel
+/**
+ * Model TeamSituationalWidget
+ * 
+ */
+export type TeamSituationalWidget = Prisma.TeamSituationalWidgetModel
+/**
+ * Model TeamStyleOfPlay
+ * 
+ */
+export type TeamStyleOfPlay = Prisma.TeamStyleOfPlayModel
+/**
+ * Model TeamTopStatDefensive
+ * 
+ */
+export type TeamTopStatDefensive = Prisma.TeamTopStatDefensiveModel
+/**
+ * Model TeamTopStatOffensive
+ * 
+ */
+export type TeamTopStatOffensive = Prisma.TeamTopStatOffensiveModel
+/**
+ * Model TeamTopStatSummary
+ * 
+ */
+export type TeamTopStatSummary = Prisma.TeamTopStatSummaryModel
+/**
+ * Model TeamTopStatXG
+ * 
+ */
+export type TeamTopStatXG = Prisma.TeamTopStatXGModel

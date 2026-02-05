@@ -262,6 +262,10 @@ export type TournamentWhereInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatListRelationFilter
   TeamSituationalStat?: Prisma.TeamSituationalStatListRelationFilter
   TeamStreakStat?: Prisma.TeamStreakStatListRelationFilter
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveListRelationFilter
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveListRelationFilter
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryListRelationFilter
+  TeamTopStatXG?: Prisma.TeamTopStatXGListRelationFilter
   TopPlayerAggression?: Prisma.TopPlayerAggressionListRelationFilter
   TopPlayerAssist?: Prisma.TopPlayerAssistListRelationFilter
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionListRelationFilter
@@ -301,6 +305,10 @@ export type TournamentOrderByWithRelationInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatOrderByRelationAggregateInput
   TeamSituationalStat?: Prisma.TeamSituationalStatOrderByRelationAggregateInput
   TeamStreakStat?: Prisma.TeamStreakStatOrderByRelationAggregateInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveOrderByRelationAggregateInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveOrderByRelationAggregateInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryOrderByRelationAggregateInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGOrderByRelationAggregateInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionOrderByRelationAggregateInput
   TopPlayerAssist?: Prisma.TopPlayerAssistOrderByRelationAggregateInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionOrderByRelationAggregateInput
@@ -344,6 +352,10 @@ export type TournamentWhereUniqueInput = Prisma.AtLeast<{
   TeamPositionalStat?: Prisma.TeamPositionalStatListRelationFilter
   TeamSituationalStat?: Prisma.TeamSituationalStatListRelationFilter
   TeamStreakStat?: Prisma.TeamStreakStatListRelationFilter
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveListRelationFilter
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveListRelationFilter
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryListRelationFilter
+  TeamTopStatXG?: Prisma.TeamTopStatXGListRelationFilter
   TopPlayerAggression?: Prisma.TopPlayerAggressionListRelationFilter
   TopPlayerAssist?: Prisma.TopPlayerAssistListRelationFilter
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionListRelationFilter
@@ -411,6 +423,10 @@ export type TournamentCreateInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -450,6 +466,10 @@ export type TournamentUncheckedCreateInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -485,6 +505,10 @@ export type TournamentUpdateInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -524,6 +548,10 @@ export type TournamentUncheckedUpdateInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -1088,6 +1116,62 @@ export type TournamentUpdateOneRequiredWithoutTournamentTableXGNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TournamentUpdateToOneWithWhereWithoutTournamentTableXGInput, Prisma.TournamentUpdateWithoutTournamentTableXGInput>, Prisma.TournamentUncheckedUpdateWithoutTournamentTableXGInput>
 }
 
+export type TournamentCreateNestedOneWithoutTeamTopStatDefensiveInput = {
+  create?: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatDefensiveInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatDefensiveInput>
+  connectOrCreate?: Prisma.TournamentCreateOrConnectWithoutTeamTopStatDefensiveInput
+  connect?: Prisma.TournamentWhereUniqueInput
+}
+
+export type TournamentUpdateOneRequiredWithoutTeamTopStatDefensiveNestedInput = {
+  create?: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatDefensiveInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatDefensiveInput>
+  connectOrCreate?: Prisma.TournamentCreateOrConnectWithoutTeamTopStatDefensiveInput
+  upsert?: Prisma.TournamentUpsertWithoutTeamTopStatDefensiveInput
+  connect?: Prisma.TournamentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TournamentUpdateToOneWithWhereWithoutTeamTopStatDefensiveInput, Prisma.TournamentUpdateWithoutTeamTopStatDefensiveInput>, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatDefensiveInput>
+}
+
+export type TournamentCreateNestedOneWithoutTeamTopStatOffensiveInput = {
+  create?: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatOffensiveInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatOffensiveInput>
+  connectOrCreate?: Prisma.TournamentCreateOrConnectWithoutTeamTopStatOffensiveInput
+  connect?: Prisma.TournamentWhereUniqueInput
+}
+
+export type TournamentUpdateOneRequiredWithoutTeamTopStatOffensiveNestedInput = {
+  create?: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatOffensiveInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatOffensiveInput>
+  connectOrCreate?: Prisma.TournamentCreateOrConnectWithoutTeamTopStatOffensiveInput
+  upsert?: Prisma.TournamentUpsertWithoutTeamTopStatOffensiveInput
+  connect?: Prisma.TournamentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TournamentUpdateToOneWithWhereWithoutTeamTopStatOffensiveInput, Prisma.TournamentUpdateWithoutTeamTopStatOffensiveInput>, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatOffensiveInput>
+}
+
+export type TournamentCreateNestedOneWithoutTeamTopStatSummaryInput = {
+  create?: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatSummaryInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatSummaryInput>
+  connectOrCreate?: Prisma.TournamentCreateOrConnectWithoutTeamTopStatSummaryInput
+  connect?: Prisma.TournamentWhereUniqueInput
+}
+
+export type TournamentUpdateOneRequiredWithoutTeamTopStatSummaryNestedInput = {
+  create?: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatSummaryInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatSummaryInput>
+  connectOrCreate?: Prisma.TournamentCreateOrConnectWithoutTeamTopStatSummaryInput
+  upsert?: Prisma.TournamentUpsertWithoutTeamTopStatSummaryInput
+  connect?: Prisma.TournamentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TournamentUpdateToOneWithWhereWithoutTeamTopStatSummaryInput, Prisma.TournamentUpdateWithoutTeamTopStatSummaryInput>, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatSummaryInput>
+}
+
+export type TournamentCreateNestedOneWithoutTeamTopStatXGInput = {
+  create?: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatXGInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatXGInput>
+  connectOrCreate?: Prisma.TournamentCreateOrConnectWithoutTeamTopStatXGInput
+  connect?: Prisma.TournamentWhereUniqueInput
+}
+
+export type TournamentUpdateOneRequiredWithoutTeamTopStatXGNestedInput = {
+  create?: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatXGInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatXGInput>
+  connectOrCreate?: Prisma.TournamentCreateOrConnectWithoutTeamTopStatXGInput
+  upsert?: Prisma.TournamentUpsertWithoutTeamTopStatXGInput
+  connect?: Prisma.TournamentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TournamentUpdateToOneWithWhereWithoutTeamTopStatXGInput, Prisma.TournamentUpdateWithoutTeamTopStatXGInput>, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatXGInput>
+}
+
 export type TournamentCreateWithoutBestXIInput = {
   id: number
   name: string
@@ -1104,6 +1188,10 @@ export type TournamentCreateWithoutBestXIInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -1142,6 +1230,10 @@ export type TournamentUncheckedCreateWithoutBestXIInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -1192,6 +1284,10 @@ export type TournamentUpdateWithoutBestXIInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -1230,6 +1326,10 @@ export type TournamentUncheckedUpdateWithoutBestXIInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -1265,6 +1365,10 @@ export type TournamentCreateWithoutCountryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -1302,6 +1406,10 @@ export type TournamentUncheckedCreateWithoutCountryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -1377,6 +1485,10 @@ export type TournamentCreateWithoutRegionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -1414,6 +1526,10 @@ export type TournamentUncheckedCreateWithoutRegionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -1474,6 +1590,10 @@ export type TournamentCreateWithoutTableDefensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -1512,6 +1632,10 @@ export type TournamentUncheckedCreateWithoutTableDefensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -1562,6 +1686,10 @@ export type TournamentUpdateWithoutTableDefensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -1600,6 +1728,10 @@ export type TournamentUncheckedUpdateWithoutTableDefensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -1634,6 +1766,10 @@ export type TournamentCreateWithoutTableOffensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -1672,6 +1808,10 @@ export type TournamentUncheckedCreateWithoutTableOffensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -1722,6 +1862,10 @@ export type TournamentUpdateWithoutTableOffensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -1760,6 +1904,10 @@ export type TournamentUncheckedUpdateWithoutTableOffensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -1794,6 +1942,10 @@ export type TournamentCreateWithoutTableSummaryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -1832,6 +1984,10 @@ export type TournamentUncheckedCreateWithoutTableSummaryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -1882,6 +2038,10 @@ export type TournamentUpdateWithoutTableSummaryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -1920,6 +2080,10 @@ export type TournamentUncheckedUpdateWithoutTableSummaryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -1954,6 +2118,10 @@ export type TournamentCreateWithoutTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -1992,6 +2160,10 @@ export type TournamentUncheckedCreateWithoutTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -2042,6 +2214,10 @@ export type TournamentUpdateWithoutTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -2080,6 +2256,10 @@ export type TournamentUncheckedUpdateWithoutTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -2114,6 +2294,10 @@ export type TournamentCreateWithoutTeamInTournamentInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -2152,6 +2336,10 @@ export type TournamentUncheckedCreateWithoutTeamInTournamentInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -2202,6 +2390,10 @@ export type TournamentUpdateWithoutTeamInTournamentInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -2240,6 +2432,10 @@ export type TournamentUncheckedUpdateWithoutTeamInTournamentInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -2274,6 +2470,10 @@ export type TournamentCreateWithoutTeamPerformanceStatInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -2312,6 +2512,10 @@ export type TournamentUncheckedCreateWithoutTeamPerformanceStatInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -2362,6 +2566,10 @@ export type TournamentUpdateWithoutTeamPerformanceStatInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -2400,6 +2608,10 @@ export type TournamentUncheckedUpdateWithoutTeamPerformanceStatInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -2434,6 +2646,10 @@ export type TournamentCreateWithoutTeamPositionalStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -2472,6 +2688,10 @@ export type TournamentUncheckedCreateWithoutTeamPositionalStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -2522,6 +2742,10 @@ export type TournamentUpdateWithoutTeamPositionalStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -2560,6 +2784,10 @@ export type TournamentUncheckedUpdateWithoutTeamPositionalStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -2594,6 +2822,10 @@ export type TournamentCreateWithoutTeamSituationalStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatCreateNestedManyWithoutTournamentInput
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -2632,6 +2864,10 @@ export type TournamentUncheckedCreateWithoutTeamSituationalStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -2682,6 +2918,10 @@ export type TournamentUpdateWithoutTeamSituationalStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatUpdateManyWithoutTournamentNestedInput
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -2720,6 +2960,10 @@ export type TournamentUncheckedUpdateWithoutTeamSituationalStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -2754,6 +2998,10 @@ export type TournamentCreateWithoutTeamStreakStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatCreateNestedManyWithoutTournamentInput
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -2792,6 +3040,10 @@ export type TournamentUncheckedCreateWithoutTeamStreakStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -2842,6 +3094,10 @@ export type TournamentUpdateWithoutTeamStreakStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatUpdateManyWithoutTournamentNestedInput
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -2880,6 +3136,10 @@ export type TournamentUncheckedUpdateWithoutTeamStreakStatInput = {
   TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -2915,6 +3175,10 @@ export type TournamentCreateWithoutTopPlayerAggressionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
   TopPlayerRating?: Prisma.TopPlayerRatingCreateNestedManyWithoutTournamentInput
@@ -2953,6 +3217,10 @@ export type TournamentUncheckedCreateWithoutTopPlayerAggressionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerRating?: Prisma.TopPlayerRatingUncheckedCreateNestedManyWithoutTournamentInput
@@ -3003,6 +3271,10 @@ export type TournamentUpdateWithoutTopPlayerAggressionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
   TopPlayerRating?: Prisma.TopPlayerRatingUpdateManyWithoutTournamentNestedInput
@@ -3041,6 +3313,10 @@ export type TournamentUncheckedUpdateWithoutTopPlayerAggressionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerRating?: Prisma.TopPlayerRatingUncheckedUpdateManyWithoutTournamentNestedInput
@@ -3075,6 +3351,10 @@ export type TournamentCreateWithoutTopPlayerAssistInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
   TopPlayerRating?: Prisma.TopPlayerRatingCreateNestedManyWithoutTournamentInput
@@ -3113,6 +3393,10 @@ export type TournamentUncheckedCreateWithoutTopPlayerAssistInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerRating?: Prisma.TopPlayerRatingUncheckedCreateNestedManyWithoutTournamentInput
@@ -3163,6 +3447,10 @@ export type TournamentUpdateWithoutTopPlayerAssistInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
   TopPlayerRating?: Prisma.TopPlayerRatingUpdateManyWithoutTournamentNestedInput
@@ -3201,6 +3489,10 @@ export type TournamentUncheckedUpdateWithoutTopPlayerAssistInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerRating?: Prisma.TopPlayerRatingUncheckedUpdateManyWithoutTournamentNestedInput
@@ -3235,6 +3527,10 @@ export type TournamentCreateWithoutTopPlayerGoalContributionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerRating?: Prisma.TopPlayerRatingCreateNestedManyWithoutTournamentInput
@@ -3273,6 +3569,10 @@ export type TournamentUncheckedCreateWithoutTopPlayerGoalContributionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerRating?: Prisma.TopPlayerRatingUncheckedCreateNestedManyWithoutTournamentInput
@@ -3323,6 +3623,10 @@ export type TournamentUpdateWithoutTopPlayerGoalContributionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerRating?: Prisma.TopPlayerRatingUpdateManyWithoutTournamentNestedInput
@@ -3361,6 +3665,10 @@ export type TournamentUncheckedUpdateWithoutTopPlayerGoalContributionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerRating?: Prisma.TopPlayerRatingUncheckedUpdateManyWithoutTournamentNestedInput
@@ -3395,6 +3703,10 @@ export type TournamentCreateWithoutTopPlayerRatingInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -3433,6 +3745,10 @@ export type TournamentUncheckedCreateWithoutTopPlayerRatingInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -3483,6 +3799,10 @@ export type TournamentUpdateWithoutTopPlayerRatingInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -3521,6 +3841,10 @@ export type TournamentUncheckedUpdateWithoutTopPlayerRatingInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -3555,6 +3879,10 @@ export type TournamentCreateWithoutTopPlayerShotInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -3593,6 +3921,10 @@ export type TournamentUncheckedCreateWithoutTopPlayerShotInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -3643,6 +3975,10 @@ export type TournamentUpdateWithoutTopPlayerShotInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -3681,6 +4017,10 @@ export type TournamentUncheckedUpdateWithoutTopPlayerShotInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -3715,6 +4055,10 @@ export type TournamentCreateWithoutTopTeamStatInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -3753,6 +4097,10 @@ export type TournamentUncheckedCreateWithoutTopTeamStatInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -3803,6 +4151,10 @@ export type TournamentUpdateWithoutTopTeamStatInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -3841,6 +4193,10 @@ export type TournamentUncheckedUpdateWithoutTopTeamStatInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -3875,6 +4231,10 @@ export type TournamentCreateWithoutTournamentAssistToGoalInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -3913,6 +4273,10 @@ export type TournamentUncheckedCreateWithoutTournamentAssistToGoalInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -3963,6 +4327,10 @@ export type TournamentUpdateWithoutTournamentAssistToGoalInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -4001,6 +4369,10 @@ export type TournamentUncheckedUpdateWithoutTournamentAssistToGoalInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -4035,6 +4407,10 @@ export type TournamentCreateWithoutTournamentPlayerTableDefensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -4073,6 +4449,10 @@ export type TournamentUncheckedCreateWithoutTournamentPlayerTableDefensiveInput 
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -4123,6 +4503,10 @@ export type TournamentUpdateWithoutTournamentPlayerTableDefensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -4161,6 +4545,10 @@ export type TournamentUncheckedUpdateWithoutTournamentPlayerTableDefensiveInput 
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -4195,6 +4583,10 @@ export type TournamentCreateWithoutTournamentPlayerTableOffensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -4233,6 +4625,10 @@ export type TournamentUncheckedCreateWithoutTournamentPlayerTableOffensiveInput 
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -4283,6 +4679,10 @@ export type TournamentUpdateWithoutTournamentPlayerTableOffensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -4321,6 +4721,10 @@ export type TournamentUncheckedUpdateWithoutTournamentPlayerTableOffensiveInput 
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -4355,6 +4759,10 @@ export type TournamentCreateWithoutTournamentPlayerTablePassingInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -4393,6 +4801,10 @@ export type TournamentUncheckedCreateWithoutTournamentPlayerTablePassingInput = 
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -4443,6 +4855,10 @@ export type TournamentUpdateWithoutTournamentPlayerTablePassingInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -4481,6 +4897,10 @@ export type TournamentUncheckedUpdateWithoutTournamentPlayerTablePassingInput = 
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -4515,6 +4935,10 @@ export type TournamentCreateWithoutTournamentPlayerTableSummaryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -4553,6 +4977,10 @@ export type TournamentUncheckedCreateWithoutTournamentPlayerTableSummaryInput = 
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -4603,6 +5031,10 @@ export type TournamentUpdateWithoutTournamentPlayerTableSummaryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -4641,6 +5073,10 @@ export type TournamentUncheckedUpdateWithoutTournamentPlayerTableSummaryInput = 
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -4675,6 +5111,10 @@ export type TournamentCreateWithoutTournamentPlayerTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -4713,6 +5153,10 @@ export type TournamentUncheckedCreateWithoutTournamentPlayerTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -4763,6 +5207,10 @@ export type TournamentUpdateWithoutTournamentPlayerTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -4801,6 +5249,10 @@ export type TournamentUncheckedUpdateWithoutTournamentPlayerTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -4835,6 +5287,10 @@ export type TournamentCreateWithoutTournamentTableDefensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -4873,6 +5329,10 @@ export type TournamentUncheckedCreateWithoutTournamentTableDefensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -4923,6 +5383,10 @@ export type TournamentUpdateWithoutTournamentTableDefensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -4961,6 +5425,10 @@ export type TournamentUncheckedUpdateWithoutTournamentTableDefensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -4995,6 +5463,10 @@ export type TournamentCreateWithoutTournamentTableOffensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -5033,6 +5505,10 @@ export type TournamentUncheckedCreateWithoutTournamentTableOffensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -5083,6 +5559,10 @@ export type TournamentUpdateWithoutTournamentTableOffensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -5121,6 +5601,10 @@ export type TournamentUncheckedUpdateWithoutTournamentTableOffensiveInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -5155,6 +5639,10 @@ export type TournamentCreateWithoutTournamentTableSummaryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -5193,6 +5681,10 @@ export type TournamentUncheckedCreateWithoutTournamentTableSummaryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -5243,6 +5735,10 @@ export type TournamentUpdateWithoutTournamentTableSummaryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -5281,6 +5777,10 @@ export type TournamentUncheckedUpdateWithoutTournamentTableSummaryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -5315,6 +5815,10 @@ export type TournamentCreateWithoutTournamentTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
@@ -5353,6 +5857,10 @@ export type TournamentUncheckedCreateWithoutTournamentTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
@@ -5403,6 +5911,10 @@ export type TournamentUpdateWithoutTournamentTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -5441,6 +5953,10 @@ export type TournamentUncheckedUpdateWithoutTournamentTableXGInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -5456,6 +5972,710 @@ export type TournamentUncheckedUpdateWithoutTournamentTableXGInput = {
   TournamentTableDefensive?: Prisma.TournamentTableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
   TournamentTableOffensive?: Prisma.TournamentTableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
   TournamentTableSummary?: Prisma.TournamentTableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+}
+
+export type TournamentCreateWithoutTeamTopStatDefensiveInput = {
+  id: number
+  name: string
+  slug: string
+  createdAt?: Date | string
+  updatedAt: Date | string
+  minId?: number | null
+  BestXI?: Prisma.BestXICreateNestedManyWithoutTournamentInput
+  TableDefensive?: Prisma.TableDefensiveCreateNestedManyWithoutTournamentInput
+  TableOffensive?: Prisma.TableOffensiveCreateNestedManyWithoutTournamentInput
+  TableSummary?: Prisma.TableSummaryCreateNestedManyWithoutTournamentInput
+  TableXG?: Prisma.TableXGCreateNestedManyWithoutTournamentInput
+  TeamInTournament?: Prisma.TeamInTournamentCreateNestedManyWithoutTournamentInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatCreateNestedManyWithoutTournamentInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
+  TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
+  TopPlayerRating?: Prisma.TopPlayerRatingCreateNestedManyWithoutTournamentInput
+  TopPlayerShot?: Prisma.TopPlayerShotCreateNestedManyWithoutTournamentInput
+  TopTeamStat?: Prisma.TopTeamStatCreateNestedManyWithoutTournamentInput
+  Country: Prisma.CountryCreateNestedOneWithoutTournamentInput
+  Region: Prisma.RegionCreateNestedOneWithoutTournamentInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGCreateNestedManyWithoutTournamentInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveCreateNestedManyWithoutTournamentInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveCreateNestedManyWithoutTournamentInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryCreateNestedManyWithoutTournamentInput
+  TournamentTableXG?: Prisma.TournamentTableXGCreateNestedManyWithoutTournamentInput
+}
+
+export type TournamentUncheckedCreateWithoutTeamTopStatDefensiveInput = {
+  id: number
+  name: string
+  slug: string
+  regionId: number
+  countryId: number
+  createdAt?: Date | string
+  updatedAt: Date | string
+  minId?: number | null
+  BestXI?: Prisma.BestXIUncheckedCreateNestedManyWithoutTournamentInput
+  TableDefensive?: Prisma.TableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TableOffensive?: Prisma.TableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TableSummary?: Prisma.TableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TableXG?: Prisma.TableXGUncheckedCreateNestedManyWithoutTournamentInput
+  TeamInTournament?: Prisma.TeamInTournamentUncheckedCreateNestedManyWithoutTournamentInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerShot?: Prisma.TopPlayerShotUncheckedCreateNestedManyWithoutTournamentInput
+  TopTeamStat?: Prisma.TopTeamStatUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableXG?: Prisma.TournamentTableXGUncheckedCreateNestedManyWithoutTournamentInput
+}
+
+export type TournamentCreateOrConnectWithoutTeamTopStatDefensiveInput = {
+  where: Prisma.TournamentWhereUniqueInput
+  create: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatDefensiveInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatDefensiveInput>
+}
+
+export type TournamentUpsertWithoutTeamTopStatDefensiveInput = {
+  update: Prisma.XOR<Prisma.TournamentUpdateWithoutTeamTopStatDefensiveInput, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatDefensiveInput>
+  create: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatDefensiveInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatDefensiveInput>
+  where?: Prisma.TournamentWhereInput
+}
+
+export type TournamentUpdateToOneWithWhereWithoutTeamTopStatDefensiveInput = {
+  where?: Prisma.TournamentWhereInput
+  data: Prisma.XOR<Prisma.TournamentUpdateWithoutTeamTopStatDefensiveInput, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatDefensiveInput>
+}
+
+export type TournamentUpdateWithoutTeamTopStatDefensiveInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  minId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  BestXI?: Prisma.BestXIUpdateManyWithoutTournamentNestedInput
+  TableDefensive?: Prisma.TableDefensiveUpdateManyWithoutTournamentNestedInput
+  TableOffensive?: Prisma.TableOffensiveUpdateManyWithoutTournamentNestedInput
+  TableSummary?: Prisma.TableSummaryUpdateManyWithoutTournamentNestedInput
+  TableXG?: Prisma.TableXGUpdateManyWithoutTournamentNestedInput
+  TeamInTournament?: Prisma.TeamInTournamentUpdateManyWithoutTournamentNestedInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUpdateManyWithoutTournamentNestedInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
+  TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUpdateManyWithoutTournamentNestedInput
+  TopPlayerShot?: Prisma.TopPlayerShotUpdateManyWithoutTournamentNestedInput
+  TopTeamStat?: Prisma.TopTeamStatUpdateManyWithoutTournamentNestedInput
+  Country?: Prisma.CountryUpdateOneRequiredWithoutTournamentNestedInput
+  Region?: Prisma.RegionUpdateOneRequiredWithoutTournamentNestedInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUpdateManyWithoutTournamentNestedInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUpdateManyWithoutTournamentNestedInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUpdateManyWithoutTournamentNestedInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUpdateManyWithoutTournamentNestedInput
+  TournamentTableXG?: Prisma.TournamentTableXGUpdateManyWithoutTournamentNestedInput
+}
+
+export type TournamentUncheckedUpdateWithoutTeamTopStatDefensiveInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  regionId?: Prisma.IntFieldUpdateOperationsInput | number
+  countryId?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  minId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  BestXI?: Prisma.BestXIUncheckedUpdateManyWithoutTournamentNestedInput
+  TableDefensive?: Prisma.TableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TableOffensive?: Prisma.TableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TableSummary?: Prisma.TableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TableXG?: Prisma.TableXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamInTournament?: Prisma.TeamInTournamentUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerShot?: Prisma.TopPlayerShotUncheckedUpdateManyWithoutTournamentNestedInput
+  TopTeamStat?: Prisma.TopTeamStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableXG?: Prisma.TournamentTableXGUncheckedUpdateManyWithoutTournamentNestedInput
+}
+
+export type TournamentCreateWithoutTeamTopStatOffensiveInput = {
+  id: number
+  name: string
+  slug: string
+  createdAt?: Date | string
+  updatedAt: Date | string
+  minId?: number | null
+  BestXI?: Prisma.BestXICreateNestedManyWithoutTournamentInput
+  TableDefensive?: Prisma.TableDefensiveCreateNestedManyWithoutTournamentInput
+  TableOffensive?: Prisma.TableOffensiveCreateNestedManyWithoutTournamentInput
+  TableSummary?: Prisma.TableSummaryCreateNestedManyWithoutTournamentInput
+  TableXG?: Prisma.TableXGCreateNestedManyWithoutTournamentInput
+  TeamInTournament?: Prisma.TeamInTournamentCreateNestedManyWithoutTournamentInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatCreateNestedManyWithoutTournamentInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
+  TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
+  TopPlayerRating?: Prisma.TopPlayerRatingCreateNestedManyWithoutTournamentInput
+  TopPlayerShot?: Prisma.TopPlayerShotCreateNestedManyWithoutTournamentInput
+  TopTeamStat?: Prisma.TopTeamStatCreateNestedManyWithoutTournamentInput
+  Country: Prisma.CountryCreateNestedOneWithoutTournamentInput
+  Region: Prisma.RegionCreateNestedOneWithoutTournamentInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGCreateNestedManyWithoutTournamentInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveCreateNestedManyWithoutTournamentInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveCreateNestedManyWithoutTournamentInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryCreateNestedManyWithoutTournamentInput
+  TournamentTableXG?: Prisma.TournamentTableXGCreateNestedManyWithoutTournamentInput
+}
+
+export type TournamentUncheckedCreateWithoutTeamTopStatOffensiveInput = {
+  id: number
+  name: string
+  slug: string
+  regionId: number
+  countryId: number
+  createdAt?: Date | string
+  updatedAt: Date | string
+  minId?: number | null
+  BestXI?: Prisma.BestXIUncheckedCreateNestedManyWithoutTournamentInput
+  TableDefensive?: Prisma.TableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TableOffensive?: Prisma.TableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TableSummary?: Prisma.TableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TableXG?: Prisma.TableXGUncheckedCreateNestedManyWithoutTournamentInput
+  TeamInTournament?: Prisma.TeamInTournamentUncheckedCreateNestedManyWithoutTournamentInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerShot?: Prisma.TopPlayerShotUncheckedCreateNestedManyWithoutTournamentInput
+  TopTeamStat?: Prisma.TopTeamStatUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableXG?: Prisma.TournamentTableXGUncheckedCreateNestedManyWithoutTournamentInput
+}
+
+export type TournamentCreateOrConnectWithoutTeamTopStatOffensiveInput = {
+  where: Prisma.TournamentWhereUniqueInput
+  create: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatOffensiveInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatOffensiveInput>
+}
+
+export type TournamentUpsertWithoutTeamTopStatOffensiveInput = {
+  update: Prisma.XOR<Prisma.TournamentUpdateWithoutTeamTopStatOffensiveInput, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatOffensiveInput>
+  create: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatOffensiveInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatOffensiveInput>
+  where?: Prisma.TournamentWhereInput
+}
+
+export type TournamentUpdateToOneWithWhereWithoutTeamTopStatOffensiveInput = {
+  where?: Prisma.TournamentWhereInput
+  data: Prisma.XOR<Prisma.TournamentUpdateWithoutTeamTopStatOffensiveInput, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatOffensiveInput>
+}
+
+export type TournamentUpdateWithoutTeamTopStatOffensiveInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  minId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  BestXI?: Prisma.BestXIUpdateManyWithoutTournamentNestedInput
+  TableDefensive?: Prisma.TableDefensiveUpdateManyWithoutTournamentNestedInput
+  TableOffensive?: Prisma.TableOffensiveUpdateManyWithoutTournamentNestedInput
+  TableSummary?: Prisma.TableSummaryUpdateManyWithoutTournamentNestedInput
+  TableXG?: Prisma.TableXGUpdateManyWithoutTournamentNestedInput
+  TeamInTournament?: Prisma.TeamInTournamentUpdateManyWithoutTournamentNestedInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUpdateManyWithoutTournamentNestedInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
+  TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUpdateManyWithoutTournamentNestedInput
+  TopPlayerShot?: Prisma.TopPlayerShotUpdateManyWithoutTournamentNestedInput
+  TopTeamStat?: Prisma.TopTeamStatUpdateManyWithoutTournamentNestedInput
+  Country?: Prisma.CountryUpdateOneRequiredWithoutTournamentNestedInput
+  Region?: Prisma.RegionUpdateOneRequiredWithoutTournamentNestedInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUpdateManyWithoutTournamentNestedInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUpdateManyWithoutTournamentNestedInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUpdateManyWithoutTournamentNestedInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUpdateManyWithoutTournamentNestedInput
+  TournamentTableXG?: Prisma.TournamentTableXGUpdateManyWithoutTournamentNestedInput
+}
+
+export type TournamentUncheckedUpdateWithoutTeamTopStatOffensiveInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  regionId?: Prisma.IntFieldUpdateOperationsInput | number
+  countryId?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  minId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  BestXI?: Prisma.BestXIUncheckedUpdateManyWithoutTournamentNestedInput
+  TableDefensive?: Prisma.TableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TableOffensive?: Prisma.TableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TableSummary?: Prisma.TableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TableXG?: Prisma.TableXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamInTournament?: Prisma.TeamInTournamentUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerShot?: Prisma.TopPlayerShotUncheckedUpdateManyWithoutTournamentNestedInput
+  TopTeamStat?: Prisma.TopTeamStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableXG?: Prisma.TournamentTableXGUncheckedUpdateManyWithoutTournamentNestedInput
+}
+
+export type TournamentCreateWithoutTeamTopStatSummaryInput = {
+  id: number
+  name: string
+  slug: string
+  createdAt?: Date | string
+  updatedAt: Date | string
+  minId?: number | null
+  BestXI?: Prisma.BestXICreateNestedManyWithoutTournamentInput
+  TableDefensive?: Prisma.TableDefensiveCreateNestedManyWithoutTournamentInput
+  TableOffensive?: Prisma.TableOffensiveCreateNestedManyWithoutTournamentInput
+  TableSummary?: Prisma.TableSummaryCreateNestedManyWithoutTournamentInput
+  TableXG?: Prisma.TableXGCreateNestedManyWithoutTournamentInput
+  TeamInTournament?: Prisma.TeamInTournamentCreateNestedManyWithoutTournamentInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatCreateNestedManyWithoutTournamentInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
+  TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGCreateNestedManyWithoutTournamentInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
+  TopPlayerRating?: Prisma.TopPlayerRatingCreateNestedManyWithoutTournamentInput
+  TopPlayerShot?: Prisma.TopPlayerShotCreateNestedManyWithoutTournamentInput
+  TopTeamStat?: Prisma.TopTeamStatCreateNestedManyWithoutTournamentInput
+  Country: Prisma.CountryCreateNestedOneWithoutTournamentInput
+  Region: Prisma.RegionCreateNestedOneWithoutTournamentInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGCreateNestedManyWithoutTournamentInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveCreateNestedManyWithoutTournamentInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveCreateNestedManyWithoutTournamentInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryCreateNestedManyWithoutTournamentInput
+  TournamentTableXG?: Prisma.TournamentTableXGCreateNestedManyWithoutTournamentInput
+}
+
+export type TournamentUncheckedCreateWithoutTeamTopStatSummaryInput = {
+  id: number
+  name: string
+  slug: string
+  regionId: number
+  countryId: number
+  createdAt?: Date | string
+  updatedAt: Date | string
+  minId?: number | null
+  BestXI?: Prisma.BestXIUncheckedCreateNestedManyWithoutTournamentInput
+  TableDefensive?: Prisma.TableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TableOffensive?: Prisma.TableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TableSummary?: Prisma.TableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TableXG?: Prisma.TableXGUncheckedCreateNestedManyWithoutTournamentInput
+  TeamInTournament?: Prisma.TeamInTournamentUncheckedCreateNestedManyWithoutTournamentInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerShot?: Prisma.TopPlayerShotUncheckedCreateNestedManyWithoutTournamentInput
+  TopTeamStat?: Prisma.TopTeamStatUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableXG?: Prisma.TournamentTableXGUncheckedCreateNestedManyWithoutTournamentInput
+}
+
+export type TournamentCreateOrConnectWithoutTeamTopStatSummaryInput = {
+  where: Prisma.TournamentWhereUniqueInput
+  create: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatSummaryInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatSummaryInput>
+}
+
+export type TournamentUpsertWithoutTeamTopStatSummaryInput = {
+  update: Prisma.XOR<Prisma.TournamentUpdateWithoutTeamTopStatSummaryInput, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatSummaryInput>
+  create: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatSummaryInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatSummaryInput>
+  where?: Prisma.TournamentWhereInput
+}
+
+export type TournamentUpdateToOneWithWhereWithoutTeamTopStatSummaryInput = {
+  where?: Prisma.TournamentWhereInput
+  data: Prisma.XOR<Prisma.TournamentUpdateWithoutTeamTopStatSummaryInput, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatSummaryInput>
+}
+
+export type TournamentUpdateWithoutTeamTopStatSummaryInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  minId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  BestXI?: Prisma.BestXIUpdateManyWithoutTournamentNestedInput
+  TableDefensive?: Prisma.TableDefensiveUpdateManyWithoutTournamentNestedInput
+  TableOffensive?: Prisma.TableOffensiveUpdateManyWithoutTournamentNestedInput
+  TableSummary?: Prisma.TableSummaryUpdateManyWithoutTournamentNestedInput
+  TableXG?: Prisma.TableXGUpdateManyWithoutTournamentNestedInput
+  TeamInTournament?: Prisma.TeamInTournamentUpdateManyWithoutTournamentNestedInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUpdateManyWithoutTournamentNestedInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
+  TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUpdateManyWithoutTournamentNestedInput
+  TopPlayerShot?: Prisma.TopPlayerShotUpdateManyWithoutTournamentNestedInput
+  TopTeamStat?: Prisma.TopTeamStatUpdateManyWithoutTournamentNestedInput
+  Country?: Prisma.CountryUpdateOneRequiredWithoutTournamentNestedInput
+  Region?: Prisma.RegionUpdateOneRequiredWithoutTournamentNestedInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUpdateManyWithoutTournamentNestedInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUpdateManyWithoutTournamentNestedInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUpdateManyWithoutTournamentNestedInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUpdateManyWithoutTournamentNestedInput
+  TournamentTableXG?: Prisma.TournamentTableXGUpdateManyWithoutTournamentNestedInput
+}
+
+export type TournamentUncheckedUpdateWithoutTeamTopStatSummaryInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  regionId?: Prisma.IntFieldUpdateOperationsInput | number
+  countryId?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  minId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  BestXI?: Prisma.BestXIUncheckedUpdateManyWithoutTournamentNestedInput
+  TableDefensive?: Prisma.TableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TableOffensive?: Prisma.TableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TableSummary?: Prisma.TableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TableXG?: Prisma.TableXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamInTournament?: Prisma.TeamInTournamentUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerShot?: Prisma.TopPlayerShotUncheckedUpdateManyWithoutTournamentNestedInput
+  TopTeamStat?: Prisma.TopTeamStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableXG?: Prisma.TournamentTableXGUncheckedUpdateManyWithoutTournamentNestedInput
+}
+
+export type TournamentCreateWithoutTeamTopStatXGInput = {
+  id: number
+  name: string
+  slug: string
+  createdAt?: Date | string
+  updatedAt: Date | string
+  minId?: number | null
+  BestXI?: Prisma.BestXICreateNestedManyWithoutTournamentInput
+  TableDefensive?: Prisma.TableDefensiveCreateNestedManyWithoutTournamentInput
+  TableOffensive?: Prisma.TableOffensiveCreateNestedManyWithoutTournamentInput
+  TableSummary?: Prisma.TableSummaryCreateNestedManyWithoutTournamentInput
+  TableXG?: Prisma.TableXGCreateNestedManyWithoutTournamentInput
+  TeamInTournament?: Prisma.TeamInTournamentCreateNestedManyWithoutTournamentInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatCreateNestedManyWithoutTournamentInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatCreateNestedManyWithoutTournamentInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatCreateNestedManyWithoutTournamentInput
+  TeamStreakStat?: Prisma.TeamStreakStatCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryCreateNestedManyWithoutTournamentInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionCreateNestedManyWithoutTournamentInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistCreateNestedManyWithoutTournamentInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionCreateNestedManyWithoutTournamentInput
+  TopPlayerRating?: Prisma.TopPlayerRatingCreateNestedManyWithoutTournamentInput
+  TopPlayerShot?: Prisma.TopPlayerShotCreateNestedManyWithoutTournamentInput
+  TopTeamStat?: Prisma.TopTeamStatCreateNestedManyWithoutTournamentInput
+  Country: Prisma.CountryCreateNestedOneWithoutTournamentInput
+  Region: Prisma.RegionCreateNestedOneWithoutTournamentInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGCreateNestedManyWithoutTournamentInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveCreateNestedManyWithoutTournamentInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveCreateNestedManyWithoutTournamentInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryCreateNestedManyWithoutTournamentInput
+  TournamentTableXG?: Prisma.TournamentTableXGCreateNestedManyWithoutTournamentInput
+}
+
+export type TournamentUncheckedCreateWithoutTeamTopStatXGInput = {
+  id: number
+  name: string
+  slug: string
+  regionId: number
+  countryId: number
+  createdAt?: Date | string
+  updatedAt: Date | string
+  minId?: number | null
+  BestXI?: Prisma.BestXIUncheckedCreateNestedManyWithoutTournamentInput
+  TableDefensive?: Prisma.TableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TableOffensive?: Prisma.TableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TableSummary?: Prisma.TableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TableXG?: Prisma.TableXGUncheckedCreateNestedManyWithoutTournamentInput
+  TeamInTournament?: Prisma.TeamInTournamentUncheckedCreateNestedManyWithoutTournamentInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamStreakStat?: Prisma.TeamStreakStatUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUncheckedCreateNestedManyWithoutTournamentInput
+  TopPlayerShot?: Prisma.TopPlayerShotUncheckedCreateNestedManyWithoutTournamentInput
+  TopTeamStat?: Prisma.TopTeamStatUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUncheckedCreateNestedManyWithoutTournamentInput
+  TournamentTableXG?: Prisma.TournamentTableXGUncheckedCreateNestedManyWithoutTournamentInput
+}
+
+export type TournamentCreateOrConnectWithoutTeamTopStatXGInput = {
+  where: Prisma.TournamentWhereUniqueInput
+  create: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatXGInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatXGInput>
+}
+
+export type TournamentUpsertWithoutTeamTopStatXGInput = {
+  update: Prisma.XOR<Prisma.TournamentUpdateWithoutTeamTopStatXGInput, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatXGInput>
+  create: Prisma.XOR<Prisma.TournamentCreateWithoutTeamTopStatXGInput, Prisma.TournamentUncheckedCreateWithoutTeamTopStatXGInput>
+  where?: Prisma.TournamentWhereInput
+}
+
+export type TournamentUpdateToOneWithWhereWithoutTeamTopStatXGInput = {
+  where?: Prisma.TournamentWhereInput
+  data: Prisma.XOR<Prisma.TournamentUpdateWithoutTeamTopStatXGInput, Prisma.TournamentUncheckedUpdateWithoutTeamTopStatXGInput>
+}
+
+export type TournamentUpdateWithoutTeamTopStatXGInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  minId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  BestXI?: Prisma.BestXIUpdateManyWithoutTournamentNestedInput
+  TableDefensive?: Prisma.TableDefensiveUpdateManyWithoutTournamentNestedInput
+  TableOffensive?: Prisma.TableOffensiveUpdateManyWithoutTournamentNestedInput
+  TableSummary?: Prisma.TableSummaryUpdateManyWithoutTournamentNestedInput
+  TableXG?: Prisma.TableXGUpdateManyWithoutTournamentNestedInput
+  TeamInTournament?: Prisma.TeamInTournamentUpdateManyWithoutTournamentNestedInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUpdateManyWithoutTournamentNestedInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
+  TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUpdateManyWithoutTournamentNestedInput
+  TopPlayerShot?: Prisma.TopPlayerShotUpdateManyWithoutTournamentNestedInput
+  TopTeamStat?: Prisma.TopTeamStatUpdateManyWithoutTournamentNestedInput
+  Country?: Prisma.CountryUpdateOneRequiredWithoutTournamentNestedInput
+  Region?: Prisma.RegionUpdateOneRequiredWithoutTournamentNestedInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUpdateManyWithoutTournamentNestedInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUpdateManyWithoutTournamentNestedInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUpdateManyWithoutTournamentNestedInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUpdateManyWithoutTournamentNestedInput
+  TournamentTableXG?: Prisma.TournamentTableXGUpdateManyWithoutTournamentNestedInput
+}
+
+export type TournamentUncheckedUpdateWithoutTeamTopStatXGInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  regionId?: Prisma.IntFieldUpdateOperationsInput | number
+  countryId?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  minId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  BestXI?: Prisma.BestXIUncheckedUpdateManyWithoutTournamentNestedInput
+  TableDefensive?: Prisma.TableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TableOffensive?: Prisma.TableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TableSummary?: Prisma.TableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TableXG?: Prisma.TableXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamInTournament?: Prisma.TeamInTournamentUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamPerformanceStat?: Prisma.TeamPerformanceStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerRating?: Prisma.TopPlayerRatingUncheckedUpdateManyWithoutTournamentNestedInput
+  TopPlayerShot?: Prisma.TopPlayerShotUncheckedUpdateManyWithoutTournamentNestedInput
+  TopTeamStat?: Prisma.TopTeamStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentAssistToGoal?: Prisma.TournamentAssistToGoalUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableDefensive?: Prisma.TournamentPlayerTableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableOffensive?: Prisma.TournamentPlayerTableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTablePassing?: Prisma.TournamentPlayerTablePassingUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableSummary?: Prisma.TournamentPlayerTableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentPlayerTableXG?: Prisma.TournamentPlayerTableXGUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableDefensive?: Prisma.TournamentTableDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableOffensive?: Prisma.TournamentTableOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableSummary?: Prisma.TournamentTableSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TournamentTableXG?: Prisma.TournamentTableXGUncheckedUpdateManyWithoutTournamentNestedInput
 }
 
 export type TournamentCreateManyCountryInput = {
@@ -5485,6 +6705,10 @@ export type TournamentUpdateWithoutCountryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -5522,6 +6746,10 @@ export type TournamentUncheckedUpdateWithoutCountryInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -5577,6 +6805,10 @@ export type TournamentUpdateWithoutRegionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUpdateManyWithoutTournamentNestedInput
@@ -5614,6 +6846,10 @@ export type TournamentUncheckedUpdateWithoutRegionInput = {
   TeamPositionalStat?: Prisma.TeamPositionalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamSituationalStat?: Prisma.TeamSituationalStatUncheckedUpdateManyWithoutTournamentNestedInput
   TeamStreakStat?: Prisma.TeamStreakStatUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatDefensive?: Prisma.TeamTopStatDefensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatOffensive?: Prisma.TeamTopStatOffensiveUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatSummary?: Prisma.TeamTopStatSummaryUncheckedUpdateManyWithoutTournamentNestedInput
+  TeamTopStatXG?: Prisma.TeamTopStatXGUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAggression?: Prisma.TopPlayerAggressionUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerAssist?: Prisma.TopPlayerAssistUncheckedUpdateManyWithoutTournamentNestedInput
   TopPlayerGoalContribution?: Prisma.TopPlayerGoalContributionUncheckedUpdateManyWithoutTournamentNestedInput
@@ -5658,6 +6894,10 @@ export type TournamentCountOutputType = {
   TeamPositionalStat: number
   TeamSituationalStat: number
   TeamStreakStat: number
+  TeamTopStatDefensive: number
+  TeamTopStatOffensive: number
+  TeamTopStatSummary: number
+  TeamTopStatXG: number
   TopPlayerAggression: number
   TopPlayerAssist: number
   TopPlayerGoalContribution: number
@@ -5687,6 +6927,10 @@ export type TournamentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extens
   TeamPositionalStat?: boolean | TournamentCountOutputTypeCountTeamPositionalStatArgs
   TeamSituationalStat?: boolean | TournamentCountOutputTypeCountTeamSituationalStatArgs
   TeamStreakStat?: boolean | TournamentCountOutputTypeCountTeamStreakStatArgs
+  TeamTopStatDefensive?: boolean | TournamentCountOutputTypeCountTeamTopStatDefensiveArgs
+  TeamTopStatOffensive?: boolean | TournamentCountOutputTypeCountTeamTopStatOffensiveArgs
+  TeamTopStatSummary?: boolean | TournamentCountOutputTypeCountTeamTopStatSummaryArgs
+  TeamTopStatXG?: boolean | TournamentCountOutputTypeCountTeamTopStatXGArgs
   TopPlayerAggression?: boolean | TournamentCountOutputTypeCountTopPlayerAggressionArgs
   TopPlayerAssist?: boolean | TournamentCountOutputTypeCountTopPlayerAssistArgs
   TopPlayerGoalContribution?: boolean | TournamentCountOutputTypeCountTopPlayerGoalContributionArgs
@@ -5783,6 +7027,34 @@ export type TournamentCountOutputTypeCountTeamSituationalStatArgs<ExtArgs extend
  */
 export type TournamentCountOutputTypeCountTeamStreakStatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.TeamStreakStatWhereInput
+}
+
+/**
+ * TournamentCountOutputType without action
+ */
+export type TournamentCountOutputTypeCountTeamTopStatDefensiveArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TeamTopStatDefensiveWhereInput
+}
+
+/**
+ * TournamentCountOutputType without action
+ */
+export type TournamentCountOutputTypeCountTeamTopStatOffensiveArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TeamTopStatOffensiveWhereInput
+}
+
+/**
+ * TournamentCountOutputType without action
+ */
+export type TournamentCountOutputTypeCountTeamTopStatSummaryArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TeamTopStatSummaryWhereInput
+}
+
+/**
+ * TournamentCountOutputType without action
+ */
+export type TournamentCountOutputTypeCountTeamTopStatXGArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TeamTopStatXGWhereInput
 }
 
 /**
@@ -5917,6 +7189,10 @@ export type TournamentSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   TeamPositionalStat?: boolean | Prisma.Tournament$TeamPositionalStatArgs<ExtArgs>
   TeamSituationalStat?: boolean | Prisma.Tournament$TeamSituationalStatArgs<ExtArgs>
   TeamStreakStat?: boolean | Prisma.Tournament$TeamStreakStatArgs<ExtArgs>
+  TeamTopStatDefensive?: boolean | Prisma.Tournament$TeamTopStatDefensiveArgs<ExtArgs>
+  TeamTopStatOffensive?: boolean | Prisma.Tournament$TeamTopStatOffensiveArgs<ExtArgs>
+  TeamTopStatSummary?: boolean | Prisma.Tournament$TeamTopStatSummaryArgs<ExtArgs>
+  TeamTopStatXG?: boolean | Prisma.Tournament$TeamTopStatXGArgs<ExtArgs>
   TopPlayerAggression?: boolean | Prisma.Tournament$TopPlayerAggressionArgs<ExtArgs>
   TopPlayerAssist?: boolean | Prisma.Tournament$TopPlayerAssistArgs<ExtArgs>
   TopPlayerGoalContribution?: boolean | Prisma.Tournament$TopPlayerGoalContributionArgs<ExtArgs>
@@ -5987,6 +7263,10 @@ export type TournamentInclude<ExtArgs extends runtime.Types.Extensions.InternalA
   TeamPositionalStat?: boolean | Prisma.Tournament$TeamPositionalStatArgs<ExtArgs>
   TeamSituationalStat?: boolean | Prisma.Tournament$TeamSituationalStatArgs<ExtArgs>
   TeamStreakStat?: boolean | Prisma.Tournament$TeamStreakStatArgs<ExtArgs>
+  TeamTopStatDefensive?: boolean | Prisma.Tournament$TeamTopStatDefensiveArgs<ExtArgs>
+  TeamTopStatOffensive?: boolean | Prisma.Tournament$TeamTopStatOffensiveArgs<ExtArgs>
+  TeamTopStatSummary?: boolean | Prisma.Tournament$TeamTopStatSummaryArgs<ExtArgs>
+  TeamTopStatXG?: boolean | Prisma.Tournament$TeamTopStatXGArgs<ExtArgs>
   TopPlayerAggression?: boolean | Prisma.Tournament$TopPlayerAggressionArgs<ExtArgs>
   TopPlayerAssist?: boolean | Prisma.Tournament$TopPlayerAssistArgs<ExtArgs>
   TopPlayerGoalContribution?: boolean | Prisma.Tournament$TopPlayerGoalContributionArgs<ExtArgs>
@@ -6029,6 +7309,10 @@ export type $TournamentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     TeamPositionalStat: Prisma.$TeamPositionalStatPayload<ExtArgs>[]
     TeamSituationalStat: Prisma.$TeamSituationalStatPayload<ExtArgs>[]
     TeamStreakStat: Prisma.$TeamStreakStatPayload<ExtArgs>[]
+    TeamTopStatDefensive: Prisma.$TeamTopStatDefensivePayload<ExtArgs>[]
+    TeamTopStatOffensive: Prisma.$TeamTopStatOffensivePayload<ExtArgs>[]
+    TeamTopStatSummary: Prisma.$TeamTopStatSummaryPayload<ExtArgs>[]
+    TeamTopStatXG: Prisma.$TeamTopStatXGPayload<ExtArgs>[]
     TopPlayerAggression: Prisma.$TopPlayerAggressionPayload<ExtArgs>[]
     TopPlayerAssist: Prisma.$TopPlayerAssistPayload<ExtArgs>[]
     TopPlayerGoalContribution: Prisma.$TopPlayerGoalContributionPayload<ExtArgs>[]
@@ -6461,6 +7745,10 @@ export interface Prisma__TournamentClient<T, Null = never, ExtArgs extends runti
   TeamPositionalStat<T extends Prisma.Tournament$TeamPositionalStatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tournament$TeamPositionalStatArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamPositionalStatPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   TeamSituationalStat<T extends Prisma.Tournament$TeamSituationalStatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tournament$TeamSituationalStatArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamSituationalStatPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   TeamStreakStat<T extends Prisma.Tournament$TeamStreakStatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tournament$TeamStreakStatArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamStreakStatPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  TeamTopStatDefensive<T extends Prisma.Tournament$TeamTopStatDefensiveArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tournament$TeamTopStatDefensiveArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamTopStatDefensivePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  TeamTopStatOffensive<T extends Prisma.Tournament$TeamTopStatOffensiveArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tournament$TeamTopStatOffensiveArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamTopStatOffensivePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  TeamTopStatSummary<T extends Prisma.Tournament$TeamTopStatSummaryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tournament$TeamTopStatSummaryArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamTopStatSummaryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  TeamTopStatXG<T extends Prisma.Tournament$TeamTopStatXGArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tournament$TeamTopStatXGArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamTopStatXGPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   TopPlayerAggression<T extends Prisma.Tournament$TopPlayerAggressionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tournament$TopPlayerAggressionArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TopPlayerAggressionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   TopPlayerAssist<T extends Prisma.Tournament$TopPlayerAssistArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tournament$TopPlayerAssistArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TopPlayerAssistPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   TopPlayerGoalContribution<T extends Prisma.Tournament$TopPlayerGoalContributionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tournament$TopPlayerGoalContributionArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TopPlayerGoalContributionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -7149,6 +8437,102 @@ export type Tournament$TeamStreakStatArgs<ExtArgs extends runtime.Types.Extensio
   take?: number
   skip?: number
   distinct?: Prisma.TeamStreakStatScalarFieldEnum | Prisma.TeamStreakStatScalarFieldEnum[]
+}
+
+/**
+ * Tournament.TeamTopStatDefensive
+ */
+export type Tournament$TeamTopStatDefensiveArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TeamTopStatDefensive
+   */
+  select?: Prisma.TeamTopStatDefensiveSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TeamTopStatDefensive
+   */
+  omit?: Prisma.TeamTopStatDefensiveOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TeamTopStatDefensiveInclude<ExtArgs> | null
+  where?: Prisma.TeamTopStatDefensiveWhereInput
+  orderBy?: Prisma.TeamTopStatDefensiveOrderByWithRelationInput | Prisma.TeamTopStatDefensiveOrderByWithRelationInput[]
+  cursor?: Prisma.TeamTopStatDefensiveWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TeamTopStatDefensiveScalarFieldEnum | Prisma.TeamTopStatDefensiveScalarFieldEnum[]
+}
+
+/**
+ * Tournament.TeamTopStatOffensive
+ */
+export type Tournament$TeamTopStatOffensiveArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TeamTopStatOffensive
+   */
+  select?: Prisma.TeamTopStatOffensiveSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TeamTopStatOffensive
+   */
+  omit?: Prisma.TeamTopStatOffensiveOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TeamTopStatOffensiveInclude<ExtArgs> | null
+  where?: Prisma.TeamTopStatOffensiveWhereInput
+  orderBy?: Prisma.TeamTopStatOffensiveOrderByWithRelationInput | Prisma.TeamTopStatOffensiveOrderByWithRelationInput[]
+  cursor?: Prisma.TeamTopStatOffensiveWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TeamTopStatOffensiveScalarFieldEnum | Prisma.TeamTopStatOffensiveScalarFieldEnum[]
+}
+
+/**
+ * Tournament.TeamTopStatSummary
+ */
+export type Tournament$TeamTopStatSummaryArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TeamTopStatSummary
+   */
+  select?: Prisma.TeamTopStatSummarySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TeamTopStatSummary
+   */
+  omit?: Prisma.TeamTopStatSummaryOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TeamTopStatSummaryInclude<ExtArgs> | null
+  where?: Prisma.TeamTopStatSummaryWhereInput
+  orderBy?: Prisma.TeamTopStatSummaryOrderByWithRelationInput | Prisma.TeamTopStatSummaryOrderByWithRelationInput[]
+  cursor?: Prisma.TeamTopStatSummaryWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TeamTopStatSummaryScalarFieldEnum | Prisma.TeamTopStatSummaryScalarFieldEnum[]
+}
+
+/**
+ * Tournament.TeamTopStatXG
+ */
+export type Tournament$TeamTopStatXGArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TeamTopStatXG
+   */
+  select?: Prisma.TeamTopStatXGSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TeamTopStatXG
+   */
+  omit?: Prisma.TeamTopStatXGOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TeamTopStatXGInclude<ExtArgs> | null
+  where?: Prisma.TeamTopStatXGWhereInput
+  orderBy?: Prisma.TeamTopStatXGOrderByWithRelationInput | Prisma.TeamTopStatXGOrderByWithRelationInput[]
+  cursor?: Prisma.TeamTopStatXGWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TeamTopStatXGScalarFieldEnum | Prisma.TeamTopStatXGScalarFieldEnum[]
 }
 
 /**

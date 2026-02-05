@@ -9,7 +9,60 @@
 * 🟢 You can import this file directly.
 */
 
+export const TeamCharacteristicArea = {
+  offensive: 'offensive',
+  defensive: 'defensive',
+  neutral: 'neutral'
+} as const
+
+export type TeamCharacteristicArea = (typeof TeamCharacteristicArea)[keyof typeof TeamCharacteristicArea]
 
 
-// This file is empty because there are no enums in the schema.
-export {}
+export const TeamCharacteristicKind = {
+  strength: 'strength',
+  weakness: 'weakness'
+} as const
+
+export type TeamCharacteristicKind = (typeof TeamCharacteristicKind)[keyof typeof TeamCharacteristicKind]
+
+
+export const TeamSituationCategory = {
+  goals: 'goals',
+  passes: 'passes',
+  cards: 'cards'
+} as const
+
+export type TeamSituationCategory = (typeof TeamSituationCategory)[keyof typeof TeamSituationCategory]
+
+
+export const TeamSituationSide = {
+  for_team: 'for_team',
+  against_team: 'against_team'
+} as const
+
+export type TeamSituationSide = (typeof TeamSituationSide)[keyof typeof TeamSituationSide]
+
+
+export const TeamSituationView = {
+  overall: 'overall',
+  home: 'home',
+  away: 'away'
+} as const
+
+export type TeamSituationView = (typeof TeamSituationView)[keyof typeof TeamSituationView]
+
+
+export const TeamXgPensMode = {
+  all: 'all',
+  exclude_penalties: 'exclude_penalties'
+} as const
+
+export type TeamXgPensMode = (typeof TeamXgPensMode)[keyof typeof TeamXgPensMode]
+
+
+export const TeamXgSide = {
+  for_team: 'for_team',
+  against_team: 'against_team'
+} as const
+
+export type TeamXgSide = (typeof TeamXgSide)[keyof typeof TeamXgSide]

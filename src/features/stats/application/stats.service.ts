@@ -189,6 +189,7 @@ export async function getTournamentTables(
     query.type,
     query.categoryId,
     query.sectionId,
+    query.typeId,
     { limit: query.limit, offset: query.offset }
   );
 
@@ -213,6 +214,8 @@ export async function getTournamentPlayerTables(
     query.type,
     query.categoryId,
     query.sectionId,
+    query.typeId,
+    query.minApps,
     { limit: query.limit, offset: query.offset }
   );
 
@@ -276,6 +279,15 @@ export async function getAllCompleteByMinId(minId: number) {
   }
 
   throw new Error("Entity not found with the given minId");
+}
+
+// ==================== MATCH PROFILE ====================
+
+// GET /match-profile/:minId - Perfil completo del equipo para vista de partido
+export async function getTeamMatchProfile(minId: number) {
+  const team = await getTeamByMinId(minId);
+  const profile = await repo.fetchMatchProfile(team.id);
+  return { data: profile };
 }
 
 // GET /all/:minId/teams-only - Solo información de EQUIPOS (sin jugadores)

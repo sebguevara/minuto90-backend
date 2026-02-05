@@ -371,6 +371,10 @@ model TableType {
   TeamPositionalStat                                                                  TeamPositionalStat[]
   TeamSituationalStat                                                                 TeamSituationalStat[]
   TeamStreakStat                                                                      TeamStreakStat[]
+  TeamTopStatDefensive                                                                TeamTopStatDefensive[]
+  TeamTopStatOffensive                                                                TeamTopStatOffensive[]
+  TeamTopStatSummary                                                                  TeamTopStatSummary[]
+  TeamTopStatXG                                                                       TeamTopStatXG[]
   TopPlayerAggression                                                                 TopPlayerAggression[]
   TopPlayerAssist                                                                     TopPlayerAssist[]
   TopPlayerGoalContribution                                                           TopPlayerGoalContribution[]
@@ -442,11 +446,18 @@ model Team {
   TableSummary                   TableSummary[]
   TableXG                        TableXG[]
   Country                        Country                          @relation(fields: [countryId], references: [id])
+  TeamCharacteristic             TeamCharacteristic[]
   TeamInTournament               TeamInTournament[]
   TeamPerformanceStat            TeamPerformanceStat[]
   TeamPositionalStat             TeamPositionalStat[]
   TeamSituationalStat            TeamSituationalStat[]
+  TeamSituationalWidget          TeamSituationalWidget[]
   TeamStreakStat                 TeamStreakStat[]
+  TeamStyleOfPlay                TeamStyleOfPlay[]
+  TeamTopStatDefensive           TeamTopStatDefensive[]
+  TeamTopStatOffensive           TeamTopStatOffensive[]
+  TeamTopStatSummary             TeamTopStatSummary[]
+  TeamTopStatXG                  TeamTopStatXG[]
   TopPlayerAggression            TopPlayerAggression[]
   TopPlayerAssist                TopPlayerAssist[]
   TopPlayerGoalContribution      TopPlayerGoalContribution[]
@@ -711,6 +722,10 @@ model Tournament {
   TeamPositionalStat             TeamPositionalStat[]
   TeamSituationalStat            TeamSituationalStat[]
   TeamStreakStat                 TeamStreakStat[]
+  TeamTopStatDefensive           TeamTopStatDefensive[]
+  TeamTopStatOffensive           TeamTopStatOffensive[]
+  TeamTopStatSummary             TeamTopStatSummary[]
+  TeamTopStatXG                  TeamTopStatXG[]
   TopPlayerAggression            TopPlayerAggression[]
   TopPlayerAssist                TopPlayerAssist[]
   TopPlayerGoalContribution      TopPlayerGoalContribution[]
@@ -1028,4 +1043,172 @@ model TournamentTableXG {
   TableType_TournamentTableXG_viewTypeIdToTableType TableType      @relation("TournamentTableXG_viewTypeIdToTableType", fields: [viewTypeId], references: [id])
 
   @@unique([tournamentId, teamId, viewTypeId, categoryId, sectionId])
+}
+
+model TeamCharacteristic {
+  id        Int                    @id @default(autoincrement())
+  teamId    Int
+  kind      TeamCharacteristicKind
+  label     String
+  area      TeamCharacteristicArea @default(neutral)
+  levelText String?
+  level     Int?
+  createdAt DateTime               @default(now())
+  updatedAt DateTime
+  Team      Team                   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, kind, label])
+}
+
+model TeamSituationalWidget {
+  id        Int                   @id @default(autoincrement())
+  teamId    Int
+  category  TeamSituationCategory
+  view      TeamSituationView
+  side      TeamSituationSide?
+  type      String
+  value     Int?
+  effectPct Float?
+  createdAt DateTime              @default(now())
+  updatedAt DateTime
+  Team      Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, category, view, side, type])
+}
+
+model TeamStyleOfPlay {
+  id        Int                    @id @default(autoincrement())
+  teamId    Int
+  label     String
+  area      TeamCharacteristicArea @default(neutral)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime
+  Team      Team                   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, label])
+}
+
+model TeamTopStatDefensive {
+  id              Int        @id @default(autoincrement())
+  teamId          Int
+  tournamentId    Int
+  viewTypeId      Int
+  apps            Int?
+  shotsConcededPg Float?
+  tacklesPg       Float?
+  interceptionsPg Float?
+  foulsPg         Float?
+  offsidesPg      Float?
+  rating          Float?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime
+  Team            Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType       TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([teamId, tournamentId, viewTypeId])
+}
+
+model TeamTopStatOffensive {
+  id           Int        @id @default(autoincrement())
+  teamId       Int
+  tournamentId Int
+  viewTypeId   Int
+  apps         Int?
+  shotsPg      Float?
+  shotsOTpg    Float?
+  dribblesPg   Float?
+  fouledPg     Float?
+  rating       Float?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  Team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType    TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([teamId, tournamentId, viewTypeId])
+}
+
+model TeamTopStatSummary {
+  id           Int        @id @default(autoincrement())
+  teamId       Int
+  tournamentId Int
+  viewTypeId   Int
+  apps         Int?
+  goals        Int?
+  shotsPg      Float?
+  yellow       Int?
+  red          Int?
+  possession   Float?
+  passSuccess  Float?
+  aerialsWonPg Float?
+  rating       Float?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  Team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType    TableType  @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([teamId, tournamentId, viewTypeId])
+}
+
+model TeamTopStatXG {
+  id           Int            @id @default(autoincrement())
+  teamId       Int
+  tournamentId Int
+  viewTypeId   Int
+  side         TeamXgSide
+  pensMode     TeamXgPensMode
+  apps         Int?
+  xG           Float?
+  goalsExcOwn  Int?
+  xGDiff       Float?
+  shots        Int?
+  xGPerShot    Float?
+  rating       Float?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime
+  Team         Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Tournament   Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TableType    TableType      @relation(fields: [viewTypeId], references: [id])
+
+  @@unique([teamId, tournamentId, viewTypeId, side, pensMode])
+}
+
+enum TeamCharacteristicArea {
+  offensive
+  defensive
+  neutral
+}
+
+enum TeamCharacteristicKind {
+  strength
+  weakness
+}
+
+enum TeamSituationCategory {
+  goals
+  passes
+  cards
+}
+
+enum TeamSituationSide {
+  for_team
+  against_team
+}
+
+enum TeamSituationView {
+  overall
+  home
+  away
+}
+
+enum TeamXgPensMode {
+  all
+  exclude_penalties
+}
+
+enum TeamXgSide {
+  for_team
+  against_team
 }

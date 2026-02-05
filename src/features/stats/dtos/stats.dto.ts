@@ -128,6 +128,28 @@ export const tournamentPlayerTableTypeEnum = z.enum([
   "xg",
 ]);
 
+// ==================== TEAM TABLES (WhoScored tables) ====================
+
+export const teamTablesQuerySchema = paginationSchema.extend({
+  tournamentId: z.coerce.number().int().positive(),
+  type: tournamentTableTypeEnum.optional(),
+  categoryId: z.coerce.number().int().positive().optional(),
+  sectionId: z.coerce.number().int().positive().optional(),
+  typeId: z.coerce.number().int().positive().optional(),
+});
+
+export const teamPlayerTablesQuerySchema = paginationSchema.extend({
+  type: tournamentPlayerTableTypeEnum.optional(),
+  categoryId: z.coerce.number().int().positive().optional(),
+  sectionId: z.coerce.number().int().positive().optional(),
+  typeId: z.coerce.number().int().positive().optional(),
+});
+
+export const teamTableQuerySchema = teamTablesQuerySchema.omit({ type: true });
+export const teamPlayerTableQuerySchema = teamPlayerTablesQuerySchema.omit({
+  type: true,
+});
+
 export const tournamentPlayerTablesQuerySchema = paginationSchema.extend({
   viewTypeId: z.coerce.number().int().positive(),
   type: tournamentPlayerTableTypeEnum.optional(),
@@ -163,6 +185,10 @@ export type TeamStreaksQuery = z.infer<typeof teamStreaksQuerySchema>;
 export type TopPlayerMetric = z.infer<typeof topPlayerMetricEnum>;
 export type TeamTopPlayersQuery = z.infer<typeof teamTopPlayersQuerySchema>;
 export type TeamTournamentParam = z.infer<typeof teamTournamentParamSchema>;
+export type TeamTablesQuery = z.infer<typeof teamTablesQuerySchema>;
+export type TeamPlayerTablesQuery = z.infer<typeof teamPlayerTablesQuerySchema>;
+export type TeamTableQuery = z.infer<typeof teamTableQuerySchema>;
+export type TeamPlayerTableQuery = z.infer<typeof teamPlayerTableQuerySchema>;
 export type TournamentTeamsQuery = z.infer<typeof tournamentTeamsQuerySchema>;
 export type TournamentTableType = z.infer<typeof tournamentTableTypeEnum>;
 export type TournamentTablesQuery = z.infer<typeof tournamentTablesQuerySchema>;
