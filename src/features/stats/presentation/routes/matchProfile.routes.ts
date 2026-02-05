@@ -29,7 +29,7 @@ export const matchProfileRoutes = new Elysia({ prefix: "/match-profile" }).get(
       tags: ["Match Profile"],
       summary: "Perfil completo del equipo para vista de partido",
       description:
-        "Retorna características (fortalezas/debilidades), estilo de juego, widgets situacionales y estadísticas top (summary, ofensiva, defensiva, xG) del equipo.",
+        "Retorna características (fortalezas/debilidades), estilo de juego, widgets situacionales y estadísticas top (summary, ofensiva, defensiva, xG) del equipo. Incluye también topStatsGrouped para navegar por torneo y viewType sin filtrar.",
     },
   }
 );

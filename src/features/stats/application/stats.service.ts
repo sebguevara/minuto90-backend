@@ -1,4 +1,5 @@
 import * as repo from "../infrastructure/stats.repo";
+import { groupTeamTopStats } from "./matchProfile.group";
 import type {
   PaginationQuery,
   TeamTournamentsQuery,
@@ -251,31 +252,38 @@ export async function getTournamentBestXI(
 // ==================== ALL SERVICES ====================
 
 // GET /all/:minId/complete - Información COMPLETA (equipos + jugadores)
-export async function getAllCompleteByMinId(minId: number) {
-  // Intentar encontrar por Team primero
-  const team = await repo.findTeamByMinId(minId);
-  if (team) {
-    // Traer TODA la información del team incluyendo jugadores
+export async function getAllCompleteByMinId(
+  minId: number,
+  opts?: { playerTables?: "global" | "tournament" }
+) {
+  // Buscar Team y Tournament en paralelo
+  const [team, tournament] = await Promise.all([
+    repo.findTeamByMinId(minId),
+    repo.findTournamentByMinId(minId),
+  ]);
+
+  console.log(`[getAllCompleteByMinId] minId=${minId} → team=${team ? `id=${team.id},minId=${team.minId}` : 'null'} | tournament=${tournament ? `id=${tournament.id},minId=${tournament.minId}` : 'null'}`);
+
+  const teamExact = team?.minId === minId;
+  const tournamentExact = tournament?.minId === minId;
+
+  if (tournament && tournamentExact) {
+    const fullData = await repo.getFullTournamentData(tournament.id, opts);
+    return { data: { type: "tournament", ...fullData } };
+  }
+  if (team && teamExact) {
     const fullData = await repo.getFullTeamData(team.id);
-    return {
-      data: {
-        type: "team",
-        ...fullData,
-      },
-    };
+    return { data: { type: "team", ...fullData } };
   }
 
-  // Intentar encontrar por Tournament
-  const tournament = await repo.findTournamentByMinId(minId);
+  // Solo fallback por id — tournament tiene prioridad
   if (tournament) {
-    // Traer TODA la información del tournament incluyendo jugadores
-    const fullData = await repo.getFullTournamentData(tournament.id);
-    return {
-      data: {
-        type: "tournament",
-        ...fullData,
-      },
-    };
+    const fullData = await repo.getFullTournamentData(tournament.id, opts);
+    return { data: { type: "tournament", ...fullData } };
+  }
+  if (team) {
+    const fullData = await repo.getFullTeamData(team.id);
+    return { data: { type: "team", ...fullData } };
   }
 
   throw new Error("Entity not found with the given minId");
@@ -287,37 +295,40 @@ export async function getAllCompleteByMinId(minId: number) {
 export async function getTeamMatchProfile(minId: number) {
   const team = await getTeamByMinId(minId);
   const profile = await repo.fetchMatchProfile(team.id);
-  return { data: profile };
+  return {
+    data: {
+      ...profile,
+      topStatsGrouped: groupTeamTopStats(profile.topStats),
+    },
+  };
 }
 
 // GET /all/:minId/teams-only - Solo información de EQUIPOS (sin jugadores)
 export async function getAllTeamsOnlyByMinId(minId: number) {
-  // Intentar encontrar por Team primero
-  const team = await repo.findTeamByMinId(minId);
-  if (team) {
-    // Traer TODA la información del team SIN jugadores
+  const [team, tournament] = await Promise.all([
+    repo.findTeamByMinId(minId),
+    repo.findTournamentByMinId(minId),
+  ]);
+
+  const teamExact = team?.minId === minId;
+  const tournamentExact = tournament?.minId === minId;
+
+  if (tournament && tournamentExact) {
+    const fullData = await repo.getFullTournamentDataWithoutPlayers(tournament.id);
+    return { data: { type: "tournament", ...fullData } };
+  }
+  if (team && teamExact) {
     const fullData = await repo.getFullTeamDataWithoutPlayers(team.id);
-    return {
-      data: {
-        type: "team",
-        ...fullData,
-      },
-    };
+    return { data: { type: "team", ...fullData } };
   }
 
-  // Intentar encontrar por Tournament
-  const tournament = await repo.findTournamentByMinId(minId);
   if (tournament) {
-    // Traer TODA la información del tournament SIN jugadores
-    const fullData = await repo.getFullTournamentDataWithoutPlayers(
-      tournament.id
-    );
-    return {
-      data: {
-        type: "tournament",
-        ...fullData,
-      },
-    };
+    const fullData = await repo.getFullTournamentDataWithoutPlayers(tournament.id);
+    return { data: { type: "tournament", ...fullData } };
+  }
+  if (team) {
+    const fullData = await repo.getFullTeamDataWithoutPlayers(team.id);
+    return { data: { type: "team", ...fullData } };
   }
 
   throw new Error("Entity not found with the given minId");

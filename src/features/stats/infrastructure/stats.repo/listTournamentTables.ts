@@ -14,139 +14,200 @@ export async function listTournamentTables(
   pagination: PaginationQuery
 ) {
   const db = whoscoredPrismaClient;
+  // Source of truth: Table* models (TableSummary/TableOffensive/TableDefensive/TableXG).
+  // These use `typeId` for Overall/Home/Away, so we map `viewTypeId` → `typeId`.
+  // `typeId` query param from the legacy TournamentTable* models is ignored here.
   const baseWhere = {
     tournamentId,
-    viewTypeId,
+    typeId: viewTypeId,
     ...(categoryId && { categoryId }),
-    ...(sectionId && { sectionId }),
-    ...(typeId && { typeId }),
   };
 
   const commonInclude = {
     Team: { include: { Country: true } },
     Tournament: { include: { Country: true, Region: true } },
     TableCategory: true,
+    TableType: true,
     TableSection: true,
   };
 
   if (type === "defensive") {
+    const where = {
+      ...baseWhere,
+      ...(sectionId && { tableSectionId: sectionId }),
+    };
     const [items, total] = await Promise.all([
-      db.tournamentTableDefensive.findMany({
-        where: baseWhere,
-        include: {
-          ...commonInclude,
-          TableType_TournamentTableDefensive_typeIdToTableType: true,
-          TableType_TournamentTableDefensive_viewTypeIdToTableType: true,
-        },
+      db.tableDefensive.findMany({
+        where,
+        include: commonInclude,
         take: pagination.limit,
         skip: pagination.offset,
         orderBy: { rank: "asc" },
       }),
-      db.tournamentTableDefensive.count({ where: baseWhere }),
+      db.tableDefensive.count({ where }),
     ]);
-    return { items, total };
+    return {
+      items: items.map((r: any) => ({
+        ...r,
+        viewTypeId: r.typeId,
+        sectionId: r.tableSectionId,
+        TableType_TournamentTableDefensive_typeIdToTableType: r.TableType,
+        TableType_TournamentTableDefensive_viewTypeIdToTableType: r.TableType,
+      })),
+      total,
+    };
   }
 
   if (type === "offensive") {
+    const where = {
+      ...baseWhere,
+      ...(sectionId && { tableSectionId: sectionId }),
+    };
     const [items, total] = await Promise.all([
-      db.tournamentTableOffensive.findMany({
-        where: baseWhere,
-        include: {
-          ...commonInclude,
-          TableType_TournamentTableOffensive_typeIdToTableType: true,
-          TableType_TournamentTableOffensive_viewTypeIdToTableType: true,
-        },
+      db.tableOffensive.findMany({
+        where,
+        include: commonInclude,
         take: pagination.limit,
         skip: pagination.offset,
         orderBy: { rank: "asc" },
       }),
-      db.tournamentTableOffensive.count({ where: baseWhere }),
+      db.tableOffensive.count({ where }),
     ]);
-    return { items, total };
+    return {
+      items: items.map((r: any) => ({
+        ...r,
+        viewTypeId: r.typeId,
+        sectionId: r.tableSectionId,
+        TableType_TournamentTableOffensive_typeIdToTableType: r.TableType,
+        TableType_TournamentTableOffensive_viewTypeIdToTableType: r.TableType,
+      })),
+      total,
+    };
   }
 
   if (type === "summary") {
+    const where = {
+      ...baseWhere,
+      ...(sectionId && { tableSectionId: sectionId }),
+    };
     const [items, total] = await Promise.all([
-      db.tournamentTableSummary.findMany({
-        where: baseWhere,
-        include: {
-          ...commonInclude,
-          TableType_TournamentTableSummary_typeIdToTableType: true,
-          TableType_TournamentTableSummary_viewTypeIdToTableType: true,
-        },
+      db.tableSummary.findMany({
+        where,
+        include: commonInclude,
         take: pagination.limit,
         skip: pagination.offset,
         orderBy: { rank: "asc" },
       }),
-      db.tournamentTableSummary.count({ where: baseWhere }),
+      db.tableSummary.count({ where }),
     ]);
-    return { items, total };
+    return {
+      items: items.map((r: any) => ({
+        ...r,
+        viewTypeId: r.typeId,
+        sectionId: r.tableSectionId,
+        TableType_TournamentTableSummary_typeIdToTableType: r.TableType,
+        TableType_TournamentTableSummary_viewTypeIdToTableType: r.TableType,
+      })),
+      total,
+    };
   }
 
   if (type === "xg") {
+    const where = {
+      ...baseWhere,
+      ...(sectionId && { sectionId }),
+    };
     const [items, total] = await Promise.all([
-      db.tournamentTableXG.findMany({
-        where: baseWhere,
-        include: {
-          ...commonInclude,
-          TableType_TournamentTableXG_typeIdToTableType: true,
-          TableType_TournamentTableXG_viewTypeIdToTableType: true,
-        },
+      db.tableXG.findMany({
+        where,
+        include: commonInclude,
         take: pagination.limit,
         skip: pagination.offset,
         orderBy: { rank: "asc" },
       }),
-      db.tournamentTableXG.count({ where: baseWhere }),
+      db.tableXG.count({ where }),
     ]);
-    return { items, total };
+    return {
+      items: items.map((r: any) => ({
+        ...r,
+        viewTypeId: r.typeId,
+        TableType_TournamentTableXG_typeIdToTableType: r.TableType,
+        TableType_TournamentTableXG_viewTypeIdToTableType: r.TableType,
+      })),
+      total,
+    };
   }
 
+  const whereDefOffSum = {
+    ...baseWhere,
+    ...(sectionId && { tableSectionId: sectionId }),
+  };
+  const whereXg = {
+    ...baseWhere,
+    ...(sectionId && { sectionId }),
+  };
+
   const [defensive, offensive, summary, xg] = await Promise.all([
-    db.tournamentTableDefensive.findMany({
-      where: baseWhere,
-      include: {
-        ...commonInclude,
-        TableType_TournamentTableDefensive_typeIdToTableType: true,
-        TableType_TournamentTableDefensive_viewTypeIdToTableType: true,
-      },
+    db.tableDefensive.findMany({
+      where: whereDefOffSum,
+      include: commonInclude,
       take: pagination.limit,
       skip: pagination.offset,
       orderBy: { rank: "asc" },
     }),
-    db.tournamentTableOffensive.findMany({
-      where: baseWhere,
-      include: {
-        ...commonInclude,
-        TableType_TournamentTableOffensive_typeIdToTableType: true,
-        TableType_TournamentTableOffensive_viewTypeIdToTableType: true,
-      },
+    db.tableOffensive.findMany({
+      where: whereDefOffSum,
+      include: commonInclude,
       take: pagination.limit,
       skip: pagination.offset,
       orderBy: { rank: "asc" },
     }),
-    db.tournamentTableSummary.findMany({
-      where: baseWhere,
-      include: {
-        ...commonInclude,
-        TableType_TournamentTableSummary_typeIdToTableType: true,
-        TableType_TournamentTableSummary_viewTypeIdToTableType: true,
-      },
+    db.tableSummary.findMany({
+      where: whereDefOffSum,
+      include: commonInclude,
       take: pagination.limit,
       skip: pagination.offset,
       orderBy: { rank: "asc" },
     }),
-    db.tournamentTableXG.findMany({
-      where: baseWhere,
-      include: {
-        ...commonInclude,
-        TableType_TournamentTableXG_typeIdToTableType: true,
-        TableType_TournamentTableXG_viewTypeIdToTableType: true,
-      },
+    db.tableXG.findMany({
+      where: whereXg,
+      include: commonInclude,
       take: pagination.limit,
       skip: pagination.offset,
       orderBy: { rank: "asc" },
     }),
   ]);
 
-  return { items: { defensive, offensive, summary, xg }, total: 0 };
+  return {
+    items: {
+      defensive: defensive.map((r: any) => ({
+        ...r,
+        viewTypeId: r.typeId,
+        sectionId: r.tableSectionId,
+        TableType_TournamentTableDefensive_typeIdToTableType: r.TableType,
+        TableType_TournamentTableDefensive_viewTypeIdToTableType: r.TableType,
+      })),
+      offensive: offensive.map((r: any) => ({
+        ...r,
+        viewTypeId: r.typeId,
+        sectionId: r.tableSectionId,
+        TableType_TournamentTableOffensive_typeIdToTableType: r.TableType,
+        TableType_TournamentTableOffensive_viewTypeIdToTableType: r.TableType,
+      })),
+      summary: summary.map((r: any) => ({
+        ...r,
+        viewTypeId: r.typeId,
+        sectionId: r.tableSectionId,
+        TableType_TournamentTableSummary_typeIdToTableType: r.TableType,
+        TableType_TournamentTableSummary_viewTypeIdToTableType: r.TableType,
+      })),
+      xg: xg.map((r: any) => ({
+        ...r,
+        viewTypeId: r.typeId,
+        TableType_TournamentTableXG_typeIdToTableType: r.TableType,
+        TableType_TournamentTableXG_viewTypeIdToTableType: r.TableType,
+      })),
+    },
+    total: 0,
+  };
 }

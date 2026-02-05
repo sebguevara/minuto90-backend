@@ -8,7 +8,10 @@ import { fetchTournamentTeams } from "./full/fetchTournamentTeams";
 import { fetchTournamentTopPlayers } from "./full/fetchTournamentTopPlayers";
 import { fetchTournamentTopTeamStats } from "./full/fetchTournamentTopTeamStats";
 
-export async function getFullTournamentData(tournamentId: number) {
+export async function getFullTournamentData(
+  tournamentId: number,
+  opts?: { playerTables?: "global" | "tournament" }
+) {
   const [
     tournament,
     teams,
@@ -25,7 +28,7 @@ export async function getFullTournamentData(tournamentId: number) {
     fetchTournamentTeamStats(tournamentId),
     fetchTournamentTopPlayers(tournamentId),
     fetchTournamentTables(tournamentId),
-    fetchTournamentPlayerTables(tournamentId),
+    fetchTournamentPlayerTables(tournamentId, opts?.playerTables ?? "tournament"),
     fetchTournamentTopTeamStats(tournamentId),
     fetchTournamentBestXIs(tournamentId),
     fetchTournamentAssistToGoal(tournamentId),
@@ -43,4 +46,3 @@ export async function getFullTournamentData(tournamentId: number) {
     assistToGoal,
   };
 }
-

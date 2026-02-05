@@ -28,7 +28,9 @@ const app = new Elysia()
   // .use(pushRoutes)
   .use(footballRoutes)
   .use(statsRoutes)
-  .listen(4500);
+  .listen(
+    process.env.NODE_ENV === "production" ? process.env.PORT : 4500
+  );
 
 console.log(`🚀 Backend iniciado en http://localhost:${app.server?.port}`);
 console.log(`📚 Swagger UI: http://localhost:${app.server?.port}/swagger`);

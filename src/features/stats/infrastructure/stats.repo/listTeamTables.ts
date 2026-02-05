@@ -6,7 +6,11 @@ export async function listTeamTables(
   viewTypeId: number
 ) {
   const db = whoscoredPrismaClient;
-  const where = { teamId, tournamentId };
+  const where = {
+    teamId,
+    tournamentId,
+    ...(viewTypeId ? { typeId: viewTypeId } : {}),
+  };
 
   const includeConfig = {
     Team: { include: { Country: true } },
@@ -25,4 +29,3 @@ export async function listTeamTables(
 
   return { defensive, offensive, summary, xg };
 }
-

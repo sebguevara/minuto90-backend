@@ -6,7 +6,7 @@ import { errorResponse } from "../helpers/response.helper";
 
 export const allRoutes = new Elysia({ prefix: "/all" })
   // GET /all/:minId/complete - Información COMPLETA (equipos + jugadores)
-  .get("/:minId/complete", async ({ params, set }) => {
+  .get("/:minId/complete", async ({ params, query, set }) => {
     try {
       const paramValidation = validateQuery(minIdParamSchema, params);
       if (!paramValidation.success) {
@@ -14,7 +14,14 @@ export const allRoutes = new Elysia({ prefix: "/all" })
         return paramValidation.error;
       }
 
-      return await service.getAllCompleteByMinId(paramValidation.data!.minId);
+      const playerTables =
+        (query?.playerTables as string | undefined) === "global"
+          ? "global"
+          : "tournament";
+
+      return await service.getAllCompleteByMinId(paramValidation.data!.minId, {
+        playerTables,
+      });
     } catch (error: any) {
       if (error.message === "Entity not found with the given minId") {
         set.status = 404;
