@@ -3,12 +3,13 @@
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
-    "postinstall": "npx prisma generate --schema ./prisma-minuto/schema.prisma && npx prisma generate --schema ./prisma-whoscored/schema.prisma",
-    "generate": "npx prisma generate --schema ./prisma-minuto/schema.prisma && npx prisma generate --schema ./prisma-whoscored/schema.prisma",
-    "migrate": "npx prisma migrate dev --schema ./prisma-minuto/schema.prisma && npx prisma migrate dev --schema ./prisma-whoscored/schema.prisma",
-    "deploy": "npx prisma migrate deploy --schema ./prisma-minuto/schema.prisma && npx prisma migrate deploy --schema ./prisma-whoscored/schema.prisma",
-    "studio": "npx prisma studio --schema ./prisma-minuto/schema.prisma --port 5555 & npx prisma studio --schema ./prisma-whoscored/schema.prisma --port 5556"
+    "postinstall": "bunx prisma generate --schema ./prisma-minuto/schema.prisma && bunx prisma generate --schema ./prisma-whoscored/schema.prisma",
+    "generate": "bunx prisma generate --schema ./prisma-minuto/schema.prisma && bunx prisma generate --schema ./prisma-whoscored/schema.prisma",
+    "migrate": "bunx prisma migrate dev --schema ./prisma-minuto/schema.prisma && bunx prisma migrate dev --schema ./prisma-whoscored/schema.prisma",
+    "deploy": "bunx prisma migrate deploy --schema ./prisma-minuto/schema.prisma && bunx prisma migrate deploy --schema ./prisma-whoscored/schema.prisma",
+    "studio": "bunx prisma studio --schema ./prisma-minuto/schema.prisma --port 5555 & bunx prisma studio --schema ./prisma-whoscored/schema.prisma --port 5556"
   },
   "dependencies": {
     "@elysiajs/openapi": "^1.4.14",

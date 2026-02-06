@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma-whoscored/whoscored-client-types/client";
+import { PrismaClient } from "../../prisma-whoscored/whoscored-client-types/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({
