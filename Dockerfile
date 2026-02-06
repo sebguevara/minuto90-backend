@@ -10,9 +10,6 @@ COPY bun.lock ./
 COPY prisma-minuto/ ./prisma-minuto/
 COPY prisma-whoscored/ ./prisma-whoscored/
 
-# Copiar .env para que prisma.config.ts pueda leerlo
-COPY .env ./
-
 # Instalar dependencias (sin ejecutar postinstall aún)
 RUN bun install --ignore-scripts
 
