@@ -22,3 +22,18 @@ export * from './enums.js';
  * 
  */
 export type PushSubscription = Prisma.PushSubscriptionModel
+/**
+ * Model NotificationSubscriber
+ * 
+ */
+export type NotificationSubscriber = Prisma.NotificationSubscriberModel
+/**
+ * Model MatchSubscription
+ * 
+ */
+export type MatchSubscription = Prisma.MatchSubscriptionModel
+/**
+ * Model EvolutionInstance
+ * 
+ */
+export type EvolutionInstance = Prisma.EvolutionInstanceModel

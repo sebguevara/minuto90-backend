@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
-  output = "../prisma-minuto/minuto-client-types"
+  output   = "../prisma-minuto/minuto-client-types"
 }
 
 datasource db {
@@ -19,4 +13,37 @@ model PushSubscription {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
+}
+
+model NotificationSubscriber {
+  id            String              @id @default(uuid())
+  phoneNumber   String              @unique
+  name          String?
+  createdAt     DateTime            @default(now())
+  isActive      Boolean             @default(true)
+  subscriptions MatchSubscription[]
+}
+
+model MatchSubscription {
+  id           String                 @id @default(uuid())
+  subscriberId String
+  fixtureId    Int
+  homeTeam     String
+  awayTeam     String
+  leagueName   String?
+  matchDate    DateTime
+  subscriber   NotificationSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriberId, fixtureId])
+  @@index([fixtureId])
+}
+
+model EvolutionInstance {
+  id           String   @id @default(uuid())
+  instanceName String   @unique
+  baseUrl      String
+  apiKey       String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

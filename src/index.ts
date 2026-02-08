@@ -3,6 +3,7 @@ import { swagger } from "@elysiajs/swagger";
 // import { pushRoutes } from "./features/push/presentation/routes";
 import { footballRoutes } from "./features/sports/football/presentation/routes";
 import { statsRoutes } from "./features/stats/presentation/routes";
+import { notificationsRoutes } from "./features/notifications/presentation/routes";
 
 const parseCorsOrigins = (value: string): string[] =>
   value
@@ -65,6 +66,7 @@ const app = new Elysia()
   // .use(pushRoutes)
   .use(footballRoutes)
   .use(statsRoutes)
+  .use(notificationsRoutes)
   .listen(
     process.env.NODE_ENV === "production" ? process.env.PORT : 4500
   );

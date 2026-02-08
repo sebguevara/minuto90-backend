@@ -11,3 +11,111 @@ services:
       - .env
     environment:
       - NODE_ENV=production
+    networks:
+      - minuto90-network
+
+  minuto90-redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "9060:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - minuto90-redis-data:/data
+    networks:
+      - minuto90-network
+
+  pg-minuto90:
+    image: postgres:17
+    restart: always
+    ports:
+      - "9070:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_MINUTO90_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_MINUTO90_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_MINUTO90_DB}
+      - TZ=America/Argentina/Buenos_Aires
+      - PGTZ=America/Argentina/Buenos_Aires
+    volumes:
+      - ./minuto90/postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_MINUTO90_USER} -d ${POSTGRES_MINUTO90_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - minuto90-network
+  pg-minuto90-evolution:
+    image: postgres:17
+    restart: always
+    ports:
+      - "9080:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_EVO_USER:-evolution}
+      - POSTGRES_PASSWORD=${POSTGRES_EVO_PASSWORD:-evolution_pass_secure}
+      - POSTGRES_DB=${POSTGRES_EVO_DB:-evolution_db}
+      - TZ=America/Argentina/Buenos_Aires
+      - PGTZ=America/Argentina/Buenos_Aires
+    volumes:
+      - ./minuto90-evolution/postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_EVO_USER:-evolution} -d ${POSTGRES_EVO_DB:-evolution_db}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - minuto90-network
+
+  minuto90-evolution:
+    container_name: minuto90-evolution
+    image: evoapicloud/evolution-api:v2.3.7
+    restart: always
+    ports:
+      - "9090:8080"
+    depends_on:
+      pg-minuto90-evolution:
+        condition: service_healthy
+    volumes:
+      - minuto90-evolution_instances:/minuto90-evolution/instances
+    environment:
+      - SERVER_URL=${SERVER_URL}
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
+
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://${POSTGRES_EVO_USER}:${POSTGRES_EVO_PASSWORD}@pg-minuto90-evolution:5432/${POSTGRES_EVO_DB}
+      - DATABASE_SAVE_DATA_INSTANCE=true
+      - DATABASE_SAVE_DATA_NEW_MESSAGE=true
+      - DATABASE_SAVE_MESSAGE_UPDATE=true
+      - DATABASE_SAVE_DATA_CONTACTS=true
+      - DATABASE_SAVE_DATA_CHATS=true
+
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://minuto90-redis:6379/1
+      - CACHE_REDIS_PREFIX_KEY=minuto90
+      - CACHE_REDIS_SAVE_INSTANCES=true
+
+      - RABBITMQ_ENABLED=false
+
+    networks:
+      - minuto90-network
+
+volumes:
+  minuto90-evolution_instances:
+  minuto90-redis-data:
+
+networks:
+  minuto90-network:
+    driver: bridge

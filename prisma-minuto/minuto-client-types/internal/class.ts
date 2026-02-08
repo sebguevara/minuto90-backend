@@ -20,7 +20,7 @@ const config: runtime.GetPrismaClientConfig = {
   "clientVersion": "7.3.0",
   "engineVersion": "9d6ad21cbbceab97458517b147a6a09ff43aa735",
   "activeProvider": "postgresql",
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../prisma-minuto/minuto-client-types\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel PushSubscription {\n  id        String   @id @default(cuid())\n  endpoint  String   @unique\n  p256dh    String\n  auth      String\n  createdAt DateTime @default(now())\n}\n",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../prisma-minuto/minuto-client-types\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel PushSubscription {\n  id        String   @id @default(cuid())\n  endpoint  String   @unique\n  p256dh    String\n  auth      String\n  createdAt DateTime @default(now())\n}\n\nmodel NotificationSubscriber {\n  id            String              @id @default(uuid())\n  phoneNumber   String              @unique\n  name          String?\n  createdAt     DateTime            @default(now())\n  isActive      Boolean             @default(true)\n  subscriptions MatchSubscription[]\n}\n\nmodel MatchSubscription {\n  id           String                 @id @default(uuid())\n  subscriberId String\n  fixtureId    Int\n  homeTeam     String\n  awayTeam     String\n  leagueName   String?\n  matchDate    DateTime\n  subscriber   NotificationSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)\n\n  @@unique([subscriberId, fixtureId])\n  @@index([fixtureId])\n}\n\nmodel EvolutionInstance {\n  id           String   @id @default(uuid())\n  instanceName String   @unique\n  baseUrl      String\n  apiKey       String\n  isActive     Boolean  @default(true)\n  createdAt    DateTime @default(now())\n  updatedAt    DateTime @updatedAt\n}\n",
   "runtimeDataModel": {
     "models": {},
     "enums": {},
@@ -28,7 +28,7 @@ const config: runtime.GetPrismaClientConfig = {
   }
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"PushSubscription\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"endpoint\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"p256dh\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"auth\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"PushSubscription\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"endpoint\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"p256dh\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"auth\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"NotificationSubscriber\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"phoneNumber\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"isActive\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"subscriptions\",\"kind\":\"object\",\"type\":\"MatchSubscription\",\"relationName\":\"MatchSubscriptionToNotificationSubscriber\"}],\"dbName\":null},\"MatchSubscription\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"subscriberId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"fixtureId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"homeTeam\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"awayTeam\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"leagueName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"matchDate\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"subscriber\",\"kind\":\"object\",\"type\":\"NotificationSubscriber\",\"relationName\":\"MatchSubscriptionToNotificationSubscriber\"}],\"dbName\":null},\"EvolutionInstance\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"instanceName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"baseUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"apiKey\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isActive\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 
 async function decodeBase64AsWasm(wasmBase64: string): Promise<WebAssembly.Module> {
   const { Buffer } = await import('node:buffer')
@@ -185,6 +185,36 @@ export interface PrismaClient<
     * ```
     */
   get pushSubscription(): Prisma.PushSubscriptionDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.notificationSubscriber`: Exposes CRUD operations for the **NotificationSubscriber** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more NotificationSubscribers
+    * const notificationSubscribers = await prisma.notificationSubscriber.findMany()
+    * ```
+    */
+  get notificationSubscriber(): Prisma.NotificationSubscriberDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.matchSubscription`: Exposes CRUD operations for the **MatchSubscription** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MatchSubscriptions
+    * const matchSubscriptions = await prisma.matchSubscription.findMany()
+    * ```
+    */
+  get matchSubscription(): Prisma.MatchSubscriptionDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.evolutionInstance`: Exposes CRUD operations for the **EvolutionInstance** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more EvolutionInstances
+    * const evolutionInstances = await prisma.evolutionInstance.findMany()
+    * ```
+    */
+  get evolutionInstance(): Prisma.EvolutionInstanceDelegate<ExtArgs, { omit: OmitOpts }>;
 }
 
 export function getPrismaClientClass(): PrismaClientConstructor {

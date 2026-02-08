@@ -51,7 +51,10 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  PushSubscription: 'PushSubscription'
+  PushSubscription: 'PushSubscription',
+  NotificationSubscriber: 'NotificationSubscriber',
+  MatchSubscription: 'MatchSubscription',
+  EvolutionInstance: 'EvolutionInstance'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -81,6 +84,43 @@ export const PushSubscriptionScalarFieldEnum = {
 export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
 
 
+export const NotificationSubscriberScalarFieldEnum = {
+  id: 'id',
+  phoneNumber: 'phoneNumber',
+  name: 'name',
+  createdAt: 'createdAt',
+  isActive: 'isActive'
+} as const
+
+export type NotificationSubscriberScalarFieldEnum = (typeof NotificationSubscriberScalarFieldEnum)[keyof typeof NotificationSubscriberScalarFieldEnum]
+
+
+export const MatchSubscriptionScalarFieldEnum = {
+  id: 'id',
+  subscriberId: 'subscriberId',
+  fixtureId: 'fixtureId',
+  homeTeam: 'homeTeam',
+  awayTeam: 'awayTeam',
+  leagueName: 'leagueName',
+  matchDate: 'matchDate'
+} as const
+
+export type MatchSubscriptionScalarFieldEnum = (typeof MatchSubscriptionScalarFieldEnum)[keyof typeof MatchSubscriptionScalarFieldEnum]
+
+
+export const EvolutionInstanceScalarFieldEnum = {
+  id: 'id',
+  instanceName: 'instanceName',
+  baseUrl: 'baseUrl',
+  apiKey: 'apiKey',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EvolutionInstanceScalarFieldEnum = (typeof EvolutionInstanceScalarFieldEnum)[keyof typeof EvolutionInstanceScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -95,4 +135,12 @@ export const QueryMode = {
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

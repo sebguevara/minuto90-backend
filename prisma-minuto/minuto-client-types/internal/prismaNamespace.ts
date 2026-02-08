@@ -384,7 +384,10 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
-  PushSubscription: 'PushSubscription'
+  PushSubscription: 'PushSubscription',
+  NotificationSubscriber: 'NotificationSubscriber',
+  MatchSubscription: 'MatchSubscription',
+  EvolutionInstance: 'EvolutionInstance'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -400,7 +403,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "pushSubscription"
+    modelProps: "pushSubscription" | "notificationSubscriber" | "matchSubscription" | "evolutionInstance"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -478,6 +481,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    NotificationSubscriber: {
+      payload: Prisma.$NotificationSubscriberPayload<ExtArgs>
+      fields: Prisma.NotificationSubscriberFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NotificationSubscriberFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NotificationSubscriberFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload>
+        }
+        findFirst: {
+          args: Prisma.NotificationSubscriberFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NotificationSubscriberFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload>
+        }
+        findMany: {
+          args: Prisma.NotificationSubscriberFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload>[]
+        }
+        create: {
+          args: Prisma.NotificationSubscriberCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload>
+        }
+        createMany: {
+          args: Prisma.NotificationSubscriberCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NotificationSubscriberCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload>[]
+        }
+        delete: {
+          args: Prisma.NotificationSubscriberDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload>
+        }
+        update: {
+          args: Prisma.NotificationSubscriberUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload>
+        }
+        deleteMany: {
+          args: Prisma.NotificationSubscriberDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NotificationSubscriberUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NotificationSubscriberUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload>[]
+        }
+        upsert: {
+          args: Prisma.NotificationSubscriberUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationSubscriberPayload>
+        }
+        aggregate: {
+          args: Prisma.NotificationSubscriberAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNotificationSubscriber>
+        }
+        groupBy: {
+          args: Prisma.NotificationSubscriberGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotificationSubscriberGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NotificationSubscriberCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotificationSubscriberCountAggregateOutputType> | number
+        }
+      }
+    }
+    MatchSubscription: {
+      payload: Prisma.$MatchSubscriptionPayload<ExtArgs>
+      fields: Prisma.MatchSubscriptionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MatchSubscriptionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MatchSubscriptionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload>
+        }
+        findFirst: {
+          args: Prisma.MatchSubscriptionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MatchSubscriptionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload>
+        }
+        findMany: {
+          args: Prisma.MatchSubscriptionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload>[]
+        }
+        create: {
+          args: Prisma.MatchSubscriptionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload>
+        }
+        createMany: {
+          args: Prisma.MatchSubscriptionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MatchSubscriptionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload>[]
+        }
+        delete: {
+          args: Prisma.MatchSubscriptionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload>
+        }
+        update: {
+          args: Prisma.MatchSubscriptionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload>
+        }
+        deleteMany: {
+          args: Prisma.MatchSubscriptionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MatchSubscriptionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MatchSubscriptionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload>[]
+        }
+        upsert: {
+          args: Prisma.MatchSubscriptionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchSubscriptionPayload>
+        }
+        aggregate: {
+          args: Prisma.MatchSubscriptionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMatchSubscription>
+        }
+        groupBy: {
+          args: Prisma.MatchSubscriptionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MatchSubscriptionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MatchSubscriptionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MatchSubscriptionCountAggregateOutputType> | number
+        }
+      }
+    }
+    EvolutionInstance: {
+      payload: Prisma.$EvolutionInstancePayload<ExtArgs>
+      fields: Prisma.EvolutionInstanceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.EvolutionInstanceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.EvolutionInstanceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload>
+        }
+        findFirst: {
+          args: Prisma.EvolutionInstanceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.EvolutionInstanceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload>
+        }
+        findMany: {
+          args: Prisma.EvolutionInstanceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload>[]
+        }
+        create: {
+          args: Prisma.EvolutionInstanceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload>
+        }
+        createMany: {
+          args: Prisma.EvolutionInstanceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.EvolutionInstanceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload>[]
+        }
+        delete: {
+          args: Prisma.EvolutionInstanceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload>
+        }
+        update: {
+          args: Prisma.EvolutionInstanceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload>
+        }
+        deleteMany: {
+          args: Prisma.EvolutionInstanceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.EvolutionInstanceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.EvolutionInstanceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload>[]
+        }
+        upsert: {
+          args: Prisma.EvolutionInstanceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvolutionInstancePayload>
+        }
+        aggregate: {
+          args: Prisma.EvolutionInstanceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateEvolutionInstance>
+        }
+        groupBy: {
+          args: Prisma.EvolutionInstanceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EvolutionInstanceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.EvolutionInstanceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EvolutionInstanceCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -528,6 +753,43 @@ export const PushSubscriptionScalarFieldEnum = {
 export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
 
 
+export const NotificationSubscriberScalarFieldEnum = {
+  id: 'id',
+  phoneNumber: 'phoneNumber',
+  name: 'name',
+  createdAt: 'createdAt',
+  isActive: 'isActive'
+} as const
+
+export type NotificationSubscriberScalarFieldEnum = (typeof NotificationSubscriberScalarFieldEnum)[keyof typeof NotificationSubscriberScalarFieldEnum]
+
+
+export const MatchSubscriptionScalarFieldEnum = {
+  id: 'id',
+  subscriberId: 'subscriberId',
+  fixtureId: 'fixtureId',
+  homeTeam: 'homeTeam',
+  awayTeam: 'awayTeam',
+  leagueName: 'leagueName',
+  matchDate: 'matchDate'
+} as const
+
+export type MatchSubscriptionScalarFieldEnum = (typeof MatchSubscriptionScalarFieldEnum)[keyof typeof MatchSubscriptionScalarFieldEnum]
+
+
+export const EvolutionInstanceScalarFieldEnum = {
+  id: 'id',
+  instanceName: 'instanceName',
+  baseUrl: 'baseUrl',
+  apiKey: 'apiKey',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EvolutionInstanceScalarFieldEnum = (typeof EvolutionInstanceScalarFieldEnum)[keyof typeof EvolutionInstanceScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -542,6 +804,14 @@ export const QueryMode = {
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 
@@ -579,6 +849,13 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -589,6 +866,20 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 /**
@@ -687,6 +978,9 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   pushSubscription?: Prisma.PushSubscriptionOmit
+  notificationSubscriber?: Prisma.NotificationSubscriberOmit
+  matchSubscription?: Prisma.MatchSubscriptionOmit
+  evolutionInstance?: Prisma.EvolutionInstanceOmit
 }
 
 /* Types for Logging */
