@@ -22,7 +22,8 @@ const parseCorsOrigins = (value: string): string[] =>
     .map((v) => v.trim())
     .filter(Boolean);
 
-const CORS_ALLOW_ORIGIN_RAW = process.env.CORS_ALLOW_ORIGIN ?? "*";
+const defaultOrigins = "https://minuto90.co, https://www.minuto90.co, https://90score.co, https://www.90score.co, http://localhost:3000";
+const CORS_ALLOW_ORIGIN_RAW = process.env.CORS_ALLOW_ORIGIN ?? defaultOrigins;
 const CORS_ALLOW_ALL_ORIGINS = CORS_ALLOW_ORIGIN_RAW.trim() === "*";
 const CORS_ALLOWED_ORIGINS = CORS_ALLOW_ALL_ORIGINS
   ? []
