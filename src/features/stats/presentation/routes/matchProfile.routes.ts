@@ -1,8 +1,10 @@
 import { Elysia } from "elysia";
 import * as service from "../../application/stats.service";
 import { minIdParamSchema } from "../../dtos/stats.dto";
-import { validateQuery } from "../helpers/validation.helper";
 import { errorResponse } from "../helpers/response.helper";
+import { validateQuery } from "../helpers/validation.helper";
+
+const tag = "Stats";
 
 export const matchProfileRoutes = new Elysia({ prefix: "/match-profile" }).get(
   "/:minId",
@@ -26,10 +28,11 @@ export const matchProfileRoutes = new Elysia({ prefix: "/match-profile" }).get(
   },
   {
     detail: {
-      tags: ["Match Profile"],
-      summary: "Perfil completo del equipo para vista de partido",
+      tags: [tag],
+      summary: "Obtener perfil completo de partido para un equipo",
       description:
-        "Retorna características (fortalezas/debilidades), estilo de juego, widgets situacionales y estadísticas top (summary, ofensiva, defensiva, xG) del equipo. Incluye también topStatsGrouped para navegar por torneo y viewType sin filtrar.",
+        "Retorna fortalezas, debilidades, estilo de juego, widgets situacionales y estadisticas destacadas del equipo.",
     },
+    params: minIdParamSchema,
   }
 );

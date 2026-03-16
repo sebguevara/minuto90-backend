@@ -15,8 +15,8 @@ export async function listTournamentTables(
 ) {
   const db = whoscoredPrismaClient;
   // Source of truth: Table* models (TableSummary/TableOffensive/TableDefensive/TableXG).
-  // These use `typeId` for Overall/Home/Away, so we map `viewTypeId` → `typeId`.
-  // `typeId` query param from the legacy TournamentTable* models is ignored here.
+  // These use `typeId` for Overall/Home/Away, so we map `viewTypeId` to `typeId`.
+  // The incoming `typeId` query param is ignored here.
   const baseWhere = {
     tournamentId,
     typeId: viewTypeId,

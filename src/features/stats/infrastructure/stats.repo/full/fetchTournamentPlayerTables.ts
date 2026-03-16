@@ -153,14 +153,5 @@ export async function fetchTournamentPlayerTables(
     }),
   ]);
 
-  console.log(
-    `[fetchTournamentPlayerTables] tournamentId=${tournamentId} → ` +
-    `summary=${summary.length}(ids: ${summary.slice(0,3).map(r => r.id)}) | ` +
-    `offensive=${offensive.length}(ids: ${offensive.slice(0,3).map(r => r.id)}) | ` +
-    `defensive=${defensive.length}(ids: ${defensive.slice(0,3).map(r => r.id)}) | ` +
-    `passing=${passing.length}(ids: ${passing.slice(0,3).map(r => r.id)}) | ` +
-    `xg=${xg.length}(ids: ${xg.slice(0,3).map(r => r.id)})`
-  );
-
   return { defensive, offensive, passing, summary, xg };
 }

@@ -1,5 +1,6 @@
 import * as repo from "../infrastructure/stats.repo";
 import { groupTeamTopStats } from "./matchProfile.group";
+import { getFootballTeamsAll } from "../infrastructure/football-teams-all.store";
 import type {
   PaginationQuery,
   TeamTournamentsQuery,
@@ -251,24 +252,54 @@ export async function getTournamentBestXI(
 
 // ==================== ALL SERVICES ====================
 
+/**
+ * Enriches tournament teams data with logo URLs from football:teams:all Redis store.
+ * Teams in the DB have no logo field; logos come from the football API cache.
+ */
+async function enrichTournamentTeamsWithLogos<T extends { teams?: any[] }>(
+  fullData: T
+): Promise<T> {
+  if (!fullData.teams?.length) return fullData;
+
+  const footballTeams = await getFootballTeamsAll();
+  if (!footballTeams?.length) return fullData;
+
+  const minIdToLogo = new Map<number, string>();
+  for (const t of footballTeams) {
+    if (t.id && t.logo) minIdToLogo.set(t.id, t.logo);
+  }
+
+  return {
+    ...fullData,
+    teams: fullData.teams.map((tit: any) => {
+      const minId: number | null = tit.Team?.minId ?? null;
+      const logo = minId != null ? (minIdToLogo.get(minId) ?? null) : null;
+      return {
+        ...tit,
+        Team: tit.Team ? { ...tit.Team, logo } : tit.Team,
+      };
+    }),
+  };
+}
+
 // GET /all/:minId/complete - Información COMPLETA (equipos + jugadores)
 export async function getAllCompleteByMinId(
   minId: number,
-  opts?: { playerTables?: "global" | "tournament" }
+  opts?: { playerTables?: "global" | "tournament", entityType?: "team" | "tournament" }
 ) {
-  // Buscar Team y Tournament en paralelo
+  // Buscar Team y Tournament en paralelo según entityType
   const [team, tournament] = await Promise.all([
-    repo.findTeamByMinId(minId),
-    repo.findTournamentByMinId(minId),
-  ]);
+    opts?.entityType === "tournament" ? Promise.resolve(null) : repo.findTeamByMinId(minId),
 
-  console.log(`[getAllCompleteByMinId] minId=${minId} → team=${team ? `id=${team.id},minId=${team.minId}` : 'null'} | tournament=${tournament ? `id=${tournament.id},minId=${tournament.minId}` : 'null'}`);
+    opts?.entityType === "team" ? Promise.resolve(null) : repo.findTournamentByMinId(minId),
+  ]);
 
   const teamExact = team?.minId === minId;
   const tournamentExact = tournament?.minId === minId;
 
   if (tournament && tournamentExact) {
-    const fullData = await repo.getFullTournamentData(tournament.id, opts);
+    const rawData = await repo.getFullTournamentData(tournament.id, opts);
+    const fullData = await enrichTournamentTeamsWithLogos(rawData);
     return { data: { type: "tournament", ...fullData } };
   }
   if (team && teamExact) {
@@ -278,7 +309,8 @@ export async function getAllCompleteByMinId(
 
   // Solo fallback por id — tournament tiene prioridad
   if (tournament) {
-    const fullData = await repo.getFullTournamentData(tournament.id, opts);
+    const rawData = await repo.getFullTournamentData(tournament.id, opts);
+    const fullData = await enrichTournamentTeamsWithLogos(rawData);
     return { data: { type: "tournament", ...fullData } };
   }
   if (team) {
@@ -304,17 +336,21 @@ export async function getTeamMatchProfile(minId: number) {
 }
 
 // GET /all/:minId/teams-only - Solo información de EQUIPOS (sin jugadores)
-export async function getAllTeamsOnlyByMinId(minId: number) {
+export async function getAllTeamsOnlyByMinId(
+  minId: number,
+  opts?: { entityType?: "team" | "tournament" }
+) {
   const [team, tournament] = await Promise.all([
-    repo.findTeamByMinId(minId),
-    repo.findTournamentByMinId(minId),
+    opts?.entityType === "tournament" ? Promise.resolve(null) : repo.findTeamByMinId(minId),
+    opts?.entityType === "team" ? Promise.resolve(null) : repo.findTournamentByMinId(minId),
   ]);
 
   const teamExact = team?.minId === minId;
   const tournamentExact = tournament?.minId === minId;
 
   if (tournament && tournamentExact) {
-    const fullData = await repo.getFullTournamentDataWithoutPlayers(tournament.id);
+    const rawData = await repo.getFullTournamentDataWithoutPlayers(tournament.id);
+    const fullData = await enrichTournamentTeamsWithLogos(rawData);
     return { data: { type: "tournament", ...fullData } };
   }
   if (team && teamExact) {
@@ -323,7 +359,8 @@ export async function getAllTeamsOnlyByMinId(minId: number) {
   }
 
   if (tournament) {
-    const fullData = await repo.getFullTournamentDataWithoutPlayers(tournament.id);
+    const rawData = await repo.getFullTournamentDataWithoutPlayers(tournament.id);
+    const fullData = await enrichTournamentTeamsWithLogos(rawData);
     return { data: { type: "tournament", ...fullData } };
   }
   if (team) {

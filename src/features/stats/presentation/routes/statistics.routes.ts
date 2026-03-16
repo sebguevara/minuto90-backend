@@ -1,15 +1,11 @@
-import { Elysia, t } from "elysia";
+import { Elysia } from "elysia";
 import * as service from "../../application/statistics.service";
 import { errorResponse } from "../helpers/response.helper";
 
-export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
-  // ==================== ESTADÍSTICAS DE EQUIPOS ====================
+const leaderboardsTag = "Stats";
+const insightsTag = "Stats";
 
-  /**
-   * GET /statistics/teams/:tournamentId/summary
-   * Obtiene estadísticas resumidas de equipos en un torneo
-   * Query params: viewTypeId, categoryId?, sectionId?, limit?, offset?
-   */
+export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
   .get(
     "/teams/:tournamentId/summary",
     async ({ params, query, set }) => {
@@ -35,17 +31,13 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener estadísticas resumidas de equipos",
-        description: "Retorna estadísticas de resumen de equipos: goles, tiros, tarjetas, posesión, pases, etc.",
+        tags: [leaderboardsTag],
+        summary: "Obtener estadisticas resumidas de equipos",
+        description:
+          "Retorna resumenes de equipos con goles, tiros, tarjetas, posesion, pases y mas.",
       },
     }
   )
-
-  /**
-   * GET /statistics/teams/:tournamentId/defensive
-   * Obtiene estadísticas defensivas de equipos en un torneo
-   */
   .get(
     "/teams/:tournamentId/defensive",
     async ({ params, query, set }) => {
@@ -71,17 +63,13 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener estadísticas defensivas de equipos",
-        description: "Retorna estadísticas defensivas: tiros pg, tackles pg, intercepciones pg, faltas pg, fueras de juego pg",
+        tags: [leaderboardsTag],
+        summary: "Obtener estadisticas defensivas de equipos",
+        description:
+          "Retorna tackles, intercepciones, faltas, despejes, tiros recibidos y mas.",
       },
     }
   )
-
-  /**
-   * GET /statistics/teams/:tournamentId/offensive
-   * Obtiene estadísticas ofensivas de equipos en un torneo
-   */
   .get(
     "/teams/:tournamentId/offensive",
     async ({ params, query, set }) => {
@@ -107,17 +95,13 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener estadísticas ofensivas de equipos",
-        description: "Retorna estadísticas ofensivas: tiros pg, tiros a portería pg, regates pg, faltas recibidas pg",
+        tags: [leaderboardsTag],
+        summary: "Obtener estadisticas ofensivas de equipos",
+        description:
+          "Retorna tiros, tiros a porteria, regates, faltas recibidas y mas.",
       },
     }
   )
-
-  /**
-   * GET /statistics/teams/:tournamentId/xg
-   * Obtiene estadísticas de xG (Expected Goals) de equipos en un torneo
-   */
   .get(
     "/teams/:tournamentId/xg",
     async ({ params, query, set }) => {
@@ -143,19 +127,12 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener estadísticas de Expected Goals (xG) de equipos",
-        description: "Retorna estadísticas de xG: Expected Goals, goles, diferencia xG, tiros, xG por tiro",
+        tags: [leaderboardsTag],
+        summary: "Obtener estadisticas xG de equipos",
+        description: "Retorna xG, goles, diferencia xG, tiros y xG por tiro.",
       },
     }
   )
-
-  // ==================== ESTADÍSTICAS DE JUGADORES ====================
-
-  /**
-   * GET /statistics/players/:tournamentId/summary
-   * Obtiene estadísticas resumidas de jugadores en un torneo
-   */
   .get(
     "/players/:tournamentId/summary",
     async ({ params, query, set }) => {
@@ -181,17 +158,13 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener estadísticas resumidas de jugadores",
-        description: "Retorna estadísticas de jugadores: goles, asistencias, tarjetas, tiros, pases, duelos aéreos, rating",
+        tags: [leaderboardsTag],
+        summary: "Obtener estadisticas resumidas de jugadores",
+        description:
+          "Retorna goles, asistencias, tarjetas, tiros, pases, duelos aereos y rating.",
       },
     }
   )
-
-  /**
-   * GET /statistics/players/:tournamentId/defensive
-   * Obtiene estadísticas defensivas de jugadores en un torneo
-   */
   .get(
     "/players/:tournamentId/defensive",
     async ({ params, query, set }) => {
@@ -217,17 +190,13 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener estadísticas defensivas de jugadores",
-        description: "Retorna estadísticas defensivas de jugadores: tackles, intercepciones, faltas, despejes, etc.",
+        tags: [leaderboardsTag],
+        summary: "Obtener estadisticas defensivas de jugadores",
+        description:
+          "Retorna tackles, intercepciones, faltas, despejes y metricas defensivas.",
       },
     }
   )
-
-  /**
-   * GET /statistics/players/:tournamentId/offensive
-   * Obtiene estadísticas ofensivas de jugadores en un torneo
-   */
   .get(
     "/players/:tournamentId/offensive",
     async ({ params, query, set }) => {
@@ -253,17 +222,13 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener estadísticas ofensivas de jugadores",
-        description: "Retorna estadísticas ofensivas de jugadores: tiros, tiros a portería, pases clave, regates, etc.",
+        tags: [leaderboardsTag],
+        summary: "Obtener estadisticas ofensivas de jugadores",
+        description:
+          "Retorna tiros, tiros a porteria, pases clave, regates y metricas ofensivas.",
       },
     }
   )
-
-  /**
-   * GET /statistics/players/:tournamentId/passing
-   * Obtiene estadísticas de pases de jugadores en un torneo
-   */
   .get(
     "/players/:tournamentId/passing",
     async ({ params, query, set }) => {
@@ -289,17 +254,13 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener estadísticas de pases de jugadores",
-        description: "Retorna estadísticas de pases: pases clave, pases totales, precisión, centros, pases largos, etc.",
+        tags: [leaderboardsTag],
+        summary: "Obtener estadisticas de pases de jugadores",
+        description:
+          "Retorna pases clave, pases totales, precision, centros y pases largos.",
       },
     }
   )
-
-  /**
-   * GET /statistics/players/:tournamentId/xg
-   * Obtiene estadísticas de xG de jugadores en un torneo
-   */
   .get(
     "/players/:tournamentId/xg",
     async ({ params, query, set }) => {
@@ -325,20 +286,12 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener estadísticas de Expected Goals (xG) de jugadores",
-        description: "Retorna estadísticas de xG: xG, npxG, xG assist, xG chain, xG buildup",
+        tags: [leaderboardsTag],
+        summary: "Obtener estadisticas xG de jugadores",
+        description: "Retorna xG, npxG, xG assist, xG chain y xG buildup.",
       },
     }
   )
-
-  // ==================== RACHAS ====================
-
-  /**
-   * GET /statistics/teams/:tournamentId/streaks
-   * Obtiene las rachas de equipos en un torneo
-   * Query params: viewTypeId, mode? (all/home/away), scope? (Current/Longest), limit?, offset?
-   */
   .get(
     "/teams/:tournamentId/streaks",
     async ({ params, query, set }) => {
@@ -364,20 +317,13 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
+        tags: [insightsTag],
         summary: "Obtener rachas de equipos",
-        description: "Retorna rachas de equipos: victorias consecutivas, derrotas, empates, etc. Por tipo: victorias, sin perder, sin ganar, derrotas",
+        description:
+          "Retorna rachas vigentes o historicas de victorias, derrotas, empates y otras variantes.",
       },
     }
   )
-
-  // ==================== RENDIMIENTOS ====================
-
-  /**
-   * GET /statistics/teams/:tournamentId/performance
-   * Obtiene el rendimiento de equipos en un torneo
-   * Query params: viewTypeId, mode? (all/home/away), limit?, offset?
-   */
   .get(
     "/teams/:tournamentId/performance",
     async ({ params, query, set }) => {
@@ -401,20 +347,13 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
+        tags: [insightsTag],
         summary: "Obtener rendimiento de equipos",
-        description: "Retorna rendimiento de equipos: partidos jugados, % victorias, % empates, % derrotas, goles a favor/contra por partido, puntos por partido",
+        description:
+          "Retorna partidos jugados, porcentajes de victorias, empates, derrotas y promedios de goles.",
       },
     }
   )
-
-  // ==================== XI IDEAL ====================
-
-  /**
-   * GET /statistics/tournaments/:tournamentId/best-xi
-   * Obtiene el XI ideal de un torneo
-   * Query params: timeframe (weekly/monthly/season), startDate?, endDate?
-   */
   .get(
     "/tournaments/:tournamentId/best-xi",
     async ({ params, query, set }) => {
@@ -432,19 +371,13 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
+        tags: [leaderboardsTag],
         summary: "Obtener XI ideal del torneo",
-        description: "Retorna el once ideal del torneo según el timeframe: semanal (weekly), mensual (monthly) o temporada completa (season)",
+        description:
+          "Retorna el once ideal del torneo segun el rango temporal seleccionado.",
       },
     }
   )
-
-  // ==================== TOP PLAYERS (LÍDERES) ====================
-
-  /**
-   * GET /statistics/tournaments/:tournamentId/top-players/rating
-   * Obtiene los jugadores con mejor rating
-   */
   .get(
     "/tournaments/:tournamentId/top-players/rating",
     async ({ params, query, set }) => {
@@ -461,17 +394,11 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
+        tags: [leaderboardsTag],
         summary: "Obtener jugadores con mejor rating",
-        description: "Retorna los jugadores con mejor rating en el torneo",
       },
     }
   )
-
-  /**
-   * GET /statistics/tournaments/:tournamentId/top-players/assists
-   * Obtiene los jugadores con más asistencias
-   */
   .get(
     "/tournaments/:tournamentId/top-players/assists",
     async ({ params, query, set }) => {
@@ -488,17 +415,11 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener jugadores con más asistencias",
-        description: "Retorna los jugadores con más asistencias en el torneo",
+        tags: [leaderboardsTag],
+        summary: "Obtener jugadores con mas asistencias",
       },
     }
   )
-
-  /**
-   * GET /statistics/tournaments/:tournamentId/top-players/shots
-   * Obtiene los jugadores con más tiros por partido
-   */
   .get(
     "/tournaments/:tournamentId/top-players/shots",
     async ({ params, query, set }) => {
@@ -515,17 +436,11 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener jugadores con más tiros",
-        description: "Retorna los jugadores con más tiros por partido en el torneo",
+        tags: [leaderboardsTag],
+        summary: "Obtener jugadores con mas tiros",
       },
     }
   )
-
-  /**
-   * GET /statistics/tournaments/:tournamentId/top-players/aggression
-   * Obtiene los jugadores más agresivos (tarjetas)
-   */
   .get(
     "/tournaments/:tournamentId/top-players/aggression",
     async ({ params, query, set }) => {
@@ -542,17 +457,11 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener jugadores más agresivos",
-        description: "Retorna los jugadores con más tarjetas amarillas y rojas en el torneo",
+        tags: [leaderboardsTag],
+        summary: "Obtener jugadores mas agresivos",
       },
     }
   )
-
-  /**
-   * GET /statistics/tournaments/:tournamentId/top-players/goal-contribution
-   * Obtiene los jugadores con mayor contribución de goles
-   */
   .get(
     "/tournaments/:tournamentId/top-players/goal-contribution",
     async ({ params, query, set }) => {
@@ -561,7 +470,11 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
         const viewTypeId = parseInt(query.viewTypeId as string);
         const limit = query.limit ? parseInt(query.limit as string) : 10;
 
-        return await service.getTopPlayersByGoalContribution(tournamentId, viewTypeId, limit);
+        return await service.getTopPlayersByGoalContribution(
+          tournamentId,
+          viewTypeId,
+          limit
+        );
       } catch (error: any) {
         set.status = error.message.includes("not found") ? 404 : 500;
         return errorResponse(error);
@@ -569,9 +482,8 @@ export const statisticsRoutes = new Elysia({ prefix: "/statistics" })
     },
     {
       detail: {
-        tags: ["Statistics"],
-        summary: "Obtener jugadores con mayor contribución de goles",
-        description: "Retorna los jugadores con mayor porcentaje de contribución a los goles de su equipo",
+        tags: [leaderboardsTag],
+        summary: "Obtener jugadores con mayor contribucion de gol",
       },
     }
   );

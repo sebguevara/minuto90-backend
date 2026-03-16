@@ -1,0 +1,75 @@
+import type {
+  GetHandballGamesQuery,
+  GetHandballLeaguesQuery,
+  GetHandballStandingsQuery,
+  GetHandballTeamsQuery,
+} from "../domain/handball.types";
+import {
+  handballService,
+  type HandballServiceContract,
+} from "../application/handball.service";
+import {
+  handballGamesQuerySchema,
+  handballLeaguesQuerySchema,
+  handballStandingsQuerySchema,
+  handballTeamsQuerySchema,
+} from "./handball.schemas";
+import { parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
+import { createTeamSportRoutes } from "./team-sport-routes.factory";
+import { handballSwaggerExamples } from "./multi-sport.swagger.examples";
+
+const toLeaguesQuery = (query: Record<string, unknown>): GetHandballLeaguesQuery => ({
+  id: parseOptionalInteger(query.id, "id"),
+  name: parseOptionalString(query.name),
+  country: parseOptionalString(query.country),
+  season: parseOptionalInteger(query.season, "season"),
+  search: parseOptionalString(query.search),
+});
+
+const toGamesQuery = (query: Record<string, unknown>): GetHandballGamesQuery => ({
+  date: parseOptionalString(query.date),
+  league: parseOptionalInteger(query.league, "league"),
+  season: parseOptionalInteger(query.season, "season"),
+  team: parseOptionalInteger(query.team, "team"),
+  id: parseOptionalInteger(query.id, "id"),
+  timezone: parseOptionalString(query.timezone),
+});
+
+const toTeamsQuery = (query: Record<string, unknown>): GetHandballTeamsQuery => ({
+  id: parseOptionalInteger(query.id, "id"),
+  name: parseOptionalString(query.name),
+  league: parseOptionalInteger(query.league, "league"),
+  season: parseOptionalInteger(query.season, "season"),
+});
+
+const toStandingsQuery = (query: Record<string, unknown>): GetHandballStandingsQuery => ({
+  league: parseOptionalInteger(query.league, "league"),
+  season: parseOptionalInteger(query.season, "season"),
+  team: parseOptionalInteger(query.team, "team"),
+});
+
+export function createHandballRoutes(
+  service: HandballServiceContract = handballService
+) {
+  return createTeamSportRoutes({
+    prefix: "/handball",
+    tag: "Handball",
+    label: "handball",
+    service,
+    seasonsExample: handballSwaggerExamples.seasons,
+    leaguesQuerySchema: handballLeaguesQuerySchema,
+    leaguesExample: handballSwaggerExamples.leagues,
+    toLeaguesQuery,
+    gamesQuerySchema: handballGamesQuerySchema,
+    gamesExample: handballSwaggerExamples.games,
+    toGamesQuery,
+    teamsQuerySchema: handballTeamsQuerySchema,
+    teamsExample: handballSwaggerExamples.teams,
+    toTeamsQuery,
+    standingsQuerySchema: handballStandingsQuerySchema,
+    standingsExample: handballSwaggerExamples.standings,
+    toStandingsQuery,
+  });
+}
+
+export const handballRoutes = createHandballRoutes();

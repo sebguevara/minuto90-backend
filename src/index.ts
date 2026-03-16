@@ -1,7 +1,18 @@
 import { Elysia } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 // import { pushRoutes } from "./features/push/presentation/routes";
-import { footballRoutes } from "./features/sports/football/presentation/routes";
+import { footballRoutes } from "./features/sports/presentation/routes";
+import { volleyballRoutes } from "./features/sports/presentation/volleyball.routes";
+import { rugbyRoutes } from "./features/sports/presentation/rugby.routes";
+import { nflRoutes } from "./features/sports/presentation/nfl.routes";
+import { nbaRoutes } from "./features/sports/presentation/nba.routes";
+import { basketballRoutes } from "./features/sports/presentation/basketball.routes";
+import { hockeyRoutes } from "./features/sports/presentation/hockey.routes";
+import { handballRoutes } from "./features/sports/presentation/handball.routes";
+import { baseballRoutes } from "./features/sports/presentation/baseball.routes";
+import { aflRoutes } from "./features/sports/presentation/afl.routes";
+import { mmaRoutes } from "./features/sports/presentation/mma.routes";
+import { formula1Routes } from "./features/sports/presentation/formula1.routes";
 import { statsRoutes } from "./features/stats/presentation/routes";
 import { notificationsRoutes } from "./features/notifications/presentation/routes";
 
@@ -35,6 +46,7 @@ const app = new Elysia()
       set.headers["Access-Control-Allow-Origin"] = allowOrigin;
       set.headers["Vary"] = "Origin";
     }
+
     set.headers["Access-Control-Allow-Headers"] = CORS_ALLOW_HEADERS;
     set.headers["Access-Control-Allow-Methods"] = CORS_ALLOW_METHODS;
     set.headers["Access-Control-Max-Age"] = "86400";
@@ -49,14 +61,31 @@ const app = new Elysia()
         info: {
           title: "Minuto90 API",
           version: "1.0.0",
-          description: "READ-ONLY REST API for football statistics",
+          description: "Read-only REST API for multi-sport statistics and fixtures",
         },
         tags: [
-          { name: "Teams", description: "Team statistics endpoints" },
-          { name: "Tournaments", description: "Tournament statistics endpoints" },
-          { name: "All", description: "Universal endpoints" },
-          { name: "Statistics", description: "Statistics endpoints for teams and players" },
           { name: "Football", description: "Football matches and seasons endpoints" },
+          { name: "Volleyball", description: "Volleyball endpoints" },
+          { name: "Rugby", description: "Rugby endpoints" },
+          { name: "NFL", description: "American football endpoints" },
+          { name: "NBA", description: "NBA endpoints" },
+          { name: "Basketball", description: "Global basketball endpoints" },
+          { name: "Hockey", description: "Ice hockey endpoints" },
+          { name: "Handball", description: "Handball endpoints" },
+          { name: "Baseball", description: "Baseball endpoints" },
+          { name: "AFL", description: "Aussie Rules endpoints" },
+          { name: "MMA", description: "MMA endpoints" },
+          { name: "Formula 1", description: "Formula 1 endpoints" },
+          {
+            name: "Stats",
+            description:
+              "Estadísticas de equipos, torneos, tablas, perfiles de partido, rankings e insights",
+          },
+          {
+            name: "Notifications",
+            description:
+              "Gestión de suscriptores, suscripciones, instancias de Evolution y endpoints de debug",
+          },
         ],
       },
       path: "/swagger",
@@ -65,11 +94,24 @@ const app = new Elysia()
   )
   // .use(pushRoutes)
   .use(footballRoutes)
+  .use(volleyballRoutes)
+  .use(rugbyRoutes)
+  .use(nflRoutes)
+  .use(nbaRoutes)
+  .use(basketballRoutes)
+  .use(hockeyRoutes)
+  .use(handballRoutes)
+  .use(baseballRoutes)
+  .use(aflRoutes)
+  .use(mmaRoutes)
+  .use(formula1Routes)
   .use(statsRoutes)
   .use(notificationsRoutes)
   .listen(
-    process.env.NODE_ENV === "production" ? process.env.PORT : 4500
+    process.env.NODE_ENV === "production"
+      ? Number(process.env.PORT ?? 4500)
+      : 4500
   );
 
-console.log(`🚀 Backend iniciado en http://localhost:${app.server?.port}`);
-console.log(`📚 Swagger UI: http://localhost:${app.server?.port}/swagger`);
+console.log(`Backend iniciado en http://localhost:${app.server?.port}`);
+console.log(`Swagger UI disponible en http://localhost:${app.server?.port}/swagger`);
