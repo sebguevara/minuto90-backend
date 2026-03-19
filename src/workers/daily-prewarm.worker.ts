@@ -13,6 +13,7 @@ import { aflApiClient } from '../features/sports/infrastructure/afl-api.client';
 import { volleyballApiClient } from '../features/sports/infrastructure/volleyball-api.client';
 import { getTeamColors } from '../shared/colors/team-color.service';
 import { setFootballTeamsAll, type FootballTeamRef } from '../features/stats/infrastructure/football-teams-all.store';
+import { insightsService } from '../features/insights/application/insights.service';
 import { logInfo, logError, logWarn } from '../shared/logging/logger';
 
 const DEFAULT_TIMEZONE = 'UTC';
@@ -154,6 +155,42 @@ async function prewarmFootballStandings(): Promise<void> {
   }
 
   logInfo('prewarm.football.standings.done', {});
+}
+
+async function prewarmFootballInsights(): Promise<void> {
+  logInfo('prewarm.football.insights.start', {});
+  const dates = getDatesRange(1, 1);
+
+  try {
+    for (const date of dates) {
+      const fixturesEnvelope = await footballApiClient.getFixtures({ date, timezone: DEFAULT_TIMEZONE });
+      const fixtures = fixturesEnvelope.response ?? [];
+      const ids = fixtures
+        .map((fixture) => fixture.fixture?.id)
+        .filter((id): id is number => typeof id === 'number' && Number.isFinite(id))
+        .slice(0, 80);
+
+      for (const fixtureId of ids) {
+        try {
+          await insightsService.getMatchStreaks(fixtureId);
+        } catch (err) {
+          logWarn('prewarm.football.insights.fixture_failed', {
+            fixtureId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+    }
+
+    const today = formatDate(new Date());
+    await insightsService.generateDailyInsights(today);
+  } catch (err) {
+    logWarn('prewarm.football.insights.failed', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  logInfo('prewarm.football.insights.done', {});
 }
 
 // ─── NBA ─────────────────────────────────────────────────────────────────────
@@ -484,6 +521,7 @@ async function runAllPrewarm(): Promise<void> {
 
     // Pre-cache standings for major leagues
     await prewarmFootballStandings();
+    await prewarmFootballInsights();
 
     // MMA + F1 need separate handling
     await Promise.allSettled([prewarmMma(), prewarmF1()]);

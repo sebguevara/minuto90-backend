@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { swagger } from "@elysiajs/swagger";
+import { rateLimit } from "elysia-rate-limit";
 // import { pushRoutes } from "./features/push/presentation/routes";
 import { footballRoutes } from "./features/sports/presentation/routes";
 import { volleyballRoutes } from "./features/sports/presentation/volleyball.routes";
@@ -15,6 +16,7 @@ import { mmaRoutes } from "./features/sports/presentation/mma.routes";
 import { formula1Routes } from "./features/sports/presentation/formula1.routes";
 import { statsRoutes } from "./features/stats/presentation/routes";
 import { notificationsRoutes } from "./features/notifications/presentation/routes";
+import { insightsRoutes } from "./features/insights/presentation/insights.routes";
 
 const parseCorsOrigins = (value: string): string[] =>
   value
@@ -34,6 +36,12 @@ const CORS_ALLOW_METHODS =
   process.env.CORS_ALLOW_METHODS ?? "GET, POST, PUT, PATCH, DELETE, OPTIONS";
 
 const app = new Elysia()
+  .use(
+    rateLimit({
+      duration: 60000,
+      max: 300,
+    })
+  )
   .onRequest(({ set, request }) => {
     const requestOrigin = request.headers.get("origin");
     const allowOrigin =
@@ -82,6 +90,7 @@ const app = new Elysia()
             description:
               "Estadísticas de equipos, torneos, tablas, perfiles de partido, rankings e insights",
           },
+          { name: "Insights", description: "Generación de resúmenes de partido e insights con IA" },
           {
             name: "Notifications",
             description:
@@ -108,6 +117,7 @@ const app = new Elysia()
   .use(formula1Routes)
   .use(statsRoutes)
   .use(notificationsRoutes)
+  .use(insightsRoutes)
   .listen(
     process.env.NODE_ENV === "production"
       ? Number(process.env.PORT ?? 4500)

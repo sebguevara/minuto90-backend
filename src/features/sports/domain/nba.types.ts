@@ -22,7 +22,7 @@ export interface GetNbaLeaguesQuery {
 
 export interface GetNbaGamesQuery {
   date?: string;
-  league?: number;
+  league?: string;
   season?: string;
   team?: number;
   id?: number;
@@ -32,13 +32,13 @@ export interface GetNbaGamesQuery {
 export interface GetNbaTeamsQuery {
   id?: number;
   name?: string;
-  league?: number;
+  league?: string;
   season?: string;
   search?: string;
 }
 
 export interface GetNbaStandingsQuery {
-  league?: number;
+  league?: string;
   season?: string;
   team?: number;
 }
@@ -95,4 +95,3 @@ export type NbaLeaguesResponse = ApiSportsListResponse<ApiSportsLeague, GetNbaLe
 export type NbaGamesResponse = ApiSportsListResponse<NbaGame, GetNbaGamesQuery>;
 export type NbaTeamsResponse = ApiSportsListResponse<NbaTeam, GetNbaTeamsQuery>;
 export type NbaStandingsResponse = ApiSportsListResponse<NbaStandingRow[], GetNbaStandingsQuery>;
-

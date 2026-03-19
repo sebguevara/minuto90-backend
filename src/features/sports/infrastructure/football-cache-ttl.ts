@@ -40,8 +40,18 @@ const TTL_BY_ENDPOINT: Record<string, number> = {
 };
 
 export function getFootballCacheTtlSeconds(endpoint: string, params?: Record<string, unknown>) {
-  if (endpoint === '/fixtures' && params?.live) {
-    return 15;
+  if (endpoint === "/fixtures") {
+    // Match-critical reads must stay hot and near-real-time.
+    // `live`, `id` and `ids` are used by live widgets/brackets where stale state is harmful.
+    if (params?.live || params?.id || params?.ids) {
+      return 5;
+    }
+
+    // Date-based fixture lists can tolerate a bit more cache.
+    if (params?.date) {
+      return 20;
+    }
   }
+
   return TTL_BY_ENDPOINT[endpoint] ?? 0;
 }

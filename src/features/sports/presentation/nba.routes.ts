@@ -30,7 +30,7 @@ const toLeaguesQuery = (query: Record<string, unknown>): GetNbaLeaguesQuery => (
 
 const toGamesQuery = (query: Record<string, unknown>): GetNbaGamesQuery => ({
   date: parseOptionalString(query.date),
-  league: parseOptionalInteger(query.league, "league"),
+  league: parseOptionalString(query.league),
   season: parseOptionalString(query.season),
   team: parseOptionalInteger(query.team, "team"),
   id: parseOptionalInteger(query.id, "id"),
@@ -40,13 +40,13 @@ const toGamesQuery = (query: Record<string, unknown>): GetNbaGamesQuery => ({
 const toTeamsQuery = (query: Record<string, unknown>): GetNbaTeamsQuery => ({
   id: parseOptionalInteger(query.id, "id"),
   name: parseOptionalString(query.name),
-  league: parseOptionalInteger(query.league, "league"),
+  league: parseOptionalString(query.league),
   season: parseOptionalString(query.season),
   search: parseOptionalString(query.search),
 });
 
 const toStandingsQuery = (query: Record<string, unknown>): GetNbaStandingsQuery => ({
-  league: parseOptionalInteger(query.league, "league"),
+  league: parseOptionalString(query.league),
   season: parseOptionalString(query.season),
   team: parseOptionalInteger(query.team, "team"),
 });
