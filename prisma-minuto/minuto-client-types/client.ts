@@ -45,6 +45,11 @@ export { Prisma }
  */
 export type PushSubscription = Prisma.PushSubscriptionModel
 /**
+ * Model User
+ * 
+ */
+export type User = Prisma.UserModel
+/**
  * Model NotificationSubscriber
  * 
  */

@@ -17,6 +17,7 @@ import { formula1Routes } from "./features/sports/presentation/formula1.routes";
 import { statsRoutes } from "./features/stats/presentation/routes";
 import { notificationsRoutes } from "./features/notifications/presentation/routes";
 import { insightsRoutes } from "./features/insights/presentation/insights.routes";
+import { userRoutes } from "./features/users/presentation/user.routes";
 
 const parseCorsOrigins = (value: string): string[] =>
   value
@@ -24,7 +25,7 @@ const parseCorsOrigins = (value: string): string[] =>
     .map((v) => v.trim())
     .filter(Boolean);
 
-const defaultOrigins = "https://minuto90.co, https://www.minuto90.co, https://90score.co, https://www.90score.co, http://localhost:3000";
+const defaultOrigins = "https://minuto90score.com, https://www.minuto90score.com, http://localhost:3000";
 const CORS_ALLOW_ORIGIN_RAW = process.env.CORS_ALLOW_ORIGIN ?? defaultOrigins;
 const CORS_ALLOW_ALL_ORIGINS = CORS_ALLOW_ORIGIN_RAW.trim() === "*";
 const CORS_ALLOWED_ORIGINS = CORS_ALLOW_ALL_ORIGINS
@@ -68,7 +69,7 @@ const app = new Elysia()
     swagger({
       documentation: {
         info: {
-          title: "Minuto90 API",
+          title: "Minuto 90 Score API",
           version: "1.0.0",
           description: "Read-only REST API for multi-sport statistics and fixtures",
         },
@@ -96,6 +97,7 @@ const app = new Elysia()
             description:
               "Gestión de suscriptores, suscripciones, instancias de Evolution y endpoints de debug",
           },
+          { name: "Users", description: "Gestión de usuarios y webhooks de Clerk" },
         ],
       },
       path: "/swagger",
@@ -118,6 +120,7 @@ const app = new Elysia()
   .use(statsRoutes)
   .use(notificationsRoutes)
   .use(insightsRoutes)
+  .use(userRoutes)
   .listen(
     process.env.NODE_ENV === "production"
       ? Number(process.env.PORT ?? 4500)

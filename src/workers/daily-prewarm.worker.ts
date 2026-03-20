@@ -15,6 +15,7 @@ import { getTeamColors } from '../shared/colors/team-color.service';
 import { setFootballTeamsAll, type FootballTeamRef } from '../features/stats/infrastructure/football-teams-all.store';
 import { insightsService } from '../features/insights/application/insights.service';
 import { logInfo, logError, logWarn } from '../shared/logging/logger';
+import { updateLiveFixturesCache } from './live-cache-updater';
 
 const DEFAULT_TIMEZONE = 'UTC';
 const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European leagues in 2026
@@ -515,6 +516,17 @@ async function runAllPrewarm(): Promise<void> {
       prewarmRugby(),
       prewarmBaseball(),
     ]);
+
+    // Seed live fixtures cache on startup
+    try {
+      const liveEnvelope = await footballApiClient.getFixtures({ live: 'all' });
+      await updateLiveFixturesCache(liveEnvelope);
+      logInfo('prewarm.football.live_fixtures.done', {});
+    } catch (err) {
+      logWarn('prewarm.football.live_fixtures.failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
 
     // Sync football:teams:all for stats logos (sequential — many league API calls)
     await syncFootballTeamsAll();

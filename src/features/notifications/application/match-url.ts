@@ -6,7 +6,7 @@ export type MatchUrlInput = {
 };
 
 function baseUrl() {
-  const raw = process.env.MINUTO90_WEB_BASE_URL ?? "minuto90.co";
+  const raw = process.env.MINUTO90_WEB_BASE_URL ?? "https://minuto90score.com";
   return raw.replace(/\/+$/g, "");
 }
 

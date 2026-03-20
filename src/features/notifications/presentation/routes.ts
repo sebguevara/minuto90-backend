@@ -55,8 +55,11 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
           typeof query.isActive === "string"
             ? query.isActive === "true"
             : undefined;
+        const where: any = {};
+        if (typeof isActive === "boolean") where.isActive = isActive;
+        if (query.userId) where.userId = query.userId;
         const data = await minutoPrismaClient.notificationSubscriber.findMany({
-          where: typeof isActive === "boolean" ? { isActive } : undefined,
+          where: Object.keys(where).length ? where : undefined,
           orderBy: { createdAt: "desc" },
           include: { subscriptions: true },
         });
@@ -71,6 +74,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
       detail: { tags: ["Notifications"], summary: "List subscribers" },
       query: t.Object({
         isActive: t.Optional(t.String()),
+        userId: t.Optional(t.String()),
       }),
     }
   )
@@ -84,6 +88,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
             phoneNumber: phone,
             name: body.name,
             isActive: body.isActive ?? true,
+            userId: body.userId,
           },
         });
         set.status = 201;
@@ -100,6 +105,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
         phoneNumber: t.String(),
         name: t.Optional(t.String()),
         isActive: t.Optional(t.Boolean()),
+        userId: t.Optional(t.String()),
       }),
     }
   )

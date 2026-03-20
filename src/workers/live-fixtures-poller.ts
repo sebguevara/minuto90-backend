@@ -10,6 +10,7 @@ import { logError, logInfo, logWarn } from "../shared/logging/logger";
 import { templates } from "../features/notifications/application/templates";
 import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
+import { updateLiveFixturesCache, invalidateStandingsCache } from "./live-cache-updater";
 
 const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 5000);
 const REDIS_TTL_SECONDS = 60 * 60 * 4;
@@ -166,6 +167,14 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
 
   if (triggers.length) {
     await dispatchTriggers({ fixtureId, triggers });
+
+    const hasFullTime = triggers.some((t) => t.type === "FULL_TIME");
+    if (hasFullTime) {
+      const leagueId = fixture.league?.id;
+      if (typeof leagueId === "number") {
+        invalidateStandingsCache(leagueId, CURRENT_SEASON).catch(() => {});
+      }
+    }
   }
 
   if (hasRelevantChanges || !oldState) {
@@ -275,6 +284,12 @@ async function handleDisappearances(currentIds: number[]) {
         }));
 
       await enqueueWhatsappNotificationsBulk(jobs);
+
+      const leagueId = fixture.league?.id;
+      if (typeof leagueId === "number") {
+        invalidateStandingsCache(leagueId, CURRENT_SEASON).catch(() => {});
+      }
+
       logInfo("live.disappeared.full_time.enqueued", {
         fixtureId,
         subs: jobs.length,
@@ -288,9 +303,14 @@ async function handleDisappearances(currentIds: number[]) {
   }
 }
 
+const CURRENT_SEASON = new Date().getFullYear() - 1;
+
 async function pollOnce() {
   const startedAt = Date.now();
-  const fixtures = await apiFootballLiveClient.listLiveFixtures();
+  const { fixtures, envelope } = await apiFootballLiveClient.listLiveFixturesWithEnvelope();
+
+  await updateLiveFixturesCache(envelope);
+
   const ids = fixtures.map((f) => f.fixture.id).filter((id) => typeof id === "number");
   await handleDisappearances(ids);
 

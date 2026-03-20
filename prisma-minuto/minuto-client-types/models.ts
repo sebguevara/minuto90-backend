@@ -9,6 +9,7 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/PushSubscription.js'
+export type * from './models/User.js'
 export type * from './models/NotificationSubscriber.js'
 export type * from './models/MatchSubscription.js'
 export type * from './models/EvolutionInstance.js'

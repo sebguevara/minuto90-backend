@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   PushSubscription: 'PushSubscription',
+  User: 'User',
   NotificationSubscriber: 'NotificationSubscriber',
   MatchSubscription: 'MatchSubscription',
   EvolutionInstance: 'EvolutionInstance'
@@ -84,12 +85,27 @@ export const PushSubscriptionScalarFieldEnum = {
 export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
 
 
+export const UserScalarFieldEnum = {
+  id: 'id',
+  clerkId: 'clerkId',
+  email: 'email',
+  name: 'name',
+  imageUrl: 'imageUrl',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
 export const NotificationSubscriberScalarFieldEnum = {
   id: 'id',
   phoneNumber: 'phoneNumber',
   name: 'name',
   createdAt: 'createdAt',
-  isActive: 'isActive'
+  isActive: 'isActive',
+  userId: 'userId'
 } as const
 
 export type NotificationSubscriberScalarFieldEnum = (typeof NotificationSubscriberScalarFieldEnum)[keyof typeof NotificationSubscriberScalarFieldEnum]

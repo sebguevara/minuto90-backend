@@ -41,7 +41,7 @@ export type ApiFootballLiveFixture = {
     date?: string;
     status: { short: ApiFootballFixtureStatusShort; elapsed?: number | null };
   };
-  league?: { name?: string | null };
+  league?: { id?: number | null; name?: string | null };
   teams?: {
     home?: { name?: string | null };
     away?: { name?: string | null };
@@ -52,10 +52,14 @@ export type ApiFootballLiveFixture = {
 };
 
 type ApiResponse<T> = {
+  get?: string;
   response: T;
   errors?: unknown;
   results?: number;
+  paging?: unknown;
 };
+
+export type LiveFixturesEnvelope = ApiResponse<ApiFootballLiveFixture[]>;
 
 export class ApiFootballLiveClient {
   constructor(
@@ -88,6 +92,34 @@ export class ApiFootballLiveClient {
 
     const json = (await res.json()) as ApiResponse<ApiFootballLiveFixture[]>;
     return Array.isArray(json?.response) ? json.response : [];
+  }
+
+  async listLiveFixturesWithEnvelope(): Promise<{ fixtures: ApiFootballLiveFixture[]; envelope: LiveFixturesEnvelope }> {
+    if (!this.apiKey) {
+      throw new Error("Missing API-Football key (set FOOTBALL_API_KEY or API_KEY).");
+    }
+
+    const url = new URL(`${this.baseUrl}/fixtures`);
+    url.searchParams.set("live", "all");
+
+    const res = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        "x-rapidapi-key": this.apiKey,
+        "x-rapidapi-host": "v3.football.api-sports.io",
+      },
+    });
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(
+        `API-Football live fixtures error: ${res.status} ${res.statusText}${body ? ` - ${body}` : ""}`
+      );
+    }
+
+    const envelope = (await res.json()) as LiveFixturesEnvelope;
+    const fixtures = Array.isArray(envelope?.response) ? envelope.response : [];
+    return { fixtures, envelope };
   }
 }
 
