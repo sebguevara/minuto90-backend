@@ -543,6 +543,24 @@ async function runAllPrewarm(): Promise<void> {
     });
   }
 
+  // ─── Sitemap regeneration ─────────────────────────────────────────────────
+  try {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const cronSecret = process.env.CRON_SECRET || 'your-secret-token-here';
+    const res = await fetch(`${frontendUrl}/api/sitemap/regenerate`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${cronSecret}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      logInfo('prewarm.sitemap.regenerated', { revalidated: data.revalidated, durationMs: data.durationMs });
+    } else {
+      logWarn('prewarm.sitemap.failed', { status: res.status });
+    }
+  } catch (err) {
+    logWarn('prewarm.sitemap.error', { error: err instanceof Error ? err.message : String(err) });
+  }
+
   logInfo('prewarm.daily.done', { timestamp: new Date().toISOString() });
 }
 
@@ -555,9 +573,9 @@ runAllPrewarm().catch((err) =>
   })
 );
 
-// Schedule daily at 03:00 UTC
+// Schedule every 6 hours (00:00, 06:00, 12:00, 18:00 UTC)
 const job = new CronJob(
-  '0 3 * * *',
+  '0 */6 * * *',
   () => {
     runAllPrewarm().catch((err) =>
       logError('prewarm.daily.cron_failed', {
@@ -570,4 +588,4 @@ const job = new CronJob(
   'UTC'
 );
 
-logInfo('prewarm.daily.scheduled', { schedule: '0 3 * * *', timezone: 'UTC' });
+logInfo('prewarm.daily.scheduled', { schedule: '0 */6 * * *', timezone: 'UTC' });
