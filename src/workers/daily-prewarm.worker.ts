@@ -75,6 +75,33 @@ async function prewarmTeamColors(
   }
 }
 
+async function warmFrontendSitemaps(): Promise<void> {
+  try {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const cronSecret = process.env.CRON_SECRET || 'your-secret-token-here';
+    const response = await fetch(`${frontendUrl}/api/sitemap/warm`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${cronSecret}` },
+    });
+
+    if (!response.ok) {
+      logWarn('prewarm.sitemap.failed', { status: response.status });
+      return;
+    }
+
+    const data = await response.json();
+    logInfo('prewarm.sitemap.warmed', {
+      total: data.total,
+      ok: data.ok,
+      timestamp: data.timestamp,
+    });
+  } catch (err) {
+    logWarn('prewarm.sitemap.error', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 // ─── Football ───────────────────────────────────────────────────────────────
 
 async function prewarmFootballFixtures(): Promise<void> {
@@ -544,23 +571,6 @@ async function runAllPrewarm(): Promise<void> {
   }
 
   // ─── Sitemap regeneration ─────────────────────────────────────────────────
-  try {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const cronSecret = process.env.CRON_SECRET || 'your-secret-token-here';
-    const res = await fetch(`${frontendUrl}/api/sitemap/regenerate`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${cronSecret}` },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      logInfo('prewarm.sitemap.regenerated', { revalidated: data.revalidated, durationMs: data.durationMs });
-    } else {
-      logWarn('prewarm.sitemap.failed', { status: res.status });
-    }
-  } catch (err) {
-    logWarn('prewarm.sitemap.error', { error: err instanceof Error ? err.message : String(err) });
-  }
-
   logInfo('prewarm.daily.done', { timestamp: new Date().toISOString() });
 }
 
@@ -569,6 +579,12 @@ async function runAllPrewarm(): Promise<void> {
 // Run immediately on startup
 runAllPrewarm().catch((err) =>
   logError('prewarm.daily.startup_failed', {
+    error: err instanceof Error ? err.message : String(err),
+  })
+);
+
+warmFrontendSitemaps().catch((err) =>
+  logError('prewarm.sitemap.startup_failed', {
     error: err instanceof Error ? err.message : String(err),
   })
 );
@@ -589,3 +605,19 @@ const job = new CronJob(
 );
 
 logInfo('prewarm.daily.scheduled', { schedule: '0 */6 * * *', timezone: 'UTC' });
+
+const sitemapWarmJob = new CronJob(
+  '0 */12 * * *',
+  () => {
+    warmFrontendSitemaps().catch((err) =>
+      logError('prewarm.sitemap.cron_failed', {
+        error: err instanceof Error ? err.message : String(err),
+      })
+    );
+  },
+  null,
+  true,
+  'UTC'
+);
+
+logInfo('prewarm.sitemap.scheduled', { schedule: '0 */12 * * *', timezone: 'UTC' });
