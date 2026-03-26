@@ -89,3 +89,9 @@ export function getDailyInsightsTtlSeconds(date: string, now: Date = new Date())
   return date === today ? 60 * 30 : 60 * 60 * 24 * 7;
 }
 
+export function getFeaturedMatchesTtlSeconds(date: string, now: Date = new Date()) {
+  const today = now.toISOString().slice(0, 10);
+  // Today: refresh every 30 min (odds/lineups change). Past: cache 7 days.
+  return date === today ? 60 * 30 : 60 * 60 * 24 * 7;
+}
+

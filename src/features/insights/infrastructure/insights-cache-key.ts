@@ -13,6 +13,10 @@ export function buildDailyInsightsCacheKey(date: string) {
   return `minuto90:${ENV}:insights:daily:${date}:v1`;
 }
 
+export function buildFeaturedMatchesCacheKey(date: string) {
+  return `minuto90:${ENV}:insights:featured:${date}:v1`;
+}
+
 export function buildInsightsLockKey(cacheKey: string) {
   return `${cacheKey}:lock`;
 }

@@ -72,4 +72,29 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
         description: "Devuelve los partidos más recomendados del día con un breve análisis editorial.",
       },
     }
+  )
+  .get(
+    "/featured",
+    async ({ query, set }) => {
+      try {
+        const limit = Math.min(30, Math.max(1, Number(query.limit) || 10));
+        const featured = await insightsService.getFeaturedMatches(query.date, limit);
+        return { success: true, data: featured };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, error: error.message };
+      }
+    },
+    {
+      query: t.Object({
+        date: t.String({ description: "Date in YYYY-MM-DD format", examples: ["2025-03-26"] }),
+        limit: t.Optional(t.String({ description: "Max results (default 10, max 30)" })),
+      }),
+      detail: {
+        tags: ["Insights"],
+        summary: "Obtener partidos destacados del día",
+        description:
+          "Devuelve los partidos más relevantes de una fecha, ordenados por score de relevancia automático (liga, posición en tabla, ronda, rivalidad).",
+      },
+    }
   );

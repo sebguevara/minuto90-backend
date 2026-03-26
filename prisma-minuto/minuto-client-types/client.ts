@@ -64,3 +64,13 @@ export type MatchSubscription = Prisma.MatchSubscriptionModel
  * 
  */
 export type EvolutionInstance = Prisma.EvolutionInstanceModel
+/**
+ * Model News
+ * 
+ */
+export type News = Prisma.NewsModel
+/**
+ * Model Post
+ * 
+ */
+export type Post = Prisma.PostModel

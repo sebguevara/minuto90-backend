@@ -8,11 +8,13 @@ import {
 import { openai } from "../infrastructure/openai.client";
 import {
   buildDailyInsightsCacheKey,
+  buildFeaturedMatchesCacheKey,
   buildInsightsLockKey,
   buildMatchInsightsCacheKey,
 } from "../infrastructure/insights-cache-key";
 import {
   getDailyInsightsTtlSeconds,
+  getFeaturedMatchesTtlSeconds,
   getMatchStreaksTtlSeconds,
   getMatchSummaryTtlSeconds,
   resolveMatchState,
@@ -965,7 +967,286 @@ Formato:
 
     return result.value;
   }
+
+  /**
+   * Returns featured/highlighted matches for a given date, scored automatically.
+   */
+  async getFeaturedMatches(date: string, limit = 10): Promise<FeaturedMatch[]> {
+    const ttlSeconds = getFeaturedMatchesTtlSeconds(date);
+    const cacheKey = buildFeaturedMatchesCacheKey(date);
+
+    const result = await this.getOrComputeCachedValue<FeaturedMatch[]>({
+      cacheKey,
+      ttlSeconds,
+      compute: () => this.computeFeaturedMatches(date, limit),
+    });
+
+    if (result.cacheHit) {
+      logInfo("insights.featured.cache_hit", { date, cacheKey, ttlSeconds });
+    }
+
+    return result.value;
+  }
+
+  private async computeFeaturedMatches(
+    date: string,
+    limit: number
+  ): Promise<FeaturedMatch[]> {
+    const fixturesRes = await footballService.getFixtures({ date });
+    const fixtures = fixturesRes.response ?? [];
+
+    if (fixtures.length === 0) return [];
+
+    // Group fixtures by league to batch-fetch standings
+    const leagueIds = [...new Set(fixtures.map((f) => f.league.id))];
+    const standingsMap = new Map<number, Array<{ team?: { id?: number }; rank?: number }>>();
+
+    // Fetch standings for all leagues in parallel (max 15 to avoid overload)
+    const leaguesToFetch = leagueIds.slice(0, 15);
+    const standingsResults = await Promise.all(
+      leaguesToFetch.map((leagueId) => {
+        const season = fixtures.find((f) => f.league.id === leagueId)?.league.season;
+        if (!season) return Promise.resolve({ leagueId, standings: [] });
+        return footballService
+          .getStandings({ league: leagueId, season })
+          .then((res) => ({
+            leagueId,
+            standings: (res.response?.[0]?.league?.standings?.[0] ?? []) as Array<{
+              team?: { id?: number };
+              rank?: number;
+            }>,
+          }))
+          .catch(() => ({ leagueId, standings: [] as Array<{ team?: { id?: number }; rank?: number }> }));
+      })
+    );
+
+    for (const { leagueId, standings } of standingsResults) {
+      if (standings.length > 0) standingsMap.set(leagueId, standings);
+    }
+
+    // Score each fixture
+    const scored = fixtures.map((f) => {
+      const leagueTier = getLeagueTier(f.league.id);
+      const standings = standingsMap.get(f.league.id) ?? [];
+      const homeRank = standings.find((s) => s.team?.id === f.teams.home.id)?.rank ?? null;
+      const awayRank = standings.find((s) => s.team?.id === f.teams.away.id)?.rank ?? null;
+      const round = f.league.round ?? "";
+
+      const score = computeMatchRelevanceScore({
+        leagueTier,
+        homeRank,
+        awayRank,
+        round,
+        totalTeams: standings.length,
+      });
+
+      return {
+        fixtureId: f.fixture.id,
+        date: f.fixture.date,
+        status: f.fixture.status.short,
+        league: {
+          id: f.league.id,
+          name: f.league.name,
+          country: f.league.country,
+          logo: f.league.logo,
+          round: f.league.round,
+        },
+        homeTeam: {
+          id: f.teams.home.id,
+          name: f.teams.home.name,
+          logo: f.teams.home.logo ?? null,
+          rank: homeRank,
+        },
+        awayTeam: {
+          id: f.teams.away.id,
+          name: f.teams.away.name,
+          logo: f.teams.away.logo ?? null,
+          rank: awayRank,
+        },
+        score: {
+          home: f.goals.home,
+          away: f.goals.away,
+        },
+        relevanceScore: score,
+        tier: leagueTier,
+      } satisfies FeaturedMatch;
+    });
+
+    return scored
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, limit);
+  }
 }
 
 export const insightsService = new InsightsService();
+
+// ─── Featured Matches Types & Scoring ────────────────────────────────────────
+
+export type FeaturedMatch = {
+  fixtureId: number;
+  date: string;
+  status: string;
+  league: {
+    id: number;
+    name: string;
+    country: string;
+    logo: string;
+    round: string;
+  };
+  homeTeam: {
+    id: number;
+    name: string;
+    logo: string | null;
+    rank: number | null;
+  };
+  awayTeam: {
+    id: number;
+    name: string;
+    logo: string | null;
+    rank: number | null;
+  };
+  score: {
+    home: number | null;
+    away: number | null;
+  };
+  relevanceScore: number;
+  tier: number;
+};
+
+// ─── League Tiers ────────────────────────────────────────────────────────────
+// Tier 1 = elite (40pts), Tier 2 = top (28pts), Tier 3 = notable (16pts), Tier 4 = default (4pts)
+
+const TIER_1_LEAGUES = new Set([
+  // UEFA Champions League, Europa League, Conference League
+  2, 3, 848,
+  // World Cup, Euro, Copa América
+  1, 4, 9,
+  // Top 5 domestic leagues
+  39,  // Premier League
+  140, // La Liga
+  135, // Serie A
+  78,  // Bundesliga
+  61,  // Ligue 1
+  // Copa Libertadores, Copa Sudamericana
+  13, 11,
+]);
+
+const TIER_2_LEAGUES = new Set([
+  // Strong domestic leagues
+  94,  // Primeira Liga (Portugal)
+  88,  // Eredivisie (Netherlands)
+  144, // Belgian Pro League
+  203, // Süper Lig (Turkey)
+  235, // Russian Premier League
+  218, // Saudi Pro League
+  262, // Liga MX
+  128, // Liga Profesional Argentina
+  71,  // Brasileirão Serie A
+  169, // Liga Dimayor Colombia
+  // UEFA Nations League, World Cup Qualifiers
+  5, 32, 34,
+  // FA Cup, Copa del Rey, Coppa Italia, DFB Pokal, Coupe de France
+  45, 143, 137, 81, 66,
+  // Community Shields, Super Cups
+  528, 556, 531, 529, 547,
+  // MLS
+  253,
+  // Championship (England)
+  40,
+]);
+
+const TIER_3_LEAGUES = new Set([
+  // Second divisions of top leagues
+  41,  // League One (England)
+  42,  // League Two (England)
+  141, // La Liga 2
+  136, // Serie B (Italy)
+  79,  // 2. Bundesliga
+  62,  // Ligue 2
+  // Other notable leagues
+  113, // Allsvenskan (Sweden)
+  103, // Eliteserien (Norway)
+  119, // Superliga (Denmark)
+  106, // Ekstraklasa (Poland)
+  179, // Scottish Premiership
+  307, // Pro League (Saudi 2nd div)
+  345, // Czech First League
+  283, // Egyptian Premier League
+]);
+
+function getLeagueTier(leagueId: number): number {
+  if (TIER_1_LEAGUES.has(leagueId)) return 1;
+  if (TIER_2_LEAGUES.has(leagueId)) return 2;
+  if (TIER_3_LEAGUES.has(leagueId)) return 3;
+  return 4;
+}
+
+// ─── Scoring ─────────────────────────────────────────────────────────────────
+
+function computeMatchRelevanceScore(input: {
+  leagueTier: number;
+  homeRank: number | null;
+  awayRank: number | null;
+  round: string;
+  totalTeams: number;
+}): number {
+  let score = 0;
+  const { leagueTier, homeRank, awayRank, round, totalTeams } = input;
+
+  // 1. League tier (max 40)
+  switch (leagueTier) {
+    case 1: score += 40; break;
+    case 2: score += 28; break;
+    case 3: score += 16; break;
+    default: score += 4; break;
+  }
+
+  // 2. Table position (max 25)
+  if (homeRank !== null && awayRank !== null && totalTeams > 0) {
+    const topThreshold = Math.max(Math.ceil(totalTeams * 0.25), 3);
+    const bottomThreshold = Math.floor(totalTeams * 0.75);
+
+    const bothTop = homeRank <= topThreshold && awayRank <= topThreshold;
+    const topVsBottom =
+      (homeRank <= topThreshold && awayRank >= bottomThreshold) ||
+      (awayRank <= topThreshold && homeRank >= bottomThreshold);
+    const oneTop = homeRank <= topThreshold || awayRank <= topThreshold;
+
+    if (bothTop) score += 25;
+    else if (topVsBottom) score += 18; // Title vs relegation drama
+    else if (oneTop) score += 10;
+  }
+
+  // 3. Round context (max 20)
+  const roundLower = round.toLowerCase();
+  if (roundLower.includes("final") && !roundLower.includes("semi") && !roundLower.includes("quarter")) {
+    score += 20;
+  } else if (roundLower.includes("semi")) {
+    score += 17;
+  } else if (roundLower.includes("quarter")) {
+    score += 14;
+  } else if (roundLower.includes("round of 16") || roundLower.includes("8th")) {
+    score += 10;
+  } else if (roundLower.includes("group")) {
+    score += 5;
+  }
+  // Check for late-season domestic rounds (high stakes)
+  const roundMatch = round.match(/(\d+)$/);
+  if (roundMatch && totalTeams > 0) {
+    const roundNum = parseInt(roundMatch[1], 10);
+    const totalRounds = (totalTeams - 1) * 2;
+    if (totalRounds > 0 && roundNum / totalRounds >= 0.85) {
+      score += 8; // Last ~15% of the season
+    }
+  }
+
+  // 4. Derby/classic detection via rank proximity (max 10)
+  if (homeRank !== null && awayRank !== null) {
+    const rankDiff = Math.abs(homeRank - awayRank);
+    if (rankDiff <= 2 && homeRank <= 6) score += 10; // Top teams neck-and-neck
+    else if (rankDiff <= 3 && homeRank <= 10) score += 5;
+  }
+
+  return score;
+}
 
