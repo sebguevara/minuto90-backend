@@ -5,7 +5,7 @@ export type CreateNewsInput = {
   body: string;
   imageUrl?: string | null;
   authorId?: string | null;
-  publishedAt?: Date | null;
+  publishedAt?: Date;
 };
 
 export type UpdateNewsInput = {
@@ -14,5 +14,5 @@ export type UpdateNewsInput = {
   summary?: string | null;
   body?: string;
   imageUrl?: string | null;
-  publishedAt?: Date | null;
+  publishedAt?: Date;
 };

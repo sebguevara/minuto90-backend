@@ -78,7 +78,10 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
     "/",
     async ({ body, set }) => {
       try {
-        const news = await newsService.create(body);
+        const news = await newsService.create({
+          ...body,
+          publishedAt: body.publishedAt ? new Date(body.publishedAt) : undefined,
+        });
         set.status = 201;
         return { data: news };
       } catch (err: any) {

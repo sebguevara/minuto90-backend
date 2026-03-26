@@ -28,7 +28,10 @@ const getRequestPurpose = (request: Request): string =>
     ? SITEMAP_REQUEST_PURPOSE
     : "default";
 
-const getClientAddress = (request: Request, server?: { requestIP?: (request: Request) => { address?: string } | null }): string => {
+const getClientAddress = (
+  request: Request,
+  server?: { requestIP?: (request: Request) => { address?: string } | null } | null
+): string => {
   const resolved = server?.requestIP?.(request)?.address;
   return resolved && resolved.trim() ? resolved : "unknown";
 };
