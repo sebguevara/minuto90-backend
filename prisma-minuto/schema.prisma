@@ -26,6 +26,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   subscribers NotificationSubscriber[]
+  news        News[]
+  posts       Post[]
 }
 
 model NotificationSubscriber {
@@ -63,4 +65,39 @@ model EvolutionInstance {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// ─── News ────────────────────────────────────────────────────────────────────
+
+model News {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  summary     String?
+  body        String
+  imageUrl    String?
+  authorId    String?
+  author      User?    @relation(fields: [authorId], references: [id])
+  publishedAt DateTime @default(now())
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([publishedAt])
+  @@index([isDeleted, publishedAt])
+}
+
+// ─── Posts ───────────────────────────────────────────────────────────────────
+
+model Post {
+  id        String   @id @default(uuid())
+  content   String
+  imageUrl  String?
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id])
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isDeleted, createdAt])
 }

@@ -18,6 +18,8 @@ import { statsRoutes } from "./features/stats/presentation/routes";
 import { notificationsRoutes } from "./features/notifications/presentation/routes";
 import { insightsRoutes } from "./features/insights/presentation/insights.routes";
 import { userRoutes } from "./features/users/presentation/user.routes";
+import { newsRoutes } from "./features/news/presentation/news.routes";
+import { postRoutes } from "./features/posts/presentation/post.routes";
 
 const parseCorsOrigins = (value: string): string[] =>
   value
@@ -98,6 +100,8 @@ const app = new Elysia()
               "Gestión de suscriptores, suscripciones, instancias de Evolution y endpoints de debug",
           },
           { name: "Users", description: "Gestión de usuarios y webhooks de Clerk" },
+          { name: "News", description: "Noticias — CRUD con soft delete" },
+          { name: "Posts", description: "Posts — CRUD con soft delete" },
         ],
       },
       path: "/swagger",
@@ -121,6 +125,8 @@ const app = new Elysia()
   .use(notificationsRoutes)
   .use(insightsRoutes)
   .use(userRoutes)
+  .use(newsRoutes)
+  .use(postRoutes)
   .listen(
     process.env.NODE_ENV === "production"
       ? Number(process.env.PORT ?? 4500)

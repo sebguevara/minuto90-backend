@@ -70,11 +70,11 @@ export function getMatchStreaksTtlSeconds(state: MatchState) {
 export function getMatchSummaryTtlSeconds(state: MatchState) {
   switch (state) {
     case "live":
-      return 60;
+      return 60 * 3; // 3 minutes
     case "upcoming_near":
-      return 60 * 10;
+      return 60 * 60 * 6; // 6 hours — pre-match analysis persists until kickoff
     case "upcoming_far":
-      return 60 * 30;
+      return 60 * 60 * 24; // 24 hours — regenerates once per day
     case "finished_recent":
       return 60 * 60 * 24 * 30;
     case "finished_old":

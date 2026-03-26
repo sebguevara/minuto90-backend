@@ -1,7 +1,10 @@
 import { logInfo } from "../../../shared/logging/logger";
 import { footballService } from "../../sports/application/football.service";
 import type { ApiFootballFixtureItem } from "../../sports/domain/football.types";
-import { getAllTeamsOnlyByMinId } from "../../stats/application/stats.service";
+import {
+  getAllTeamsOnlyByMinId,
+  getTeamMatchProfile,
+} from "../../stats/application/stats.service";
 import { openai } from "../infrastructure/openai.client";
 import {
   buildDailyInsightsCacheKey,
@@ -17,6 +20,9 @@ import {
 import { redisInsightsCacheStore } from "../infrastructure/insights-cache.store";
 
 const COMPLETED_MATCH_STATUS = new Set(["FT", "AET", "PEN"]);
+const LIVE_MATCH_STATUS = new Set([
+  "1H", "2H", "ET", "P", "BT", "LIVE", "INT", "HT", "SUSP", "INTR",
+]);
 const LOCK_TTL_SECONDS = 25;
 const LOCK_MAX_RETRIES = 10;
 const LOCK_WAIT_MS = 180;
@@ -289,6 +295,71 @@ async function loadTeamDbContext(
   }
 }
 
+type TeamWhoScoredProfile = {
+  strengths: string[];
+  weaknesses: string[];
+  styleOfPlay: string[];
+  topStats: {
+    rating: number | null;
+    possession: number | null;
+    shotsPg: number | null;
+    passSuccess: number | null;
+    goals: number | null;
+    apps: number | null;
+  };
+};
+
+async function loadTeamWhoScoredProfile(
+  teamMinId: number,
+  leagueId: number
+): Promise<TeamWhoScoredProfile | null> {
+  try {
+    const result = await getTeamMatchProfile(teamMinId);
+    const profile = result?.data;
+    if (!profile) return null;
+
+    const strengths = (profile.characteristics ?? [])
+      .filter((c: { kind: string }) => c.kind === "strength")
+      .map((c: { label: string }) => c.label);
+
+    const weaknesses = (profile.characteristics ?? [])
+      .filter((c: { kind: string }) => c.kind === "weakness")
+      .map((c: { label: string }) => c.label);
+
+    const styleOfPlay = (profile.styleOfPlay ?? []).map(
+      (s: { label: string }) => s.label
+    );
+
+    // Pick overall summary row, prefer matching league
+    const summaryRows = profile.topStats?.summary ?? [];
+    const summaryRow =
+      summaryRows.find(
+        (r: { viewTypeId: number; tournamentId: number }) =>
+          r.viewTypeId === 1 && r.tournamentId === leagueId
+      ) ??
+      summaryRows.find(
+        (r: { viewTypeId: number }) => r.viewTypeId === 1
+      ) ??
+      null;
+
+    return {
+      strengths: strengths.slice(0, 5),
+      weaknesses: weaknesses.slice(0, 5),
+      styleOfPlay: styleOfPlay.slice(0, 6),
+      topStats: {
+        rating: summaryRow?.rating ?? null,
+        possession: summaryRow?.possession ?? null,
+        shotsPg: summaryRow?.shotsPg ?? null,
+        passSuccess: summaryRow?.passSuccess ?? null,
+        goals: summaryRow?.goals ?? null,
+        apps: summaryRow?.apps ?? null,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
 export class InsightsService {
   private async getFixtureById(fixtureId: number) {
     const fixturesRes = await footballService.getFixtures({ id: fixtureId });
@@ -422,6 +493,10 @@ export class InsightsService {
       throw new Error("Partido no encontrado");
     }
 
+    const statusShort = fixtureData.fixture.status.short?.toUpperCase() ?? "";
+    const isFinished = COMPLETED_MATCH_STATUS.has(statusShort);
+    const isLive = LIVE_MATCH_STATUS.has(statusShort);
+
     const state = resolveMatchState({
       statusShort: fixtureData.fixture.status.short,
       kickoffAt: getFixtureKickoffDate(fixtureData),
@@ -433,60 +508,13 @@ export class InsightsService {
       cacheKey,
       ttlSeconds,
       compute: async () => {
-        const [statsRes, eventsRes] = await Promise.all([
-          footballService.getFixtureStatistics({ fixture: fixtureId }),
-          footballService.getFixtureEvents({ fixture: fixtureId }),
-        ]);
-
-        const { fixture, league, teams, goals, score } = fixtureData;
-        const statistics = statsRes.response || [];
-        const events = eventsRes.response || [];
-
-        const matchContext = {
-          tournament: league.name,
-          round: league.round,
-          homeTeam: teams.home.name,
-          awayTeam: teams.away.name,
-          finalScore: `${goals.home} - ${goals.away}`,
-          halftimeScore: `${score.halftime.home} - ${score.halftime.away}`,
-          status: fixture.status.long,
-          events: events.map((e) => ({
-            time: `${e.time.elapsed}${e.time.extra ? "+" + e.time.extra : ""}'`,
-            team: e.team.name,
-            player: e.player.name,
-            assist: e.assist.name,
-            type: e.type,
-            detail: e.detail,
-          })),
-          keyStats: statistics.map((s) => ({
-            team: s.team.name,
-            stats: s.statistics.filter((st) =>
-              ["Ball Possession", "Total Shots", "Shots on Goal", "Fouls"].includes(
-                st.type
-              )
-            ),
-          })),
-        };
-
-        const systemPrompt = `Eres un relator y analista experto de fútbol sudamericano e internacional.
-Tu tarea es narrar un resumen breve pero sustancioso del partido basándote en los datos estadísticos y los eventos (goles, tarjetas, cambios).
-Debes transmitir cómo se sintió el partido: si fue dominado de principio a fin, si fue un encuentro tenso, si hubo un giro dramático, etc.
-Escribe en un tono atrapante, vibrante y muy profesional.
-Evita el abuso de números o porcentajes; menciona solo los que sean estrictamente necesarios para respaldar la narrativa (por ejemplo, posesión abrumadora o cantidad de tiros).
-Formato de salida: Devuelve directamente el texto, sin introducciones conversacionales. Puede tener un pequeño título creativo al comienzo en Markdown (ej: ### El dominio táctico de X sobre Y).`;
-
-        const completion = await openai.responses.create({
-          model: "gpt-5-mini",
-          reasoning: { effort: "low" },
-          instructions: systemPrompt,
-          input: `Aquí tienes los datos del partido:\n\n${JSON.stringify(
-            matchContext,
-            null,
-            2
-          )}`,
-        });
-
-        return completion.output_text || "No se pudo generar el resumen del partido.";
+        if (isFinished) {
+          return this.computePostMatchSummary(fixtureId, fixtureData);
+        }
+        if (isLive) {
+          return this.computeLiveMatchAnalysis(fixtureId, fixtureData);
+        }
+        return this.computePreMatchAnalysis(fixtureId, fixtureData);
       },
     });
 
@@ -499,6 +527,372 @@ Formato de salida: Devuelve directamente el texto, sin introducciones conversaci
     }
 
     return result.value;
+  }
+
+  private async computePostMatchSummary(
+    fixtureId: number,
+    fixtureData: ApiFootballFixtureItem
+  ): Promise<string> {
+    const [statsRes, eventsRes, lineupsRes, playersRes] = await Promise.all([
+      footballService.getFixtureStatistics({ fixture: fixtureId }),
+      footballService.getFixtureEvents({ fixture: fixtureId }),
+      footballService.getFixtureLineups({ fixture: fixtureId }),
+      footballService.getFixturePlayers({ fixture: fixtureId }),
+    ]);
+
+    const { league, teams, goals, score } = fixtureData;
+    const statistics = statsRes.response || [];
+    const events = eventsRes.response || [];
+    const lineups = lineupsRes.response || [];
+    const playersData = playersRes.response || [];
+
+    const topPlayers = playersData.flatMap((t) =>
+      t.players
+        .filter((p) => p.statistics?.[0]?.games?.rating)
+        .sort(
+          (a, b) =>
+            parseFloat(b.statistics[0].games.rating ?? "0") -
+            parseFloat(a.statistics[0].games.rating ?? "0")
+        )
+        .slice(0, 5)
+        .map((p) => {
+          const s = p.statistics[0];
+          return {
+            name: p.player.name,
+            team: t.team.name,
+            rating: s.games.rating,
+            goals: s.goals?.total ?? 0,
+            assists: s.goals?.assists ?? 0,
+            shots: s.shots?.total ?? 0,
+            shotsOnTarget: s.shots?.on ?? 0,
+            keyPasses: s.passes?.key ?? 0,
+            passAccuracy: s.passes?.accuracy,
+            duelsWon: s.duels?.won ?? 0,
+            duelsTotal: s.duels?.total ?? 0,
+            tackles: s.tackles?.total ?? 0,
+            interceptions: s.tackles?.interceptions ?? 0,
+          };
+        })
+    );
+
+    const matchContext = {
+      tournament: league.name,
+      round: league.round,
+      homeTeam: teams.home.name,
+      awayTeam: teams.away.name,
+      finalScore: `${goals.home} - ${goals.away}`,
+      halftimeScore: `${score.halftime.home} - ${score.halftime.away}`,
+      events: events.map((e) => ({
+        time: `${e.time.elapsed}${e.time.extra ? "+" + e.time.extra : ""}'`,
+        team: e.team.name,
+        player: e.player.name,
+        assist: e.assist.name,
+        type: e.type,
+        detail: e.detail,
+      })),
+      statistics: statistics.map((s) => ({
+        team: s.team.name,
+        stats: s.statistics,
+      })),
+      lineups: lineups.map((l) => ({
+        team: l.team.name,
+        formation: l.formation,
+        startXI: l.startXI.map((p) => p.player.name),
+        coach: l.coach?.name ?? null,
+      })),
+      topPlayers,
+    };
+
+    const systemPrompt = `Eres un analista deportivo de élite especializado en fútbol. Tu audiencia son aficionados exigentes que buscan análisis profundo, no un resumen genérico.
+
+ESTRUCTURA (2 párrafos máximo):
+1. Resultado, narrativa y análisis táctico — quién dominó, formaciones, qué funcionó y qué no. Menciona contexto del torneo y respalda con estadísticas clave (posesión, tiros, pases). Si hubo giro dramático, destácalo.
+2. Figuras y conclusión — jugadores destacados con datos concretos (rating, goles, asistencias, pases clave, duelos). Cierra con qué se lleva cada equipo y lectura para el torneo.
+
+REGLAS:
+- Idioma: español.
+- Tono: profesional, analítico, directo. Sin clichés vacíos.
+- Sé conciso. Cada frase debe aportar información nueva.
+- Usa datos solo cuando aporten valor real a la narrativa.
+- NO inventes datos que no estén en el input.
+- Devuelve directamente el texto sin encabezados markdown, sin emojis, sin introducciones conversacionales.`;
+
+    const completion = await openai.responses.create({
+      model: "gpt-5-mini",
+      reasoning: { effort: "low" },
+      instructions: systemPrompt,
+      input: `Datos del partido:\n\n${JSON.stringify(matchContext, null, 2)}`,
+    });
+
+    return completion.output_text || "No se pudo generar el resumen del partido.";
+  }
+
+  private async computePreMatchAnalysis(
+    fixtureId: number,
+    fixtureData: ApiFootballFixtureItem
+  ): Promise<string> {
+    const { league, teams } = fixtureData;
+    const homeId = teams.home.id;
+    const awayId = teams.away.id;
+
+    const [
+      predictionsRes,
+      standingsRes,
+      h2hRes,
+      oddsRes,
+      lineupsRes,
+      homeWsProfile,
+      awayWsProfile,
+    ] = await Promise.all([
+      footballService
+        .getPredictions({ fixture: fixtureId })
+        .catch(() => ({ response: [] })),
+      footballService
+        .getStandings({ league: league.id, season: league.season })
+        .catch(() => ({ response: [] })),
+      footballService
+        .getFixtureHeadToHead({ h2h: `${homeId}-${awayId}`, last: 5 })
+        .catch(() => ({ response: [] })),
+      footballService
+        .getOdds({ fixture: fixtureId })
+        .catch(() => ({ response: [] })),
+      footballService
+        .getFixtureLineups({ fixture: fixtureId })
+        .catch(() => ({ response: [] })),
+      loadTeamWhoScoredProfile(homeId, league.id),
+      loadTeamWhoScoredProfile(awayId, league.id),
+    ]);
+
+    const prediction = predictionsRes.response?.[0] ?? null;
+    const standings = standingsRes.response?.[0]?.league?.standings?.[0] ?? [];
+    const h2hFixtures = h2hRes.response || [];
+    const lineups = lineupsRes.response || [];
+
+    const homeStanding = Array.isArray(standings)
+      ? standings.find((s: { team?: { id?: number } }) => s.team?.id === homeId)
+      : null;
+    const awayStanding = Array.isArray(standings)
+      ? standings.find((s: { team?: { id?: number } }) => s.team?.id === awayId)
+      : null;
+
+    const formatStanding = (s: Record<string, unknown> | null | undefined) => {
+      if (!s) return null;
+      return {
+        position: s.rank,
+        points: s.points,
+        form: s.form,
+        record: s.all,
+        description: s.description,
+      };
+    };
+
+    // Extract 1X2 odds from 1xBet only
+    const oddsData = oddsRes.response?.[0] ?? null;
+    const oneXBetBookmaker = oddsData?.bookmakers?.find(
+      (bk) => bk.name.toLowerCase().includes("1xbet")
+    );
+    const matchWinnerBet = oneXBetBookmaker?.bets
+      ?.filter((b) => b.name === "Match Winner")
+      .map((b) => ({
+        values: b.values.reduce(
+          (acc, v) => {
+            const label = String(v.value);
+            if (label === "Home") acc.home = v.odd;
+            else if (label === "Draw") acc.draw = v.odd;
+            else if (label === "Away") acc.away = v.odd;
+            return acc;
+          },
+          {} as { home?: string; draw?: string; away?: string }
+        ),
+      }))?.[0] ?? null;
+
+    const preMatchContext = {
+      tournament: league.name,
+      round: league.round,
+      date: fixtureData.fixture.date,
+      homeTeam: teams.home.name,
+      awayTeam: teams.away.name,
+      standings: {
+        home: formatStanding(homeStanding as Record<string, unknown> | null),
+        away: formatStanding(awayStanding as Record<string, unknown> | null),
+      },
+      h2h: h2hFixtures.map((f) => ({
+        date: f.fixture.date,
+        homeTeam: f.teams.home.name,
+        awayTeam: f.teams.away.name,
+        score: `${f.goals.home} - ${f.goals.away}`,
+        league: f.league.name,
+      })),
+      prediction: prediction
+        ? {
+            winner: prediction.predictions?.winner?.name ?? null,
+            winOrDraw: prediction.predictions?.win_or_draw ?? null,
+            advice: prediction.predictions?.advice ?? null,
+            percent: prediction.predictions?.percent ?? null,
+            underOver: prediction.predictions?.under_over ?? null,
+          }
+        : null,
+      comparison: prediction?.comparison ?? null,
+      odds: matchWinnerBet
+        ? {
+            bookmaker: "1xBet",
+            home: matchWinnerBet.values.home ?? null,
+            draw: matchWinnerBet.values.draw ?? null,
+            away: matchWinnerBet.values.away ?? null,
+          }
+        : null,
+      homeFormLast5: prediction?.teams?.home?.last_5 ?? null,
+      awayFormLast5: prediction?.teams?.away?.last_5 ?? null,
+      lineups:
+        lineups.length > 0
+          ? lineups.map((l) => ({
+              team: l.team.name,
+              formation: l.formation,
+              coach: l.coach?.name ?? null,
+              startXI: l.startXI.map((p) => ({
+                name: p.player.name,
+                pos: p.player.pos,
+                number: p.player.number,
+              })),
+            }))
+          : null,
+    };
+
+    const hasLineups = lineups.length > 0;
+
+    const systemPrompt = `Eres un analista deportivo de élite especializado en fútbol. Genera un análisis previo COMPACTO del partido.
+
+ESTRUCTURA (2 párrafos máximo, cortos y directos):
+1. Contexto y claves — posiciones en la tabla (qué se juega cada equipo: título, clasificación, descenso, nada), forma reciente, historial directo.${hasLineups ? " Si hay alineaciones, analiza las formaciones (ej: 4-3-3 agresivo vs 5-4-1 defensivo), jugadores clave y qué plantea tácticamente cada técnico." : ""}
+2. Cuotas 1xBet y pronóstico — analiza las cuotas de 1xBet: quién paga más, quién menos, qué refleja el mercado. Menciona las cuotas exactas (ej: "1xBet paga 1.50 al local, 4.20 al empate y 5.80 a la visita"). Cierra con un pronóstico razonado. No seas absoluto, presenta matices.
+
+DATOS CLAVE:
+- "standings": posición y puntos en la tabla. "description" indica si pelea por algo (Champions, descenso, etc).
+- "homeFormLast5"/"awayFormLast5": forma reciente. "form" es % de rendimiento (100% = todas victorias). "goals" tiene goles a favor/contra en últimos 5.
+- "comparison": comparación porcentual forma/ataque/defensa entre equipos.
+- "odds": cuotas de 1xBet. Cuota más baja = mayor favoritismo.${hasLineups ? '\n- "lineups": alineaciones confirmadas. "pos" indica posición (G=portero, D=defensa, M=mediocampista, F=delantero). La formación revela la intención táctica del DT.' : ""}
+
+REGLAS:
+- Idioma: español. Tono: profesional y conciso.
+- Máximo 5-6 oraciones por párrafo.
+- Cuando menciones forma, traduce el porcentaje a contexto (ej: "80%" = "4 de 5 positivos").
+- Siempre menciona "1xBet" por nombre al hablar de cuotas.
+- NO inventes datos. Sin markdown, sin emojis, sin introducciones.`;
+
+    const completion = await openai.responses.create({
+      model: "gpt-5-mini",
+      reasoning: { effort: "low" },
+      instructions: systemPrompt,
+      input: `Datos previos al partido:\n\n${JSON.stringify(preMatchContext, null, 2)}`,
+    });
+
+    return completion.output_text || "No se pudo generar el análisis previo.";
+  }
+
+  private async computeLiveMatchAnalysis(
+    fixtureId: number,
+    fixtureData: ApiFootballFixtureItem
+  ): Promise<string> {
+    const { league, teams, goals } = fixtureData;
+    const elapsed = fixtureData.fixture.status.elapsed ?? null;
+    const statusLong = fixtureData.fixture.status.long ?? "";
+
+    const [statsRes, eventsRes, lineupsRes, liveOddsRes] = await Promise.all([
+      footballService
+        .getFixtureStatistics({ fixture: fixtureId })
+        .catch(() => ({ response: [] })),
+      footballService
+        .getFixtureEvents({ fixture: fixtureId })
+        .catch(() => ({ response: [] })),
+      footballService
+        .getFixtureLineups({ fixture: fixtureId })
+        .catch(() => ({ response: [] })),
+      footballService
+        .getOddsLive({ fixture: fixtureId })
+        .catch(() => ({ response: [] })),
+    ]);
+
+    const statistics = statsRes.response || [];
+    const events = eventsRes.response || [];
+    const lineups = lineupsRes.response || [];
+    const liveOdds = liveOddsRes.response?.[0] ?? null;
+
+    // Extract 1xBet live odds
+    const oneXBetLiveOdds = liveOdds?.odds
+      ?.find((b) => b.name === "Match Winner")
+      ?.values?.reduce(
+        (acc, v) => {
+          const label = String(v.value);
+          if (label === "Home") acc.home = v.odd;
+          else if (label === "Draw") acc.draw = v.odd;
+          else if (label === "Away") acc.away = v.odd;
+          return acc;
+        },
+        {} as { home?: string; draw?: string; away?: string }
+      ) ?? null;
+
+    const liveContext = {
+      tournament: league.name,
+      round: league.round,
+      homeTeam: teams.home.name,
+      awayTeam: teams.away.name,
+      score: `${goals.home ?? 0} - ${goals.away ?? 0}`,
+      elapsed,
+      status: statusLong,
+      events: events.map((e) => ({
+        time: `${e.time.elapsed}${e.time.extra ? "+" + e.time.extra : ""}'`,
+        team: e.team.name,
+        player: e.player.name,
+        assist: e.assist.name,
+        type: e.type,
+        detail: e.detail,
+      })),
+      statistics: statistics.map((s) => ({
+        team: s.team.name,
+        stats: s.statistics,
+      })),
+      lineups: lineups.map((l) => ({
+        team: l.team.name,
+        formation: l.formation,
+        coach: l.coach?.name ?? null,
+        startXI: l.startXI.map((p) => ({
+          name: p.player.name,
+          pos: p.player.pos,
+        })),
+      })),
+      liveOdds: oneXBetLiveOdds
+        ? {
+            bookmaker: "1xBet",
+            home: oneXBetLiveOdds.home ?? null,
+            draw: oneXBetLiveOdds.draw ?? null,
+            away: oneXBetLiveOdds.away ?? null,
+          }
+        : null,
+    };
+
+    const systemPrompt = `Eres un analista deportivo en VIVO comentando un partido que está en juego AHORA MISMO. Tu tono es el de un analista de transmisión en directo: presente, preciso y con urgencia.
+
+CONTEXTO: El partido lleva ${elapsed ?? "?"} minutos y va ${goals.home ?? 0}-${goals.away ?? 0}.
+
+ESTRUCTURA (2 párrafos máximo, cortos y directos):
+1. Lo que está pasando — analiza el marcador actual, quién domina según las estadísticas en vivo (posesión, tiros, tiros al arco), eventos clave (goles, tarjetas, cambios). Comenta las formaciones y si algún equipo cambió su planteamiento. Sé concreto con datos del partido.
+2. Cuotas en vivo 1xBet y lectura — si hay cuotas en vivo, analiza cómo se han movido: ¿el mercado cree que puede haber remontada? ¿el favorito sigue siendo el mismo? Menciona las cuotas exactas. Da tu lectura de cómo puede terminar basándote en lo que ves en los datos.
+
+REGLAS:
+- Idioma: español. Tono: directo, presente ("está dominando", "lleva", "tiene").
+- NUNCA hables en futuro como si el partido no hubiera empezado. El partido YA está en juego.
+- Máximo 5-6 oraciones por párrafo.
+- Siempre menciona "1xBet" por nombre al hablar de cuotas.
+- NO inventes datos. Sin markdown, sin emojis, sin introducciones.`;
+
+    const completion = await openai.responses.create({
+      model: "gpt-5-mini",
+      reasoning: { effort: "low" },
+      instructions: systemPrompt,
+      input: `Datos en vivo del partido:\n\n${JSON.stringify(liveContext, null, 2)}`,
+    });
+
+    return completion.output_text || "No se pudo generar el análisis en vivo.";
   }
 
   /**
