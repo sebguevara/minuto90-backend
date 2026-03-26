@@ -21,6 +21,18 @@ import { userRoutes } from "./features/users/presentation/user.routes";
 import { newsRoutes } from "./features/news/presentation/news.routes";
 import { postRoutes } from "./features/posts/presentation/post.routes";
 
+const SITEMAP_REQUEST_PURPOSE = "sitemap";
+
+const getRequestPurpose = (request: Request): string =>
+  request.headers.get("x-minuto90-purpose") === SITEMAP_REQUEST_PURPOSE
+    ? SITEMAP_REQUEST_PURPOSE
+    : "default";
+
+const getClientAddress = (request: Request, server?: { requestIP?: (request: Request) => { address?: string } | null }): string => {
+  const resolved = server?.requestIP?.(request)?.address;
+  return resolved && resolved.trim() ? resolved : "unknown";
+};
+
 const parseCorsOrigins = (value: string): string[] =>
   value
     .split(",")
@@ -42,7 +54,10 @@ const app = new Elysia()
   .use(
     rateLimit({
       duration: 60000,
-      max: 300,
+      max: (_key, request) =>
+        getRequestPurpose(request) === SITEMAP_REQUEST_PURPOSE ? 2000 : 300,
+      generator: (request, server) =>
+        `${getRequestPurpose(request)}:${getClientAddress(request, server)}`,
     })
   )
   .onRequest(({ set, request }) => {
