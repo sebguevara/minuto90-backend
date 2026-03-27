@@ -43,6 +43,7 @@ import {
   createEmptyFootballLiveSnapshot,
   getFootballLiveSnapshot,
 } from "../infrastructure/football-live.snapshot";
+import { logInfo, logWarn } from "../../../shared/logging/logger";
 import {
   coachsQuerySchema,
   countriesQuerySchema,
@@ -85,6 +86,64 @@ const FOOTBALL_LIVE_STREAM_POLL_MS = Number(
 const FOOTBALL_LIVE_STREAM_KEEPALIVE_MS = Number(
   process.env.FOOTBALL_LIVE_STREAM_KEEPALIVE_MS ?? 15000
 );
+
+type FootballLiveHomeFixture = {
+  fixture: {
+    id: number;
+    date?: string;
+    status?: {
+      short?: string;
+      elapsed?: number | null;
+    };
+  };
+  goals?: {
+    home?: number | null;
+    away?: number | null;
+  };
+};
+
+function mergeLiveIntoFixture<TFixture extends Record<string, any>>(
+  baseFixture: TFixture,
+  liveFixture: FootballLiveHomeFixture
+): TFixture {
+  return {
+    ...baseFixture,
+    fixture: {
+      ...baseFixture.fixture,
+      ...(liveFixture.fixture.date ? { date: liveFixture.fixture.date } : {}),
+      status: {
+        ...baseFixture.fixture?.status,
+        ...(liveFixture.fixture.status?.short
+          ? { short: liveFixture.fixture.status.short }
+          : {}),
+        ...(liveFixture.fixture.status?.elapsed !== undefined
+          ? { elapsed: liveFixture.fixture.status.elapsed ?? null }
+          : {}),
+      },
+    },
+    goals: {
+      ...baseFixture.goals,
+      ...(liveFixture.goals?.home !== undefined
+        ? { home: liveFixture.goals.home ?? null }
+        : {}),
+      ...(liveFixture.goals?.away !== undefined
+        ? { away: liveFixture.goals.away ?? null }
+        : {}),
+    },
+    score: {
+      ...baseFixture.score,
+      fulltime: {
+        ...baseFixture.score?.fulltime,
+        ...(liveFixture.goals?.home !== undefined
+          ? { home: liveFixture.goals.home ?? null }
+          : {}),
+        ...(liveFixture.goals?.away !== undefined
+          ? { away: liveFixture.goals.away ?? null }
+          : {}),
+      },
+    },
+  };
+}
 
 function parseOptionalInteger(value: unknown, field: string) {
   if (value === undefined || value === null || value === "") {
@@ -334,6 +393,111 @@ function encodeSseEvent(event: string, payload: unknown) {
 
 export function createFootballRoutes(service: FootballServiceContract = footballService) {
   return new Elysia({ prefix: "/football" })
+    .get("/live/home", async ({ query, set }) => {
+      try {
+        const date =
+          typeof query.date === "string" && query.date.trim().length > 0
+            ? query.date.trim()
+            : undefined;
+        const timezone =
+          typeof query.timezone === "string" && query.timezone.trim().length > 0
+            ? query.timezone.trim()
+            : "America/Argentina/Buenos_Aires";
+
+        if (!date) {
+          throw createFootballValidationError("El parametro date es obligatorio");
+        }
+
+        const [baseEnvelope, snapshot] = await Promise.all([
+          service.getFixtures({ date, timezone }),
+          getFootballLiveSnapshot(),
+        ]);
+
+        const liveFixtures = Array.isArray(snapshot?.response) ? snapshot.response : [];
+        const baseResponse = Array.isArray(baseEnvelope.response) ? baseEnvelope.response : [];
+        const mergedMap = new Map<number, Record<string, any>>(
+          baseResponse
+            .filter((fixture) => Boolean(fixture?.fixture?.id))
+            .map((fixture) => [fixture.fixture.id as number, fixture])
+        );
+
+        if (snapshot) {
+          logInfo("football.live_home.snapshot_hit", {
+            date,
+            timezone,
+            results: liveFixtures.length,
+            version: snapshot.version,
+          });
+        } else {
+          logWarn("football.live_home.snapshot_missing", { date, timezone });
+        }
+
+        logInfo("football.live_home.base_fetch_hit", {
+          date,
+          timezone,
+          results: baseResponse.length,
+        });
+
+        const missingLiveIds = liveFixtures
+          .map((fixture) => fixture?.fixture?.id)
+          .filter(
+            (fixtureId): fixtureId is number =>
+              typeof fixtureId === "number" && !mergedMap.has(fixtureId)
+          );
+
+        if (missingLiveIds.length > 0) {
+          const missingEnvelope = await service.getFixtures({
+            ids: missingLiveIds.join("-"),
+            timezone,
+          });
+          const missingResponse = Array.isArray(missingEnvelope.response)
+            ? missingEnvelope.response
+            : [];
+
+          for (const fixture of missingResponse) {
+            if (fixture?.fixture?.id) {
+              mergedMap.set(fixture.fixture.id, fixture as Record<string, any>);
+            }
+          }
+        }
+
+        for (const liveFixture of liveFixtures) {
+          const fixtureId = liveFixture?.fixture?.id;
+          if (typeof fixtureId !== "number") continue;
+
+          const baseFixture = mergedMap.get(fixtureId);
+          if (!baseFixture) continue;
+
+          mergedMap.set(fixtureId, mergeLiveIntoFixture(baseFixture, liveFixture));
+        }
+
+        const mergedResponse = Array.from(mergedMap.values()).sort((left, right) => {
+          const leftTs = Number(left?.fixture?.timestamp ?? 0);
+          const rightTs = Number(right?.fixture?.timestamp ?? 0);
+          return leftTs - rightTs;
+        });
+
+        logInfo("football.live_home.merge_results", {
+          date,
+          timezone,
+          baseResults: baseResponse.length,
+          liveResults: liveFixtures.length,
+          missingLiveIds: missingLiveIds.length,
+          mergedResults: mergedResponse.length,
+        });
+
+        return {
+          source: "redis+base",
+          date,
+          timezone,
+          updatedAt: snapshot?.updatedAt ?? new Date().toISOString(),
+          results: mergedResponse.length,
+          response: mergedResponse,
+        };
+      } catch (error) {
+        return handleFootballError(set, error);
+      }
+    })
     .get("/live/stream", ({ request, set }) => {
       set.headers["Content-Type"] = "text/event-stream; charset=utf-8";
       set.headers["Cache-Control"] = "no-cache, no-transform";
@@ -376,6 +540,19 @@ export function createFootballRoutes(service: FootballServiceContract = football
               }
 
               lastVersion = snapshot.version;
+              if (snapshot.results === 0) {
+                logInfo("football.live_stream.snapshot_empty", {
+                  version: snapshot.version,
+                  updatedAt: snapshot.updatedAt,
+                });
+              } else {
+                logInfo("football.live_stream.snapshot_push", {
+                  version: snapshot.version,
+                  updatedAt: snapshot.updatedAt,
+                  results: snapshot.results,
+                  force,
+                });
+              }
               enqueue(encodeSseEvent("snapshot", snapshot));
             };
 

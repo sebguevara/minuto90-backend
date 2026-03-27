@@ -20,6 +20,7 @@ import { insightsRoutes } from "./features/insights/presentation/insights.routes
 import { userRoutes } from "./features/users/presentation/user.routes";
 import { newsRoutes } from "./features/news/presentation/news.routes";
 import { postRoutes } from "./features/posts/presentation/post.routes";
+import { comparatorRoutes } from "./features/comparator/presentation/comparator.routes";
 
 const SITEMAP_REQUEST_PURPOSE = "sitemap";
 
@@ -120,6 +121,7 @@ const app = new Elysia()
           { name: "Users", description: "Gestión de usuarios y webhooks de Clerk" },
           { name: "News", description: "Noticias — CRUD con soft delete" },
           { name: "Posts", description: "Posts — CRUD con soft delete" },
+          { name: "Comparador", description: "Comparador de equipos — perfiles normalizados de API-Football + WhoScored" },
         ],
       },
       path: "/swagger",
@@ -145,6 +147,7 @@ const app = new Elysia()
   .use(userRoutes)
   .use(newsRoutes)
   .use(postRoutes)
+  .use(comparatorRoutes)
   .listen(
     process.env.NODE_ENV === "production"
       ? Number(process.env.PORT ?? 4500)
