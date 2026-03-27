@@ -5,6 +5,7 @@
     "test": "bun test",
     "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
+    "worker": "bun run src/workers/index.ts",
     "worker:poll-live": "bun run src/workers/live-fixtures-poller.ts",
     "worker:whatsapp": "bun run src/workers/whatsapp-notifications.worker.ts",
     "worker:daily-prewarm": "bun run src/workers/daily-prewarm.worker.ts",

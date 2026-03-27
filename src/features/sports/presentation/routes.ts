@@ -40,6 +40,10 @@ import {
   type FootballServiceContract,
 } from "../application/football.service";
 import {
+  createEmptyFootballLiveSnapshot,
+  getFootballLiveSnapshot,
+} from "../infrastructure/football-live.snapshot";
+import {
   coachsQuerySchema,
   countriesQuerySchema,
   fixtureEventsQuerySchema,
@@ -74,6 +78,13 @@ import {
 } from "./football.schemas";
 import { footballSwaggerExamples } from "./football.swagger.examples";
 import { createSwaggerDetail } from "./swagger.helpers";
+
+const FOOTBALL_LIVE_STREAM_POLL_MS = Number(
+  process.env.FOOTBALL_LIVE_STREAM_POLL_MS ?? 1000
+);
+const FOOTBALL_LIVE_STREAM_KEEPALIVE_MS = Number(
+  process.env.FOOTBALL_LIVE_STREAM_KEEPALIVE_MS ?? 15000
+);
 
 function parseOptionalInteger(value: unknown, field: string) {
   if (value === undefined || value === null || value === "") {
@@ -317,8 +328,101 @@ function footballDetail(summary: string, example: unknown, description?: string)
   return createSwaggerDetail("Football", summary, example, description);
 }
 
+function encodeSseEvent(event: string, payload: unknown) {
+  return `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`;
+}
+
 export function createFootballRoutes(service: FootballServiceContract = footballService) {
   return new Elysia({ prefix: "/football" })
+    .get("/live/stream", ({ request, set }) => {
+      set.headers["Content-Type"] = "text/event-stream; charset=utf-8";
+      set.headers["Cache-Control"] = "no-cache, no-transform";
+      set.headers["Connection"] = "keep-alive";
+      set.headers["X-Accel-Buffering"] = "no";
+
+      const encoder = new TextEncoder();
+
+      return new Response(
+        new ReadableStream<Uint8Array>({
+          start(controller) {
+            let closed = false;
+            let lastVersion = "";
+            let lastKeepaliveAt = 0;
+            let isTickRunning = false;
+            let intervalId: ReturnType<typeof setInterval> | null = null;
+
+            const close = () => {
+              if (closed) return;
+              closed = true;
+              if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+              }
+              request.signal.removeEventListener("abort", close);
+              controller.close();
+            };
+
+            const enqueue = (chunk: string) => {
+              if (closed) return;
+              controller.enqueue(encoder.encode(chunk));
+            };
+
+            const pushSnapshot = async (force = false) => {
+              const snapshot =
+                (await getFootballLiveSnapshot()) ?? createEmptyFootballLiveSnapshot();
+
+              if (!force && snapshot.version === lastVersion) {
+                return;
+              }
+
+              lastVersion = snapshot.version;
+              enqueue(encodeSseEvent("snapshot", snapshot));
+            };
+
+            const tick = async () => {
+              if (closed || isTickRunning) return;
+              isTickRunning = true;
+
+              try {
+                await pushSnapshot(false);
+
+                const now = Date.now();
+                if (now - lastKeepaliveAt >= FOOTBALL_LIVE_STREAM_KEEPALIVE_MS) {
+                  lastKeepaliveAt = now;
+                  enqueue(`: keepalive ${new Date(now).toISOString()}\n\n`);
+                }
+              } catch (_error) {
+                enqueue(
+                  encodeSseEvent("error", {
+                    message: "No se pudo leer el snapshot live desde Redis",
+                  })
+                );
+              } finally {
+                isTickRunning = false;
+              }
+            };
+
+            request.signal.addEventListener("abort", close);
+
+            enqueue(
+              encodeSseEvent("connected", {
+                connectedAt: new Date().toISOString(),
+                source: "redis",
+              })
+            );
+
+            void pushSnapshot(true);
+            intervalId = setInterval(() => {
+              void tick();
+            }, FOOTBALL_LIVE_STREAM_POLL_MS);
+          },
+          cancel() {},
+        }),
+        {
+          headers: set.headers as HeadersInit,
+        }
+      );
+    })
     .get(
       "/countries",
       async ({ query, set }) => {
