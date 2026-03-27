@@ -29,7 +29,16 @@ export function serializeApiFootballParams(params?: object) {
 
 export function buildFootballCacheKey(endpoint: string, params?: object) {
   const normalizedEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
-  const serializedParams = serializeApiFootballParams(params);
+  const normalizedParams =
+    normalizedEndpoint === "odds" &&
+    typeof (params as Record<string, unknown> | undefined)?.fixture === "number"
+      ? {
+          fixture: (params as Record<string, unknown>).fixture,
+          bookmaker: (params as Record<string, unknown>).bookmaker ?? 11,
+          bet: (params as Record<string, unknown>).bet ?? 1,
+        }
+      : params;
+  const serializedParams = serializeApiFootballParams(normalizedParams);
 
   return serializedParams
     ? `football:${normalizedEndpoint}?${serializedParams}`

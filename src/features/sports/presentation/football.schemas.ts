@@ -203,6 +203,7 @@ export const oddsLiveBetsQuerySchema = t.Object({
 
 export const oddsQuerySchema = t.Object({
   fixture: t.Optional(t.String()),
+  fixtures: t.Optional(t.String()),
   league: t.Optional(t.String()),
   season: t.Optional(t.String()),
   date: t.Optional(t.String()),
@@ -210,6 +211,7 @@ export const oddsQuerySchema = t.Object({
   page: t.Optional(t.String()),
   bookmaker: t.Optional(t.String()),
   bet: t.Optional(t.String()),
+  cacheOnly: t.Optional(t.String()),
 });
 
 export const oddsMappingQuerySchema = t.Object({

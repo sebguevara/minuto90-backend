@@ -43,6 +43,7 @@ import {
   createEmptyFootballLiveSnapshot,
   getFootballLiveSnapshot,
 } from "../infrastructure/football-live.snapshot";
+import { getCachedOddsByFixture } from "../infrastructure/football-odds-cache";
 import { logInfo, logWarn } from "../../../shared/logging/logger";
 import {
   coachsQuerySchema,
@@ -348,6 +349,61 @@ function toOddsQuery(query: Record<string, unknown>): GetOddsQuery {
     page: parseOptionalInteger(query.page, "page"),
     bookmaker: parseOptionalInteger(query.bookmaker, "bookmaker"),
     bet: parseOptionalInteger(query.bet, "bet"),
+  };
+}
+
+function isTruthyQueryFlag(value: unknown) {
+  if (typeof value !== "string") return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes";
+}
+
+function parseFixtureIds(value: unknown): number[] {
+  if (typeof value !== "string") return [];
+
+  return Array.from(
+    new Set(
+      value
+        .split("-")
+        .map((item) => Number(item))
+        .filter((item) => Number.isFinite(item) && item > 0)
+    )
+  );
+}
+
+async function getCachedOddsResponse(query: Record<string, unknown>) {
+  const fixtureIds = [
+    ...parseFixtureIds(query.fixtures),
+    ...(typeof query.fixture === "string"
+      ? [parseOptionalInteger(query.fixture, "fixture")].filter(
+          (fixtureId): fixtureId is number => typeof fixtureId === "number"
+        )
+      : []),
+  ];
+
+  const bookmaker = parseOptionalInteger(query.bookmaker, "bookmaker") ?? 11;
+  const bet = parseOptionalInteger(query.bet, "bet") ?? 1;
+
+  const envelopes = await Promise.all(
+    fixtureIds.map((fixture) => getCachedOddsByFixture({ fixture, bookmaker, bet }))
+  );
+
+  const response = envelopes.flatMap((envelope) =>
+    Array.isArray(envelope?.response) ? envelope.response : []
+  );
+
+  return {
+    get: "odds",
+    parameters: {
+      fixtures: fixtureIds.join("-"),
+      bookmaker: String(bookmaker),
+      bet: String(bet),
+      cacheOnly: "true",
+    },
+    errors: [],
+    results: response.length,
+    paging: { current: 1, total: 1 },
+    response,
   };
 }
 
@@ -1199,6 +1255,9 @@ export function createFootballRoutes(service: FootballServiceContract = football
       "/odds",
       async ({ query, set }) => {
         try {
+          if (isTruthyQueryFlag((query as Record<string, unknown>).cacheOnly)) {
+            return await getCachedOddsResponse(query as Record<string, unknown>);
+          }
           return await service.getOdds(toOddsQuery(query as Record<string, unknown>));
         } catch (error) {
           return handleFootballError(set, error);

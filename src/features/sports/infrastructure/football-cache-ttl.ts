@@ -53,5 +53,9 @@ export function getFootballCacheTtlSeconds(endpoint: string, params?: Record<str
     }
   }
 
+  if (endpoint === "/odds" && params?.fixture) {
+    return 60 * 60;
+  }
+
   return TTL_BY_ENDPOINT[endpoint] ?? 0;
 }
