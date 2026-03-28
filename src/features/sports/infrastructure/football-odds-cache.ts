@@ -2,6 +2,7 @@ import type { ApiFootballOddsEnvelope, GetOddsQuery } from "../domain/football.t
 import { redisFootballCacheStore } from "./football-cache.store";
 import { buildFootballCacheKey } from "./football-cache-key";
 
+/** @deprecated Usar getFootballOddsPerFixtureCacheTtlSeconds en football-cache-ttl (env FOOTBALL_ODDS_FIXTURE_TTL_SECONDS). */
 export const FOOTBALL_ODDS_CACHE_TTL_SECONDS = 60 * 60;
 export const DEFAULT_ODDS_BOOKMAKER = 11;
 export const DEFAULT_ODDS_BET = 1;

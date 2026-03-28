@@ -212,6 +212,8 @@ export const oddsQuerySchema = t.Object({
   bookmaker: t.Optional(t.String()),
   bet: t.Optional(t.String()),
   cacheOnly: t.Optional(t.String()),
+  /** Lee Redis y solo pide a la API los fixtures sin cuotas guardadas. */
+  hydrateMissing: t.Optional(t.String()),
 });
 
 export const oddsMappingQuerySchema = t.Object({

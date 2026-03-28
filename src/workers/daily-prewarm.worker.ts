@@ -20,6 +20,7 @@ import {
   DEFAULT_ODDS_BET,
   DEFAULT_ODDS_BOOKMAKER,
 } from '../features/sports/infrastructure/football-odds-cache';
+import { warmOddsForDate } from '../features/sports/infrastructure/football-odds-hydration';
 
 const DEFAULT_TIMEZONE = 'UTC';
 const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European leagues in 2026
@@ -145,29 +146,13 @@ async function prewarmFootballOdds(): Promise<void> {
 
   for (const date of dates) {
     try {
-      const envelope = await footballApiClient.getFixtures({ date, timezone: DEFAULT_TIMEZONE });
-      const fixtures = envelope.response ?? [];
-      if (!fixtures.length) continue;
-
-      for (const fixture of fixtures) {
-        const fixtureId = fixture.fixture?.id;
-        if (!fixtureId) continue;
-
-        try {
-          await footballApiClient.getOdds({
-            fixture: fixtureId,
-            bookmaker: DEFAULT_ODDS_BOOKMAKER,
-            bet: DEFAULT_ODDS_BET,
-          });
-          total += 1;
-        } catch (err) {
-          logWarn('prewarm.football.odds.fixture_failed', {
-            date,
-            fixtureId,
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }
-      }
+      const written = await warmOddsForDate(
+        date,
+        DEFAULT_TIMEZONE,
+        DEFAULT_ODDS_BOOKMAKER,
+        DEFAULT_ODDS_BET
+      );
+      total += written;
     } catch (err) {
       logWarn('prewarm.football.odds.date_failed', {
         date,

@@ -1,3 +1,12 @@
+/** TTL Redis por fixture para /odds (segundos). Default 1h; p. ej. 10800 = 3h. Máx. 6h. */
+export function getFootballOddsPerFixtureCacheTtlSeconds(): number {
+  const raw = Number(process.env.FOOTBALL_ODDS_FIXTURE_TTL_SECONDS);
+  if (Number.isFinite(raw) && raw >= 60) {
+    return Math.min(raw, 60 * 60 * 6);
+  }
+  return 60 * 60;
+}
+
 const TTL_BY_ENDPOINT: Record<string, number> = {
   "/countries": 60 * 60 * 24,
   "/leagues": 60 * 60 * 12,
@@ -54,7 +63,7 @@ export function getFootballCacheTtlSeconds(endpoint: string, params?: Record<str
   }
 
   if (endpoint === "/odds" && params?.fixture) {
-    return 60 * 60;
+    return getFootballOddsPerFixtureCacheTtlSeconds();
   }
 
   return TTL_BY_ENDPOINT[endpoint] ?? 0;

@@ -44,6 +44,7 @@ import {
   getFootballLiveSnapshot,
 } from "../infrastructure/football-live.snapshot";
 import { getCachedOddsByFixture } from "../infrastructure/football-odds-cache";
+import { hydrateFixturesOddsResponse } from "../infrastructure/football-odds-hydration";
 import { logInfo, logWarn } from "../../../shared/logging/logger";
 import {
   coachsQuerySchema,
@@ -371,8 +372,8 @@ function parseFixtureIds(value: unknown): number[] {
   );
 }
 
-async function getCachedOddsResponse(query: Record<string, unknown>) {
-  const fixtureIds = [
+function parseOddsFixtureIdsFromQuery(query: Record<string, unknown>): number[] {
+  return [
     ...parseFixtureIds(query.fixtures),
     ...(typeof query.fixture === "string"
       ? [parseOptionalInteger(query.fixture, "fixture")].filter(
@@ -380,6 +381,10 @@ async function getCachedOddsResponse(query: Record<string, unknown>) {
         )
       : []),
   ];
+}
+
+async function getCachedOddsResponse(query: Record<string, unknown>) {
+  const fixtureIds = parseOddsFixtureIdsFromQuery(query);
 
   const bookmaker = parseOptionalInteger(query.bookmaker, "bookmaker") ?? 11;
   const bet = parseOptionalInteger(query.bet, "bet") ?? 1;
@@ -405,6 +410,18 @@ async function getCachedOddsResponse(query: Record<string, unknown>) {
     paging: { current: 1, total: 1 },
     response,
   };
+}
+
+async function getHydrateOddsResponse(query: Record<string, unknown>) {
+  const fixtureIds = parseOddsFixtureIdsFromQuery(query);
+  if (!fixtureIds.length) {
+    throw createFootballValidationError(
+      "Para hydrateMissing se requiere el parametro fixture o fixtures"
+    );
+  }
+  const bookmaker = parseOptionalInteger(query.bookmaker, "bookmaker") ?? 11;
+  const bet = parseOptionalInteger(query.bet, "bet") ?? 1;
+  return hydrateFixturesOddsResponse(fixtureIds, bookmaker, bet);
 }
 
 function toOddsMappingQuery(query: Record<string, unknown>): GetOddsMappingQuery {
@@ -1255,6 +1272,9 @@ export function createFootballRoutes(service: FootballServiceContract = football
       "/odds",
       async ({ query, set }) => {
         try {
+          if (isTruthyQueryFlag((query as Record<string, unknown>).hydrateMissing)) {
+            return await getHydrateOddsResponse(query as Record<string, unknown>);
+          }
           if (isTruthyQueryFlag((query as Record<string, unknown>).cacheOnly)) {
             return await getCachedOddsResponse(query as Record<string, unknown>);
           }

@@ -24,10 +24,16 @@ import { comparatorRoutes } from "./features/comparator/presentation/comparator.
 
 const SITEMAP_REQUEST_PURPOSE = "sitemap";
 
+/** Separador de segmentos en la clave de rate limit (no aparece en IPv4/IPv6). */
+const RATE_LIMIT_KEY_SEP = "|";
+
 const getRequestPurpose = (request: Request): string =>
   request.headers.get("x-minuto90-purpose") === SITEMAP_REQUEST_PURPOSE
     ? SITEMAP_REQUEST_PURPOSE
     : "default";
+
+/** Rutas de cuotas (p. ej. /football/odds, /football/odds/live, /volleyball/odds). */
+const isOddsApiPath = (pathname: string): boolean => /\/odds(\/|$)/.test(pathname);
 
 const getClientAddress = (
   request: Request,
@@ -36,6 +42,36 @@ const getClientAddress = (
   const resolved = server?.requestIP?.(request)?.address;
   return resolved && resolved.trim() ? resolved : "unknown";
 };
+
+const rateLimitBucket = (request: Request): "odds" | "default" => {
+  try {
+    const pathname = new URL(request.url).pathname;
+    return isOddsApiPath(pathname) ? "odds" : "default";
+  } catch {
+    return "default";
+  }
+};
+
+const rateLimitMax = (key: string): number => {
+  const [purpose, bucket] = key.split(RATE_LIMIT_KEY_SEP);
+  if (purpose === SITEMAP_REQUEST_PURPOSE) {
+    return Number(process.env.RATE_LIMIT_SITEMAP_MAX ?? 2000);
+  }
+  if (bucket === "odds") {
+    return Number(process.env.RATE_LIMIT_ODDS_MAX ?? 4000);
+  }
+  return Number(process.env.RATE_LIMIT_MAX ?? 600);
+};
+
+const rateLimitKeyGenerator = (
+  request: Request,
+  server?: { requestIP?: (request: Request) => { address?: string } | null } | null
+): string =>
+  [
+    getRequestPurpose(request),
+    rateLimitBucket(request),
+    getClientAddress(request, server),
+  ].join(RATE_LIMIT_KEY_SEP);
 
 const parseCorsOrigins = (value: string): string[] =>
   value
@@ -58,10 +94,8 @@ const app = new Elysia()
   .use(
     rateLimit({
       duration: 60000,
-      max: (_key, request) =>
-        getRequestPurpose(request) === SITEMAP_REQUEST_PURPOSE ? 2000 : 300,
-      generator: (request, server) =>
-        `${getRequestPurpose(request)}:${getClientAddress(request, server)}`,
+      max: (key) => rateLimitMax(key),
+      generator: (request, server) => rateLimitKeyGenerator(request, server),
     })
   )
   .onRequest(({ set, request }) => {
