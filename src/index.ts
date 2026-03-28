@@ -24,8 +24,27 @@ import { comparatorRoutes } from "./features/comparator/presentation/comparator.
 
 const SITEMAP_REQUEST_PURPOSE = "sitemap";
 
+/** Cabecera opcional: mismo secreto en Next (MINUTO90_INTERNAL_API_KEY) y backend → el BFF no comparte bucket con el mundo. */
+const INTERNAL_API_KEY_HEADER = "x-minuto90-internal-key";
+
 /** Separador de segmentos en la clave de rate limit (no aparece en IPv4/IPv6). */
 const RATE_LIMIT_KEY_SEP = "|";
+
+const isRateLimitGloballyDisabled = (): boolean => {
+  const v = process.env.RATE_LIMIT_DISABLED?.trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+};
+
+const internalApiKeyConfigured = (): string | undefined => {
+  const k = process.env.MINUTO90_INTERNAL_API_KEY?.trim();
+  return k ? k : undefined;
+};
+
+const hasValidInternalKey = (request: Request): boolean => {
+  const expected = internalApiKeyConfigured();
+  if (!expected) return false;
+  return request.headers.get(INTERNAL_API_KEY_HEADER) === expected;
+};
 
 const getRequestPurpose = (request: Request): string =>
   request.headers.get("x-minuto90-purpose") === SITEMAP_REQUEST_PURPOSE
@@ -35,18 +54,37 @@ const getRequestPurpose = (request: Request): string =>
 /** Rutas de cuotas (p. ej. /football/odds, /football/odds/live, /volleyball/odds). */
 const isOddsApiPath = (pathname: string): boolean => /\/odds(\/|$)/.test(pathname);
 
+/**
+ * Identificador para rate limit: preferir IP del cliente real si el proxy o Next reenvían cabeceras.
+ * Sin esto, todo el SSR desde Next comparte una IP → un bucket → 429 masivo y la navegación “no abre”.
+ */
 const getClientAddress = (
   request: Request,
   server?: { requestIP?: (request: Request) => { address?: string } | null } | null
 ): string => {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const first = forwarded.split(",")[0]?.trim();
+    if (first) {
+      return first;
+    }
+  }
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp?.trim()) {
+    return realIp.trim();
+  }
   const resolved = server?.requestIP?.(request)?.address;
   return resolved && resolved.trim() ? resolved : "unknown";
 };
 
-const rateLimitBucket = (request: Request): "odds" | "default" => {
+const rateLimitBucket = (request: Request): "odds" | "baseball" | "default" => {
   try {
     const pathname = new URL(request.url).pathname;
-    return isOddsApiPath(pathname) ? "odds" : "default";
+    if (isOddsApiPath(pathname)) return "odds";
+    if (pathname === "/baseball" || pathname.startsWith("/baseball/")) {
+      return "baseball";
+    }
+    return "default";
   } catch {
     return "default";
   }
@@ -58,9 +96,16 @@ const rateLimitMax = (key: string): number => {
     return Number(process.env.RATE_LIMIT_SITEMAP_MAX ?? 2000);
   }
   if (bucket === "odds") {
-    return Number(process.env.RATE_LIMIT_ODDS_MAX ?? 4000);
+    return Number(process.env.RATE_LIMIT_ODDS_MAX ?? 50000);
   }
-  return Number(process.env.RATE_LIMIT_MAX ?? 600);
+  if (bucket === "baseball") {
+    return Number(process.env.RATE_LIMIT_BASEBALL_MAX ?? 50000);
+  }
+  /**
+   * BFF/SSR (p. ej. Railway): peticiones Next→backend suelen verse como una IP; límites bajos = 429 en cadena.
+   * `MINUTO90_INTERNAL_API_KEY` + cabecera o `RATE_LIMIT_DISABLED=true` evita el colapso sin depender del proxy.
+   */
+  return Number(process.env.RATE_LIMIT_MAX ?? 500000);
 };
 
 const rateLimitKeyGenerator = (
@@ -96,6 +141,7 @@ const app = new Elysia()
       duration: 60000,
       max: (key) => rateLimitMax(key),
       generator: (request, server) => rateLimitKeyGenerator(request, server),
+      skip: (req) => isRateLimitGloballyDisabled() || hasValidInternalKey(req),
     })
   )
   .onRequest(({ set, request }) => {
