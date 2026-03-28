@@ -10,6 +10,8 @@ import {
   getCachedOddsByFixture,
 } from "./football-odds-cache";
 
+const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
 function makePerFixtureOddsEnvelope(
   item: ApiFootballOddsItem,
   bookmaker: number,
@@ -125,23 +127,42 @@ export async function hydrateFixturesOddsResponse(
       : 6;
 
   const queue = [...missingIds];
+
+  const fetchOddsForFixtureWithRetry = async (
+    fixtureId: number
+  ): Promise<ApiFootballOddsItem | null> => {
+    const maxAttempts = 3;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const env = await footballApiClient.getOdds({ fixture: fixtureId, bookmaker, bet });
+        const item = env.response?.[0];
+        if (item?.fixture?.id) {
+          return item;
+        }
+        return null;
+      } catch (err) {
+        if (attempt === maxAttempts - 1) {
+          logWarn("football.odds.hydrate.fixture_failed", {
+            fixtureId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+          return null;
+        }
+        await delay(320 * (attempt + 1));
+      }
+    }
+    return null;
+  };
+
   const worker = async () => {
     for (;;) {
       const id = queue.shift();
       if (id === undefined) {
         return;
       }
-      try {
-        const env = await footballApiClient.getOdds({ fixture: id, bookmaker, bet });
-        const item = env.response?.[0];
-        if (item?.fixture?.id) {
-          byId.set(id, item);
-        }
-      } catch (err) {
-        logWarn("football.odds.hydrate.fixture_failed", {
-          fixtureId: id,
-          error: err instanceof Error ? err.message : String(err),
-        });
+      const item = await fetchOddsForFixtureWithRetry(id);
+      if (item?.fixture?.id) {
+        byId.set(id, item);
       }
     }
   };
