@@ -117,23 +117,37 @@ export async function hydrateFixturesOddsResponse(
     }
   }
 
-  for (const id of uniqueOrder) {
-    if (byId.has(id)) {
-      continue;
-    }
-    try {
-      const env = await footballApiClient.getOdds({ fixture: id, bookmaker, bet });
-      const item = env.response?.[0];
-      if (item?.fixture?.id) {
-        byId.set(id, item);
+  const missingIds = uniqueOrder.filter((id) => !byId.has(id));
+  const rawConcurrency = Number(process.env.FOOTBALL_ODDS_HYDRATE_CONCURRENCY);
+  const maxParallel =
+    Number.isFinite(rawConcurrency) && rawConcurrency >= 1
+      ? Math.min(12, Math.floor(rawConcurrency))
+      : 6;
+
+  const queue = [...missingIds];
+  const worker = async () => {
+    for (;;) {
+      const id = queue.shift();
+      if (id === undefined) {
+        return;
       }
-    } catch (err) {
-      logWarn("football.odds.hydrate.fixture_failed", {
-        fixtureId: id,
-        error: err instanceof Error ? err.message : String(err),
-      });
+      try {
+        const env = await footballApiClient.getOdds({ fixture: id, bookmaker, bet });
+        const item = env.response?.[0];
+        if (item?.fixture?.id) {
+          byId.set(id, item);
+        }
+      } catch (err) {
+        logWarn("football.odds.hydrate.fixture_failed", {
+          fixtureId: id,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
-  }
+  };
+
+  const workers = Math.min(maxParallel, queue.length || 1);
+  await Promise.all(Array.from({ length: workers }, () => worker()));
 
   const response = uniqueOrder
     .map((id) => byId.get(id))

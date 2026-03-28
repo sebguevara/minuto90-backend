@@ -1,10 +1,10 @@
-/** TTL Redis por fixture para /odds (segundos). Default 1h; p. ej. 10800 = 3h. Máx. 6h. */
+/** TTL Redis por fixture para /odds (segundos). Default 3h; override con FOOTBALL_ODDS_FIXTURE_TTL_SECONDS. Máx. 6h. */
 export function getFootballOddsPerFixtureCacheTtlSeconds(): number {
   const raw = Number(process.env.FOOTBALL_ODDS_FIXTURE_TTL_SECONDS);
   if (Number.isFinite(raw) && raw >= 60) {
     return Math.min(raw, 60 * 60 * 6);
   }
-  return 60 * 60;
+  return 60 * 60 * 3;
 }
 
 const TTL_BY_ENDPOINT: Record<string, number> = {

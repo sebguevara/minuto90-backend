@@ -25,6 +25,23 @@ import { warmOddsForDate } from '../features/sports/infrastructure/football-odds
 const DEFAULT_TIMEZONE = 'UTC';
 const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European leagues in 2026
 
+/**
+ * Prewarm completo: fixtures (incl. home), live, odds del día, standings, insights, otros deportes, teams sync, etc.
+ * No hace FLUSH de Redis: repuebla vía API; al escribir se renuevan entradas según TTL de cada recurso.
+ *
+ * Default: cada 3 horas en punto (UTC). Ajuste fino:
+ * - PREWARM_CRON_SCHEDULE — expresión cron (ej. `30 */3 * * *` = :30 cada 3h)
+ * - PREWARM_CRON_TIMEZONE — IANA (ej. `America/Argentina/Buenos_Aires`)
+ */
+const PREWARM_CRON_SCHEDULE = process.env.PREWARM_CRON_SCHEDULE?.trim() || '0 */3 * * *';
+const PREWARM_CRON_TIMEZONE = process.env.PREWARM_CRON_TIMEZONE?.trim() || DEFAULT_TIMEZONE;
+
+/** Warm del sitemap del frontend (default cada 12h UTC; override SITEMAP_WARM_CRON_SCHEDULE). */
+const SITEMAP_WARM_CRON_SCHEDULE =
+  process.env.SITEMAP_WARM_CRON_SCHEDULE?.trim() || '0 */12 * * *';
+const SITEMAP_WARM_CRON_TIMEZONE =
+  process.env.SITEMAP_WARM_CRON_TIMEZONE?.trim() || DEFAULT_TIMEZONE;
+
 // Major football league IDs (API-Football) for teams sync
 const FOOTBALL_LEAGUES_FOR_TEAMS_SYNC = [
   2,   // UEFA Champions League
@@ -59,6 +76,42 @@ function getDatesRange(pastDays: number, futureDays: number): string[] {
     const d = new Date(today);
     d.setDate(today.getDate() + offset);
     dates.push(formatDate(d));
+  }
+  return dates;
+}
+
+/**
+ * Feed home (/football/live/home): el base cache es getFixtures({ date, timezone }).
+ * Prewarm explícito para zonas Colombia y Argentina (y opcionales vía env).
+ */
+const DEFAULT_HOME_FEED_PREWARM_TIMEZONES = ['America/Bogota', 'America/Argentina/Buenos_Aires'] as const;
+
+function getHomeFeedPrewarmTimezones(): string[] {
+  const raw = process.env.HOME_FEED_PREWARM_TIMEZONES?.trim();
+  if (raw) {
+    return raw.split(',').map((z) => z.trim()).filter(Boolean);
+  }
+  return [...DEFAULT_HOME_FEED_PREWARM_TIMEZONES];
+}
+
+/** Fechas calendario yyyy-MM-dd tal como las ve cada IANA zone (ventana alrededor de "ahora"). */
+function getDateRangeForTimezone(timeZone: string, pastDays: number, futureDays: number): string[] {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const seen = new Set<string>();
+  const dates: string[] = [];
+  const dayMs = 24 * 60 * 60 * 1000;
+  const base = Date.now();
+  for (let offset = -pastDays; offset <= futureDays; offset++) {
+    const ymd = formatter.format(new Date(base + offset * dayMs));
+    if (!seen.has(ymd)) {
+      seen.add(ymd);
+      dates.push(ymd);
+    }
   }
   return dates;
 }
@@ -137,6 +190,61 @@ async function prewarmFootballFixtures(): Promise<void> {
   }
 
   logInfo('prewarm.football.fixtures.done', { total });
+}
+
+/** Calienta Redis para el listado del home por timezone (mismas keys que live/home antes del merge con live). */
+async function prewarmFootballHomeFeedByTimezone(): Promise<void> {
+  const timezones = getHomeFeedPrewarmTimezones();
+  if (!timezones.length) {
+    return;
+  }
+
+  const pastRaw = Number(process.env.HOME_FEED_PREWARM_PAST_DAYS ?? 3);
+  const futureRaw = Number(process.env.HOME_FEED_PREWARM_FUTURE_DAYS ?? 7);
+  const pastDays = Number.isFinite(pastRaw) ? Math.max(0, pastRaw) : 3;
+  const futureDays = Number.isFinite(futureRaw) ? Math.max(0, futureRaw) : 7;
+
+  logInfo('prewarm.football.home_feed_tz.start', {
+    timezones,
+    pastDays,
+    futureDays,
+  });
+
+  let total = 0;
+
+  for (const timezone of timezones) {
+    const dates = getDateRangeForTimezone(timezone, pastDays, futureDays);
+    for (const date of dates) {
+      try {
+        const envelope = await footballApiClient.getFixtures({ date, timezone });
+        const fixtures = envelope.response ?? [];
+        total += fixtures.length;
+
+        const teamsMap = new Map<number, string>();
+        for (const fx of fixtures) {
+          if (fx.teams.home.id && fx.teams.home.logo) {
+            teamsMap.set(fx.teams.home.id, fx.teams.home.logo);
+          }
+          if (fx.teams.away.id && fx.teams.away.logo) {
+            teamsMap.set(fx.teams.away.id, fx.teams.away.logo);
+          }
+        }
+
+        await prewarmTeamColors(
+          'football',
+          Array.from(teamsMap.entries()).map(([id, logo]) => ({ id, logo }))
+        );
+      } catch (err) {
+        logWarn('prewarm.football.home_feed_tz.failed', {
+          date,
+          timezone,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  }
+
+  logInfo('prewarm.football.home_feed_tz.done', { total, timezones });
 }
 
 async function prewarmFootballOdds(): Promise<void> {
@@ -557,6 +665,7 @@ async function runAllPrewarm(): Promise<void> {
     // Run sports fixtures prewarm in parallel groups to avoid overwhelming the API
     await Promise.allSettled([
       prewarmFootballFixtures(),
+      prewarmFootballHomeFeedByTimezone(),
       prewarmNba(),
       prewarmBasketball(),
     ]);
@@ -620,9 +729,8 @@ warmFrontendSitemaps().catch((err) =>
   })
 );
 
-// Schedule every 6 hours (00:00, 06:00, 12:00, 18:00 UTC)
 const job = new CronJob(
-  '0 */6 * * *',
+  PREWARM_CRON_SCHEDULE,
   () => {
     runAllPrewarm().catch((err) =>
       logError('prewarm.daily.cron_failed', {
@@ -632,13 +740,16 @@ const job = new CronJob(
   },
   null,
   true,
-  'UTC'
+  PREWARM_CRON_TIMEZONE
 );
 
-logInfo('prewarm.daily.scheduled', { schedule: '0 */6 * * *', timezone: 'UTC' });
+logInfo('prewarm.daily.scheduled', {
+  schedule: PREWARM_CRON_SCHEDULE,
+  timezone: PREWARM_CRON_TIMEZONE,
+});
 
 const sitemapWarmJob = new CronJob(
-  '0 */12 * * *',
+  SITEMAP_WARM_CRON_SCHEDULE,
   () => {
     warmFrontendSitemaps().catch((err) =>
       logError('prewarm.sitemap.cron_failed', {
@@ -648,7 +759,10 @@ const sitemapWarmJob = new CronJob(
   },
   null,
   true,
-  'UTC'
+  SITEMAP_WARM_CRON_TIMEZONE
 );
 
-logInfo('prewarm.sitemap.scheduled', { schedule: '0 */12 * * *', timezone: 'UTC' });
+logInfo('prewarm.sitemap.scheduled', {
+  schedule: SITEMAP_WARM_CRON_SCHEDULE,
+  timezone: SITEMAP_WARM_CRON_TIMEZONE,
+});
