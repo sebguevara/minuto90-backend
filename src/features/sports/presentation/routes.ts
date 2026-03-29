@@ -43,8 +43,11 @@ import {
   createEmptyFootballLiveSnapshot,
   getFootballLiveSnapshot,
 } from "../infrastructure/football-live.snapshot";
-import { getCachedOddsByFixture } from "../infrastructure/football-odds-cache";
-import { hydrateFixturesOddsResponse } from "../infrastructure/football-odds-hydration";
+import { DEFAULT_ODDS_BET, DEFAULT_ODDS_BOOKMAKER } from "../infrastructure/football-odds-cache";
+import {
+  getCachedOddsResponse as getCachedPrematchOddsResponse,
+  hydrateFixturesOddsResponse,
+} from "../infrastructure/football-odds-hydration";
 import { logInfo, logWarn } from "../../../shared/logging/logger";
 import {
   coachsQuerySchema,
@@ -386,43 +389,31 @@ function parseOddsFixtureIdsFromQuery(query: Record<string, unknown>): number[] 
 
 async function getCachedOddsResponse(query: Record<string, unknown>) {
   const fixtureIds = parseOddsFixtureIdsFromQuery(query);
+  const date = typeof query.date === "string" ? query.date : undefined;
+  const bookmaker =
+    parseOptionalInteger(query.bookmaker, "bookmaker") ?? DEFAULT_ODDS_BOOKMAKER;
+  const bet = parseOptionalInteger(query.bet, "bet") ?? DEFAULT_ODDS_BET;
 
-  const bookmaker = parseOptionalInteger(query.bookmaker, "bookmaker") ?? 11;
-  const bet = parseOptionalInteger(query.bet, "bet") ?? 1;
-
-  const envelopes = await Promise.all(
-    fixtureIds.map((fixture) => getCachedOddsByFixture({ fixture, bookmaker, bet }))
-  );
-
-  const response = envelopes.flatMap((envelope) =>
-    Array.isArray(envelope?.response) ? envelope.response : []
-  );
-
-  return {
-    get: "odds",
-    parameters: {
-      fixtures: fixtureIds.join("-"),
-      bookmaker: String(bookmaker),
-      bet: String(bet),
-      cacheOnly: "true",
-    },
-    errors: [],
-    results: response.length,
-    paging: { current: 1, total: 1 },
-    response,
-  };
+  return getCachedPrematchOddsResponse(fixtureIds, bookmaker, bet, date);
 }
 
 async function getHydrateOddsResponse(query: Record<string, unknown>) {
   const fixtureIds = parseOddsFixtureIdsFromQuery(query);
-  if (!fixtureIds.length) {
+  const date = typeof query.date === "string" ? query.date : undefined;
+  const timezone =
+    typeof query.timezone === "string" && query.timezone.trim()
+      ? query.timezone.trim()
+      : "UTC";
+
+  if (!fixtureIds.length && !date) {
     throw createFootballValidationError(
-      "Para hydrateMissing se requiere el parametro fixture o fixtures"
+      "Para hydrateMissing se requiere el parametro date o fixture(s)"
     );
   }
-  const bookmaker = parseOptionalInteger(query.bookmaker, "bookmaker") ?? 11;
-  const bet = parseOptionalInteger(query.bet, "bet") ?? 1;
-  return hydrateFixturesOddsResponse(fixtureIds, bookmaker, bet);
+  const bookmaker =
+    parseOptionalInteger(query.bookmaker, "bookmaker") ?? DEFAULT_ODDS_BOOKMAKER;
+  const bet = parseOptionalInteger(query.bet, "bet") ?? DEFAULT_ODDS_BET;
+  return hydrateFixturesOddsResponse(fixtureIds, bookmaker, bet, { date, timezone });
 }
 
 function toOddsMappingQuery(query: Record<string, unknown>): GetOddsMappingQuery {

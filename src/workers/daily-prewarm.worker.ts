@@ -16,11 +16,6 @@ import { setFootballTeamsAll, type FootballTeamRef } from '../features/stats/inf
 import { insightsService } from '../features/insights/application/insights.service';
 import { logInfo, logError, logWarn } from '../shared/logging/logger';
 import { updateLiveFixturesCache } from './live-cache-updater';
-import {
-  DEFAULT_ODDS_BET,
-  DEFAULT_ODDS_BOOKMAKER,
-} from '../features/sports/infrastructure/football-odds-cache';
-import { warmOddsForDate } from '../features/sports/infrastructure/football-odds-hydration';
 
 const DEFAULT_TIMEZONE = 'UTC';
 const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European leagues in 2026
@@ -30,7 +25,7 @@ const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European l
  * No hace FLUSH de Redis: repuebla vía API; al escribir se renuevan entradas según TTL de cada recurso.
  *
  * Default: cada 3 horas en punto (UTC). Ajuste fino:
- * - PREWARM_CRON_SCHEDULE — expresión cron (ej. `30 */3 * * *` = :30 cada 3h)
+ * - PREWARM_CRON_SCHEDULE: expresion cron para correr cada 3 horas.
  * - PREWARM_CRON_TIMEZONE — IANA (ej. `America/Argentina/Buenos_Aires`)
  */
 const PREWARM_CRON_SCHEDULE = process.env.PREWARM_CRON_SCHEDULE?.trim() || '0 */3 * * *';
@@ -245,31 +240,6 @@ async function prewarmFootballHomeFeedByTimezone(): Promise<void> {
   }
 
   logInfo('prewarm.football.home_feed_tz.done', { total, timezones });
-}
-
-async function prewarmFootballOdds(): Promise<void> {
-  logInfo('prewarm.football.odds.start', {});
-  const dates = getDatesRange(0, 7);
-  let total = 0;
-
-  for (const date of dates) {
-    try {
-      const written = await warmOddsForDate(
-        date,
-        DEFAULT_TIMEZONE,
-        DEFAULT_ODDS_BOOKMAKER,
-        DEFAULT_ODDS_BET
-      );
-      total += written;
-    } catch (err) {
-      logWarn('prewarm.football.odds.date_failed', {
-        date,
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
-  }
-
-  logInfo('prewarm.football.odds.done', { total });
 }
 
 async function syncFootballTeamsAll(): Promise<void> {
@@ -699,7 +669,6 @@ async function runAllPrewarm(): Promise<void> {
 
     // Pre-cache standings for major leagues
     await prewarmFootballStandings();
-    await prewarmFootballOdds();
     await prewarmFootballInsights();
 
     // MMA + F1 need separate handling

@@ -1,10 +1,86 @@
-/** TTL Redis por fixture para /odds (segundos). Default 3h; override con FOOTBALL_ODDS_FIXTURE_TTL_SECONDS. Máx. 6h. */
-export function getFootballOddsPerFixtureCacheTtlSeconds(): number {
-  const raw = Number(process.env.FOOTBALL_ODDS_FIXTURE_TTL_SECONDS);
-  if (Number.isFinite(raw) && raw >= 60) {
-    return Math.min(raw, 60 * 60 * 6);
+const SECOND = 1;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+
+function readEnvSeconds(name: string, fallback: number, minSeconds: number, maxSeconds: number) {
+  const raw = Number(process.env[name]);
+  if (!Number.isFinite(raw)) {
+    return fallback;
   }
-  return 60 * 60 * 3;
+
+  return Math.min(Math.max(Math.floor(raw), minSeconds), maxSeconds);
+}
+
+function toUtcDateKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function normalizeDateKey(date: string) {
+  const trimmed = date.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) {
+    return trimmed;
+  }
+  return toUtcDateKey(parsed);
+}
+
+export function compareFootballDateToToday(date: string, now = new Date()) {
+  const normalizedDate = normalizeDateKey(date);
+  const today = toUtcDateKey(now);
+  return normalizedDate.localeCompare(today);
+}
+
+export function getFootballOddsTodayCacheTtlSeconds() {
+  return readEnvSeconds("FOOTBALL_ODDS_TTL_TODAY_SECONDS", 3 * HOUR, 5 * MINUTE, 24 * HOUR);
+}
+
+export function getFootballOddsFutureCacheTtlSeconds() {
+  return readEnvSeconds("FOOTBALL_ODDS_TTL_FUTURE_SECONDS", 6 * HOUR, 5 * MINUTE, 48 * HOUR);
+}
+
+export function getFootballOddsPastCacheTtlSeconds() {
+  return readEnvSeconds("FOOTBALL_ODDS_TTL_PAST_SECONDS", 24 * HOUR, 5 * MINUTE, 7 * 24 * HOUR);
+}
+
+export function getFootballOddsLiveCacheTtlSeconds() {
+  return readEnvSeconds("FOOTBALL_ODDS_TTL_LIVE_SECONDS", 30, 5, 5 * MINUTE);
+}
+
+export function getFootballOddsSnapshotFreshTtlSeconds(date: string, now = new Date()) {
+  const relation = compareFootballDateToToday(date, now);
+  if (relation === 0) {
+    return getFootballOddsTodayCacheTtlSeconds();
+  }
+  if (relation > 0) {
+    return getFootballOddsFutureCacheTtlSeconds();
+  }
+  return getFootballOddsPastCacheTtlSeconds();
+}
+
+export function getFootballOddsSnapshotStaleGraceSeconds() {
+  return readEnvSeconds("FOOTBALL_ODDS_STALE_GRACE_SECONDS", 24 * HOUR, 5 * MINUTE, 7 * 24 * HOUR);
+}
+
+export function getFootballOddsSnapshotRedisTtlSeconds(date: string, now = new Date()) {
+  return (
+    getFootballOddsSnapshotFreshTtlSeconds(date, now) +
+    getFootballOddsSnapshotStaleGraceSeconds()
+  );
+}
+
+export function getFootballOddsDatePageConcurrency() {
+  return readEnvSeconds("FOOTBALL_ODDS_DATE_PAGE_CONCURRENCY", 6, 1, 12);
+}
+
+export function getFootballOddsDateRefreshLockTtlSeconds() {
+  return readEnvSeconds("FOOTBALL_ODDS_DATE_LOCK_TTL_SECONDS", 10 * MINUTE, 30, 60 * MINUTE);
+}
+
+export function getFootballOddsTodayRefreshCron() {
+  return process.env.FOOTBALL_ODDS_TODAY_CRON?.trim() || "0 */3 * * *";
 }
 
 const TTL_BY_ENDPOINT: Record<string, number> = {
@@ -40,7 +116,7 @@ const TTL_BY_ENDPOINT: Record<string, number> = {
   "/transfers": 60 * 60 * 6,
   "/trophies": 60 * 60 * 24,
   "/sidelined": 60 * 60 * 6,
-  "/odds/live": 30,
+  "/odds/live": getFootballOddsLiveCacheTtlSeconds(),
   "/odds/live/bets": 60 * 60 * 24,
   "/odds": 60,
   "/odds/mapping": 60 * 30,
@@ -50,20 +126,13 @@ const TTL_BY_ENDPOINT: Record<string, number> = {
 
 export function getFootballCacheTtlSeconds(endpoint: string, params?: Record<string, unknown>) {
   if (endpoint === "/fixtures") {
-    // Match-critical reads must stay hot and near-real-time.
-    // `live`, `id` and `ids` are used by live widgets/brackets where stale state is harmful.
     if (params?.live || params?.id || params?.ids) {
       return 5;
     }
 
-    // Date-based fixture lists can tolerate a bit more cache.
     if (params?.date) {
       return 20;
     }
-  }
-
-  if (endpoint === "/odds" && params?.fixture) {
-    return getFootballOddsPerFixtureCacheTtlSeconds();
   }
 
   return TTL_BY_ENDPOINT[endpoint] ?? 0;
