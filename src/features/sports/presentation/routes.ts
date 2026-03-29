@@ -347,6 +347,7 @@ function toOddsQuery(query: Record<string, unknown>): GetOddsQuery {
     league: parseOptionalInteger(query.league, "league"),
     season: parseOptionalInteger(query.season, "season"),
     date: typeof query.date === "string" ? query.date : undefined,
+    timezone: typeof query.timezone === "string" && query.timezone.trim() ? query.timezone.trim() : undefined,
     page: parseOptionalInteger(query.page, "page"),
     bookmaker: parseOptionalInteger(query.bookmaker, "bookmaker"),
     bet: parseOptionalInteger(query.bet, "bet"),
