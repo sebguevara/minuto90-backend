@@ -158,7 +158,39 @@ function pickPreferredBookmaker(
   preferredBookmaker = DEFAULT_ODDS_BOOKMAKER
 ): ApiFootballOddsBookmaker | null {
   if (!bookmakers.length) return null;
-  return bookmakers.find((bookmaker) => bookmaker.id === preferredBookmaker) ?? bookmakers[0] ?? null;
+
+  const normalizeOutcome = (raw: string | number) => {
+    const value = String(raw).trim();
+    if (value === "Home" || value === "1") return "Home";
+    if (value === "Draw" || value === "X") return "Draw";
+    if (value === "Away" || value === "2") return "Away";
+    return null;
+  };
+
+  const hasRenderable1x2 = (bookmaker: ApiFootballOddsBookmaker) =>
+    (bookmaker.bets ?? []).some((bet) => {
+      if (bet.id === DEFAULT_ODDS_BET) {
+        return true;
+      }
+      const outcomes = new Set(
+        (bet.values ?? [])
+          .map((value) => normalizeOutcome(value.value))
+          .filter((value): value is "Home" | "Draw" | "Away" => !!value)
+      );
+      return outcomes.has("Home") && outcomes.has("Away");
+    });
+
+  const preferred = bookmakers.find((bookmaker) => bookmaker.id === preferredBookmaker);
+  if (preferred && hasRenderable1x2(preferred)) {
+    return preferred;
+  }
+
+  const firstRenderable = bookmakers.find((bookmaker) => hasRenderable1x2(bookmaker));
+  if (firstRenderable) {
+    return firstRenderable;
+  }
+
+  return preferred ?? bookmakers[0] ?? null;
 }
 
 export function selectPublicOddsItem(

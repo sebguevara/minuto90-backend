@@ -19,8 +19,8 @@ import {
   setCachedOddsSnapshotByFixture,
 } from "./football-odds-cache";
 
-const LOCK_WAIT_MS = 350;
-const LOCK_WAIT_ATTEMPTS = 12;
+const LOCK_WAIT_MS = 1000;
+const LOCK_WAIT_ATTEMPTS = 90;
 
 function delay(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
