@@ -24,16 +24,16 @@ const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European l
  * Prewarm completo: fixtures (incl. home), live, odds del día, standings, insights, otros deportes, teams sync, etc.
  * No hace FLUSH de Redis: repuebla vía API; al escribir se renuevan entradas según TTL de cada recurso.
  *
- * Default: cada 3 horas en punto (UTC). Ajuste fino:
+ * Default: dos veces por día fuera de horas pico (UTC). Ajuste fino:
  * - PREWARM_CRON_SCHEDULE: expresion cron para correr cada 3 horas.
  * - PREWARM_CRON_TIMEZONE — IANA (ej. `America/Argentina/Buenos_Aires`)
  */
-const PREWARM_CRON_SCHEDULE = process.env.PREWARM_CRON_SCHEDULE?.trim() || '0 */3 * * *';
+const PREWARM_CRON_SCHEDULE = process.env.PREWARM_CRON_SCHEDULE?.trim() || '0 4,16 * * *';
 const PREWARM_CRON_TIMEZONE = process.env.PREWARM_CRON_TIMEZONE?.trim() || DEFAULT_TIMEZONE;
 
-/** Warm del sitemap del frontend (default cada 12h UTC; override SITEMAP_WARM_CRON_SCHEDULE). */
+/** Warm del sitemap del frontend (default cada 24h UTC; override SITEMAP_WARM_CRON_SCHEDULE). */
 const SITEMAP_WARM_CRON_SCHEDULE =
-  process.env.SITEMAP_WARM_CRON_SCHEDULE?.trim() || '0 */12 * * *';
+  process.env.SITEMAP_WARM_CRON_SCHEDULE?.trim() || '0 3 * * *';
 const SITEMAP_WARM_CRON_TIMEZONE =
   process.env.SITEMAP_WARM_CRON_TIMEZONE?.trim() || DEFAULT_TIMEZONE;
 
@@ -632,28 +632,13 @@ async function runAllPrewarm(): Promise<void> {
   logInfo('prewarm.daily.start', { timestamp: new Date().toISOString() });
 
   try {
-    // Run sports fixtures prewarm in parallel groups to avoid overwhelming the API
+    // Keep scheduled prewarm focused on football to reduce steady-state cost.
     await Promise.allSettled([
       prewarmFootballFixtures(),
       prewarmFootballHomeFeedByTimezone(),
-      prewarmNba(),
-      prewarmBasketball(),
     ]);
 
-    await Promise.allSettled([
-      prewarmHockey(),
-      prewarmHandball(),
-      prewarmVolleyball(),
-    ]);
-
-    await Promise.allSettled([
-      prewarmNfl(),
-      prewarmAfl(),
-      prewarmRugby(),
-      prewarmBaseball(),
-    ]);
-
-    // Seed live fixtures cache on startup
+    // Refresh live fixtures cache during the scheduled football prewarm.
     try {
       const liveEnvelope = await footballApiClient.getFixtures({ live: 'all' });
       await updateLiveFixturesCache(liveEnvelope);
@@ -670,9 +655,6 @@ async function runAllPrewarm(): Promise<void> {
     // Pre-cache standings for major leagues
     await prewarmFootballStandings();
     await prewarmFootballInsights();
-
-    // MMA + F1 need separate handling
-    await Promise.allSettled([prewarmMma(), prewarmF1()]);
   } catch (err) {
     logError('prewarm.daily.fatal', {
       error: err instanceof Error ? err.message : String(err),
@@ -685,18 +667,11 @@ async function runAllPrewarm(): Promise<void> {
 
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
 
-// Run immediately on startup
-runAllPrewarm().catch((err) =>
-  logError('prewarm.daily.startup_failed', {
-    error: err instanceof Error ? err.message : String(err),
-  })
-);
-
-warmFrontendSitemaps().catch((err) =>
-  logError('prewarm.sitemap.startup_failed', {
-    error: err instanceof Error ? err.message : String(err),
-  })
-);
+logInfo('prewarm.startup.disabled', {
+  reason: 'scheduled_only',
+  prewarmSchedule: PREWARM_CRON_SCHEDULE,
+  sitemapSchedule: SITEMAP_WARM_CRON_SCHEDULE,
+});
 
 const job = new CronJob(
   PREWARM_CRON_SCHEDULE,
