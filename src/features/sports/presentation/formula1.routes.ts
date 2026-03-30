@@ -9,6 +9,7 @@ import {
   formula1Service,
   type Formula1ServiceContract,
 } from "../application/formula1.service";
+import { formula1ApiClient } from "../infrastructure/formula1-api.client";
 import {
   formula1DriversQuerySchema,
   formula1RankingsQuerySchema,
@@ -158,7 +159,49 @@ export function createFormula1Routes(
         ),
         query: formula1RankingsQuerySchema,
       }
-    );
+    )
+    .get("/competitions", async ({ query, set }) => {
+      try {
+        return await formula1ApiClient.request("/competitions", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/circuits", async ({ query, set }) => {
+      try {
+        return await formula1ApiClient.request("/circuits", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/rankings/races", async ({ query, set }) => {
+      try {
+        return await formula1ApiClient.request("/rankings/races", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/rankings/fastestlaps", async ({ query, set }) => {
+      try {
+        return await formula1ApiClient.request("/rankings/fastestlaps", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/rankings/startinggrid", async ({ query, set }) => {
+      try {
+        return await formula1ApiClient.request("/rankings/startinggrid", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/pitstops", async ({ query, set }) => {
+      try {
+        return await formula1ApiClient.request("/pitstops", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    });
 }
 
 export const formula1Routes = createFormula1Routes();

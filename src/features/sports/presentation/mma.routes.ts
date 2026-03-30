@@ -5,6 +5,7 @@ import type {
   GetMmaLeaguesQuery,
 } from "../domain/mma.types";
 import { mmaService, type MmaServiceContract } from "../application/mma.service";
+import { mmaApiClient } from "../infrastructure/mma-api.client";
 import {
   mmaFightersQuerySchema,
   mmaFightsQuerySchema,
@@ -107,7 +108,35 @@ export function createMmaRoutes(service: MmaServiceContract = mmaService) {
         detail: createSwaggerDetail("MMA", "Obtener peleadores de MMA", mmaSwaggerExamples.fighters),
         query: mmaFightersQuerySchema,
       }
-    );
+    )
+    .get("/teams", async ({ query, set }) => {
+      try {
+        return await mmaApiClient.request("/teams", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/fighters/records", async ({ query, set }) => {
+      try {
+        return await mmaApiClient.request("/fighters/records", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/fights/results", async ({ query, set }) => {
+      try {
+        return await mmaApiClient.request("/fights/results", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/fights/statistics", async ({ query, set }) => {
+      try {
+        return await mmaApiClient.request("/fights/statistics", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    });
 }
 
 export const mmaRoutes = createMmaRoutes();

@@ -21,6 +21,7 @@ export const baseballTeamsQuerySchema = t.Object({
   name: t.Optional(t.String()),
   league: t.Optional(t.String()),
   season: t.Optional(t.String()),
+  country_id: t.Optional(t.String()),
 });
 
 export const baseballStandingsQuerySchema = t.Object({
@@ -28,4 +29,3 @@ export const baseballStandingsQuerySchema = t.Object({
   season: t.Optional(t.String()),
   team: t.Optional(t.String()),
 });
-

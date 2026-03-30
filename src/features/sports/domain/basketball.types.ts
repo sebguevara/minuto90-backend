@@ -35,6 +35,20 @@ export interface GetBasketballTeamsQuery {
   league?: number;
   season?: string;
   search?: string;
+  country_id?: number;
+}
+
+export interface GetBasketballPlayersQuery {
+  id?: number;
+  season?: string;
+  team?: number;
+  search?: string;
+}
+
+export interface GetBasketballStatisticsQuery {
+  league: number;
+  season: string;
+  team: number;
 }
 
 export interface GetBasketballStandingsQuery {
@@ -75,6 +89,67 @@ export interface BasketballTeam {
   country: ApiSportsCountry;
 }
 
+export interface BasketballPlayer {
+  id: number;
+  name: string;
+  number: string | null;
+  country: string | null;
+  position: string | null;
+  age: number | null;
+}
+
+interface BasketballGamePlayed {
+  home: number;
+  away: number;
+  all: number;
+}
+
+interface BasketballGameOutcome {
+  home: {
+    total: number;
+    percentage: number | string | null;
+  };
+  away: {
+    total: number;
+    percentage: number | string | null;
+  };
+  all: {
+    total: number;
+    percentage: number | string | null;
+  };
+}
+
+interface BasketballPoints {
+  total: {
+    home: number;
+    away: number;
+    all: number;
+  };
+  average: {
+    home: number | string | null;
+    away: number | string | null;
+    all: number | string | null;
+  };
+}
+
+export interface BasketballTeamStatistics {
+  country: ApiSportsCountry;
+  league: ApiSportsLeagueInfo & {
+    type?: string;
+  };
+  team: BasketballTeam;
+  games: {
+    played: BasketballGamePlayed;
+    wins: BasketballGameOutcome;
+    draws: BasketballGameOutcome;
+    loses: BasketballGameOutcome;
+  };
+  points: {
+    for: BasketballPoints;
+    against: BasketballPoints;
+  };
+}
+
 export interface BasketballStandingRow {
   position: number;
   team: ApiSportsTeamSummary;
@@ -103,8 +178,15 @@ export type BasketballTeamsResponse = ApiSportsListResponse<
   BasketballTeam,
   GetBasketballTeamsQuery
 >;
+export type BasketballPlayersResponse = ApiSportsListResponse<
+  BasketballPlayer,
+  GetBasketballPlayersQuery
+>;
+export type BasketballStatisticsResponse = ApiSportsListResponse<
+  BasketballTeamStatistics,
+  GetBasketballStatisticsQuery
+>;
 export type BasketballStandingsResponse = ApiSportsListResponse<
   BasketballStandingRow[],
   GetBasketballStandingsQuery
 >;
-

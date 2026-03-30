@@ -6,6 +6,7 @@ import type {
   GetNbaTeamsQuery,
 } from "../domain/nba.types";
 import { nbaService, type NbaServiceContract } from "../application/nba.service";
+import { nbaApiClient } from "../infrastructure/nba-api.client";
 import {
   nbaGamesQuerySchema,
   nbaLeaguesQuerySchema,
@@ -13,7 +14,7 @@ import {
   nbaStandingsQuerySchema,
   nbaTeamsQuerySchema,
 } from "./nba.schemas";
-import { parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
+import { handleApiSportsError, parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
 import { createTeamSportRoutes } from "./team-sport-routes.factory";
 import { nbaSwaggerExamples } from "./multi-sport.swagger.examples";
 
@@ -72,7 +73,28 @@ export function createNbaRoutes(service: NbaServiceContract = nbaService) {
     standingsQuerySchema: nbaStandingsQuerySchema,
     standingsExample: nbaSwaggerExamples.standings,
     toStandingsQuery,
-  });
+  })
+    .get("/players", async ({ query, set }) => {
+      try {
+        return await nbaApiClient.request("/players", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/teams/statistics", async ({ query, set }) => {
+      try {
+        return await nbaApiClient.request("/teams/statistics", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/games/statistics", async ({ query, set }) => {
+      try {
+        return await nbaApiClient.request("/games/statistics", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    });
 }
 
 export const nbaRoutes = createNbaRoutes();

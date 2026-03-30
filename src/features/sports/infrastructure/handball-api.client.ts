@@ -28,6 +28,7 @@ export interface HandballApiClientContract {
   getGames(query: GetHandballGamesQuery): Promise<HandballGamesResponse>;
   getTeams(query: GetHandballTeamsQuery): Promise<HandballTeamsResponse>;
   getStandings(query: GetHandballStandingsQuery): Promise<HandballStandingsResponse>;
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>): Promise<TResponse>;
 }
 
 export class HandballApiClient implements HandballApiClientContract {
@@ -59,7 +60,10 @@ export class HandballApiClient implements HandballApiClientContract {
   getStandings(query: GetHandballStandingsQuery) {
     return this.httpClient.request<HandballStandingsResponse>("/standings", query);
   }
+
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>) {
+    return this.httpClient.request<TResponse>(endpoint, query);
+  }
 }
 
 export const handballApiClient = new HandballApiClient();
-

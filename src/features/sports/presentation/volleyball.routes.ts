@@ -9,6 +9,7 @@ import {
   volleyballService,
   type VolleyballServiceContract,
 } from "../application/volleyball.service";
+import { volleyballApiClient } from "../infrastructure/volleyball-api.client";
 import {
   volleyballGamesQuerySchema,
   volleyballLeaguesQuerySchema,
@@ -151,7 +152,35 @@ export function createVolleyballRoutes(service: VolleyballServiceContract = voll
         ),
         query: volleyballStandingsQuerySchema,
       }
-    );
+    )
+    .get("/countries", async ({ set }) => {
+      try {
+        return await volleyballApiClient.request("/countries");
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/teams/statistics", async ({ query, set }) => {
+      try {
+        return await volleyballApiClient.request("/teams/statistics", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/games/h2h", async ({ query, set }) => {
+      try {
+        return await volleyballApiClient.request("/games/h2h", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/odds", async ({ query, set }) => {
+      try {
+        return await volleyballApiClient.request("/odds", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    });
 }
 
 export const volleyballRoutes = createVolleyballRoutes();

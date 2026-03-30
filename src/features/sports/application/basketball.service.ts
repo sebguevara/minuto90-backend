@@ -1,12 +1,16 @@
 import type {
   BasketballGamesResponse,
   BasketballLeaguesResponse,
+  BasketballPlayersResponse,
   BasketballSeasonsResponse,
+  BasketballStatisticsResponse,
   BasketballStandingsResponse,
   BasketballTeamsResponse,
   GetBasketballGamesQuery,
   GetBasketballLeaguesQuery,
+  GetBasketballPlayersQuery,
   GetBasketballSeasonsQuery,
+  GetBasketballStatisticsQuery,
   GetBasketballStandingsQuery,
   GetBasketballTeamsQuery,
 } from "../domain/basketball.types";
@@ -20,6 +24,8 @@ export interface BasketballServiceContract {
   getLeagues(query: GetBasketballLeaguesQuery): Promise<BasketballLeaguesResponse>;
   getGames(query: GetBasketballGamesQuery): Promise<BasketballGamesResponse>;
   getTeams(query: GetBasketballTeamsQuery): Promise<BasketballTeamsResponse>;
+  getPlayers(query: GetBasketballPlayersQuery): Promise<BasketballPlayersResponse>;
+  getStatistics(query: GetBasketballStatisticsQuery): Promise<BasketballStatisticsResponse>;
   getStandings(query: GetBasketballStandingsQuery): Promise<BasketballStandingsResponse>;
 }
 
@@ -40,6 +46,14 @@ export class BasketballService implements BasketballServiceContract {
 
   getTeams(query: GetBasketballTeamsQuery) {
     return this.client.getTeams(query);
+  }
+
+  getPlayers(query: GetBasketballPlayersQuery) {
+    return this.client.getPlayers(query);
+  }
+
+  getStatistics(query: GetBasketballStatisticsQuery) {
+    return this.client.getStatistics(query);
   }
 
   getStandings(query: GetBasketballStandingsQuery) {

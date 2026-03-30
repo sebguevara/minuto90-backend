@@ -25,6 +25,7 @@ export interface MmaApiClientContract {
   getLeagues(query: GetMmaLeaguesQuery): Promise<MmaLeaguesResponse>;
   getFights(query: GetMmaFightsQuery): Promise<MmaFightsResponse>;
   getFighters(query: GetMmaFightersQuery): Promise<MmaFightersResponse>;
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>): Promise<TResponse>;
 }
 
 export class MmaApiClient implements MmaApiClientContract {
@@ -52,7 +53,10 @@ export class MmaApiClient implements MmaApiClientContract {
   getFighters(query: GetMmaFightersQuery) {
     return this.httpClient.request<MmaFightersResponse>("/fighters", query);
   }
+
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>) {
+    return this.httpClient.request<TResponse>(endpoint, query);
+  }
 }
 
 export const mmaApiClient = new MmaApiClient();
-

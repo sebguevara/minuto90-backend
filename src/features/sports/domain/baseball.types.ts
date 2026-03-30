@@ -29,6 +29,7 @@ export interface GetBaseballTeamsQuery {
   name?: string;
   league?: number;
   season?: number;
+  country_id?: number;
 }
 
 export interface GetBaseballStandingsQuery {
@@ -89,4 +90,3 @@ export type BaseballStandingsResponse = ApiSportsListResponse<
   BaseballStandingRow[],
   GetBaseballStandingsQuery
 >;
-

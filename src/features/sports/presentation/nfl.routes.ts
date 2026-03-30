@@ -5,13 +5,14 @@ import type {
   GetNflTeamsQuery,
 } from "../domain/nfl.types";
 import { nflService, type NflServiceContract } from "../application/nfl.service";
+import { nflApiClient } from "../infrastructure/nfl-api.client";
 import {
   nflGamesQuerySchema,
   nflLeaguesQuerySchema,
   nflStandingsQuerySchema,
   nflTeamsQuerySchema,
 } from "./nfl.schemas";
-import { parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
+import { handleApiSportsError, parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
 import { createTeamSportRoutes } from "./team-sport-routes.factory";
 import { nflSwaggerExamples } from "./multi-sport.swagger.examples";
 
@@ -65,7 +66,49 @@ export function createNflRoutes(service: NflServiceContract = nflService) {
     standingsQuerySchema: nflStandingsQuerySchema,
     standingsExample: nflSwaggerExamples.standings,
     toStandingsQuery,
-  });
+  })
+    .get("/players", async ({ query, set }) => {
+      try {
+        return await nflApiClient.request("/players", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/games/events", async ({ query, set }) => {
+      try {
+        return await nflApiClient.request("/games/events", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/games/statistics/players", async ({ query, set }) => {
+      try {
+        return await nflApiClient.request("/games/statistics/players", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/standings/conferences", async ({ query, set }) => {
+      try {
+        return await nflApiClient.request("/standings/conferences", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/standings/divisions", async ({ query, set }) => {
+      try {
+        return await nflApiClient.request("/standings/divisions", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/players/statistics", async ({ query, set }) => {
+      try {
+        return await nflApiClient.request("/players/statistics", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    });
 }
 
 export const nflRoutes = createNflRoutes();

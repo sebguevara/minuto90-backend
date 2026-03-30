@@ -8,13 +8,14 @@ import {
   baseballService,
   type BaseballServiceContract,
 } from "../application/baseball.service";
+import { baseballApiClient } from "../infrastructure/baseball-api.client";
 import {
   baseballGamesQuerySchema,
   baseballLeaguesQuerySchema,
   baseballStandingsQuerySchema,
   baseballTeamsQuerySchema,
 } from "./baseball.schemas";
-import { parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
+import { handleApiSportsError, parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
 import { createTeamSportRoutes } from "./team-sport-routes.factory";
 import { baseballSwaggerExamples } from "./multi-sport.swagger.examples";
 
@@ -39,6 +40,7 @@ const toTeamsQuery = (query: Record<string, unknown>): GetBaseballTeamsQuery => 
   name: parseOptionalString(query.name),
   league: parseOptionalInteger(query.league, "league"),
   season: parseOptionalInteger(query.season, "season"),
+  country_id: parseOptionalInteger(query.country_id, "country_id"),
 });
 
 const toStandingsQuery = (query: Record<string, unknown>): GetBaseballStandingsQuery => ({
@@ -68,7 +70,35 @@ export function createBaseballRoutes(
     standingsQuerySchema: baseballStandingsQuerySchema,
     standingsExample: baseballSwaggerExamples.standings,
     toStandingsQuery,
-  });
+  })
+    .get("/countries", async ({ set }) => {
+      try {
+        return await baseballApiClient.request("/countries");
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/teams/statistics", async ({ query, set }) => {
+      try {
+        return await baseballApiClient.request("/teams/statistics", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/games/h2h", async ({ query, set }) => {
+      try {
+        return await baseballApiClient.request("/games/h2h", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/odds", async ({ query, set }) => {
+      try {
+        return await baseballApiClient.request("/odds", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    });
 }
 
 export const baseballRoutes = createBaseballRoutes();

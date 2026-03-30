@@ -28,6 +28,7 @@ export interface BaseballApiClientContract {
   getGames(query: GetBaseballGamesQuery): Promise<BaseballGamesResponse>;
   getTeams(query: GetBaseballTeamsQuery): Promise<BaseballTeamsResponse>;
   getStandings(query: GetBaseballStandingsQuery): Promise<BaseballStandingsResponse>;
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>): Promise<TResponse>;
 }
 
 export class BaseballApiClient implements BaseballApiClientContract {
@@ -59,7 +60,10 @@ export class BaseballApiClient implements BaseballApiClientContract {
   getStandings(query: GetBaseballStandingsQuery) {
     return this.httpClient.request<BaseballStandingsResponse>("/standings", query);
   }
+
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>) {
+    return this.httpClient.request<TResponse>(endpoint, query);
+  }
 }
 
 export const baseballApiClient = new BaseballApiClient();
-

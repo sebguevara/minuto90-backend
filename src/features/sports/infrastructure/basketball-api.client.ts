@@ -2,12 +2,16 @@ import { ApiSportsHttpClient } from "./api-sports-http.client";
 import type {
   BasketballGamesResponse,
   BasketballLeaguesResponse,
+  BasketballPlayersResponse,
   BasketballSeasonsResponse,
+  BasketballStatisticsResponse,
   BasketballStandingsResponse,
   BasketballTeamsResponse,
   GetBasketballGamesQuery,
   GetBasketballLeaguesQuery,
+  GetBasketballPlayersQuery,
   GetBasketballSeasonsQuery,
+  GetBasketballStatisticsQuery,
   GetBasketballStandingsQuery,
   GetBasketballTeamsQuery,
 } from "../domain/basketball.types";
@@ -21,6 +25,8 @@ const TTL_BY_ENDPOINT: Record<string, number> = {
   "/leagues": 60 * 60 * 12,
   "/games": 60,
   "/teams": 60 * 60,
+  "/players": 60 * 30,
+  "/statistics": 60 * 5,
   "/standings": 60 * 15,
 };
 
@@ -29,7 +35,10 @@ export interface BasketballApiClientContract {
   getLeagues(query: GetBasketballLeaguesQuery): Promise<BasketballLeaguesResponse>;
   getGames(query: GetBasketballGamesQuery): Promise<BasketballGamesResponse>;
   getTeams(query: GetBasketballTeamsQuery): Promise<BasketballTeamsResponse>;
+  getPlayers(query: GetBasketballPlayersQuery): Promise<BasketballPlayersResponse>;
+  getStatistics(query: GetBasketballStatisticsQuery): Promise<BasketballStatisticsResponse>;
   getStandings(query: GetBasketballStandingsQuery): Promise<BasketballStandingsResponse>;
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>): Promise<TResponse>;
 }
 
 export class BasketballApiClient implements BasketballApiClientContract {
@@ -58,10 +67,21 @@ export class BasketballApiClient implements BasketballApiClientContract {
     return this.httpClient.request<BasketballTeamsResponse>("/teams", query);
   }
 
+  getPlayers(query: GetBasketballPlayersQuery) {
+    return this.httpClient.request<BasketballPlayersResponse>("/players", query);
+  }
+
+  getStatistics(query: GetBasketballStatisticsQuery) {
+    return this.httpClient.request<BasketballStatisticsResponse>("/statistics", query);
+  }
+
   getStandings(query: GetBasketballStandingsQuery) {
     return this.httpClient.request<BasketballStandingsResponse>("/standings", query);
+  }
+
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>) {
+    return this.httpClient.request<TResponse>(endpoint, query);
   }
 }
 
 export const basketballApiClient = new BasketballApiClient();
-

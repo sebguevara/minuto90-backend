@@ -5,13 +5,14 @@ import type {
   GetHockeyTeamsQuery,
 } from "../domain/hockey.types";
 import { hockeyService, type HockeyServiceContract } from "../application/hockey.service";
+import { hockeyApiClient } from "../infrastructure/hockey-api.client";
 import {
   hockeyGamesQuerySchema,
   hockeyLeaguesQuerySchema,
   hockeyStandingsQuerySchema,
   hockeyTeamsQuerySchema,
 } from "./hockey.schemas";
-import { parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
+import { handleApiSportsError, parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
 import { createTeamSportRoutes } from "./team-sport-routes.factory";
 import { hockeySwaggerExamples } from "./multi-sport.swagger.examples";
 
@@ -63,7 +64,35 @@ export function createHockeyRoutes(service: HockeyServiceContract = hockeyServic
     standingsQuerySchema: hockeyStandingsQuerySchema,
     standingsExample: hockeySwaggerExamples.standings,
     toStandingsQuery,
-  });
+  })
+    .get("/countries", async ({ set }) => {
+      try {
+        return await hockeyApiClient.request("/countries");
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/teams/statistics", async ({ query, set }) => {
+      try {
+        return await hockeyApiClient.request("/teams/statistics", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/games/h2h", async ({ query, set }) => {
+      try {
+        return await hockeyApiClient.request("/games/h2h", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/odds", async ({ query, set }) => {
+      try {
+        return await hockeyApiClient.request("/odds", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    });
 }
 
 export const hockeyRoutes = createHockeyRoutes();

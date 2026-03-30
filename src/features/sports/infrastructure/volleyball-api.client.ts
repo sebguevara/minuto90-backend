@@ -30,6 +30,7 @@ export interface VolleyballApiClientContract {
   getGames(query: GetVolleyballGamesQuery): Promise<VolleyballGamesResponse>;
   getTeams(query: GetVolleyballTeamsQuery): Promise<VolleyballTeamsResponse>;
   getStandings(query: GetVolleyballStandingsQuery): Promise<VolleyballStandingsResponse>;
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>): Promise<TResponse>;
 }
 
 export class VolleyballApiClient implements VolleyballApiClientContract {
@@ -61,7 +62,10 @@ export class VolleyballApiClient implements VolleyballApiClientContract {
   getStandings(query: GetVolleyballStandingsQuery) {
     return this.httpClient.request<VolleyballStandingsResponse>("/standings", query);
   }
+
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>) {
+    return this.httpClient.request<TResponse>(endpoint, query);
+  }
 }
 
 export const volleyballApiClient = new VolleyballApiClient();
-

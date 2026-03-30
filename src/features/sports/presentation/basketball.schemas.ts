@@ -26,6 +26,20 @@ export const basketballTeamsQuerySchema = t.Object({
   league: t.Optional(t.String()),
   season: t.Optional(t.String()),
   search: t.Optional(t.String()),
+  country_id: t.Optional(t.String()),
+});
+
+export const basketballPlayersQuerySchema = t.Object({
+  id: t.Optional(t.String()),
+  season: t.Optional(t.String()),
+  team: t.Optional(t.String()),
+  search: t.Optional(t.String()),
+});
+
+export const basketballStatisticsQuerySchema = t.Object({
+  league: t.String(),
+  season: t.String(),
+  team: t.String(),
 });
 
 export const basketballStandingsQuerySchema = t.Object({
@@ -33,4 +47,3 @@ export const basketballStandingsQuerySchema = t.Object({
   season: t.Optional(t.String()),
   team: t.Optional(t.String()),
 });
-

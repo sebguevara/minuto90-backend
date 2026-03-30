@@ -29,6 +29,7 @@ export interface NbaApiClientContract {
   getGames(query: GetNbaGamesQuery): Promise<NbaGamesResponse>;
   getTeams(query: GetNbaTeamsQuery): Promise<NbaTeamsResponse>;
   getStandings(query: GetNbaStandingsQuery): Promise<NbaStandingsResponse>;
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>): Promise<TResponse>;
 }
 
 export class NbaApiClient implements NbaApiClientContract {
@@ -60,7 +61,10 @@ export class NbaApiClient implements NbaApiClientContract {
   getStandings(query: GetNbaStandingsQuery) {
     return this.httpClient.request<NbaStandingsResponse>("/standings", query);
   }
+
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>) {
+    return this.httpClient.request<TResponse>(endpoint, query);
+  }
 }
 
 export const nbaApiClient = new NbaApiClient();
-

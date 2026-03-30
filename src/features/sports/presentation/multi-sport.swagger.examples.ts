@@ -268,6 +268,66 @@ export const basketballSwaggerExamples = {
       },
     ],
   },
+  players: {
+    response: [
+      {
+        id: 1546,
+        name: "Facundo Campazzo",
+        number: "7",
+        country: "Argentina",
+        position: "G",
+        age: 34,
+      },
+    ],
+  },
+  statistics: {
+    response: [
+      {
+        country: { id: 42, name: "Spain", code: "ES", flag: "es.svg" },
+        league: {
+          id: 117,
+          name: "Euroleague",
+          type: "Cup",
+          logo: "https://media.api-sports.io/basketball/leagues/117.png",
+          season: "2023-2024",
+        },
+        team: {
+          id: 357,
+          name: "Real Madrid",
+          logo: "https://media.api-sports.io/basketball/teams/357.png",
+          country: { id: 42, name: "Spain", code: "ES", flag: "es.svg" },
+        },
+        games: {
+          played: { home: 17, away: 17, all: 34 },
+          wins: {
+            home: { total: 15, percentage: "88.2" },
+            away: { total: 12, percentage: "70.6" },
+            all: { total: 27, percentage: "79.4" },
+          },
+          draws: {
+            home: { total: 0, percentage: "0" },
+            away: { total: 0, percentage: "0" },
+            all: { total: 0, percentage: "0" },
+          },
+          loses: {
+            home: { total: 2, percentage: "11.8" },
+            away: { total: 5, percentage: "29.4" },
+            all: { total: 7, percentage: "20.6" },
+          },
+        },
+        points: {
+          for: {
+            total: { home: 1498, away: 1426, all: 2924 },
+            average: { home: "88.1", away: "83.9", all: "86.0" },
+          },
+          against: {
+            total: { home: 1314, away: 1367, all: 2681 },
+            average: { home: "77.3", away: "80.4", all: "78.9" },
+          },
+        },
+      },
+    ],
+  },
   standings: {
     response: [
       [

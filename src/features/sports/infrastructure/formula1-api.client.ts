@@ -32,6 +32,7 @@ export interface Formula1ApiClientContract {
   getDrivers(query: GetFormula1DriversQuery): Promise<Formula1DriversResponse>;
   getDriverRankings(query: GetFormula1RankingsQuery): Promise<Formula1DriverRankingsResponse>;
   getTeamRankings(query: GetFormula1RankingsQuery): Promise<Formula1TeamRankingsResponse>;
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>): Promise<TResponse>;
 }
 
 export class Formula1ApiClient implements Formula1ApiClientContract {
@@ -70,7 +71,10 @@ export class Formula1ApiClient implements Formula1ApiClientContract {
   getTeamRankings(query: GetFormula1RankingsQuery) {
     return this.httpClient.request<Formula1TeamRankingsResponse>("/rankings/teams", query);
   }
+
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>) {
+    return this.httpClient.request<TResponse>(endpoint, query);
+  }
 }
 
 export const formula1ApiClient = new Formula1ApiClient();
-

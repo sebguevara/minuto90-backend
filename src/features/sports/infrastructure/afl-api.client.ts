@@ -28,6 +28,7 @@ export interface AflApiClientContract {
   getGames(query: GetAflGamesQuery): Promise<AflGamesResponse>;
   getTeams(query: GetAflTeamsQuery): Promise<AflTeamsResponse>;
   getStandings(query: GetAflStandingsQuery): Promise<AflStandingsResponse>;
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>): Promise<TResponse>;
 }
 
 export class AflApiClient implements AflApiClientContract {
@@ -59,7 +60,10 @@ export class AflApiClient implements AflApiClientContract {
   getStandings(query: GetAflStandingsQuery) {
     return this.httpClient.request<AflStandingsResponse>("/standings", query);
   }
+
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>) {
+    return this.httpClient.request<TResponse>(endpoint, query);
+  }
 }
 
 export const aflApiClient = new AflApiClient();
-

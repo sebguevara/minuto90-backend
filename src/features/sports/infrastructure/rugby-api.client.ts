@@ -28,6 +28,7 @@ export interface RugbyApiClientContract {
   getGames(query: GetRugbyGamesQuery): Promise<RugbyGamesResponse>;
   getTeams(query: GetRugbyTeamsQuery): Promise<RugbyTeamsResponse>;
   getStandings(query: GetRugbyStandingsQuery): Promise<RugbyStandingsResponse>;
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>): Promise<TResponse>;
 }
 
 export class RugbyApiClient implements RugbyApiClientContract {
@@ -59,7 +60,10 @@ export class RugbyApiClient implements RugbyApiClientContract {
   getStandings(query: GetRugbyStandingsQuery) {
     return this.httpClient.request<RugbyStandingsResponse>("/standings", query);
   }
+
+  request<TResponse = unknown>(endpoint: string, query?: Record<string, unknown>) {
+    return this.httpClient.request<TResponse>(endpoint, query);
+  }
 }
 
 export const rugbyApiClient = new RugbyApiClient();
-

@@ -8,13 +8,14 @@ import {
   handballService,
   type HandballServiceContract,
 } from "../application/handball.service";
+import { handballApiClient } from "../infrastructure/handball-api.client";
 import {
   handballGamesQuerySchema,
   handballLeaguesQuerySchema,
   handballStandingsQuerySchema,
   handballTeamsQuerySchema,
 } from "./handball.schemas";
-import { parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
+import { handleApiSportsError, parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
 import { createTeamSportRoutes } from "./team-sport-routes.factory";
 import { handballSwaggerExamples } from "./multi-sport.swagger.examples";
 
@@ -69,7 +70,35 @@ export function createHandballRoutes(
     standingsQuerySchema: handballStandingsQuerySchema,
     standingsExample: handballSwaggerExamples.standings,
     toStandingsQuery,
-  });
+  })
+    .get("/countries", async ({ set }) => {
+      try {
+        return await handballApiClient.request("/countries");
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/teams/statistics", async ({ query, set }) => {
+      try {
+        return await handballApiClient.request("/teams/statistics", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/games/h2h", async ({ query, set }) => {
+      try {
+        return await handballApiClient.request("/games/h2h", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    })
+    .get("/odds", async ({ query, set }) => {
+      try {
+        return await handballApiClient.request("/odds", query as Record<string, unknown>);
+      } catch (error) {
+        return handleApiSportsError(set, error);
+      }
+    });
 }
 
 export const handballRoutes = createHandballRoutes();
