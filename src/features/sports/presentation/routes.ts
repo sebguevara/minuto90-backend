@@ -611,10 +611,25 @@ function toOddsBetsQuery(query: Record<string, unknown>): GetOddsBetsQuery {
   };
 }
 
-function handleFootballError(set: { status?: number | string }, error: unknown) {
+function handleFootballError(
+  set: { status?: number | string; headers?: Record<string, unknown> },
+  error: unknown
+) {
   if (error instanceof FootballModuleError) {
     set.status = error.status;
-    return { error: error.message, code: error.code };
+    if (
+      error.code === "FIXTURE_TIMEOUT_COOLDOWN" &&
+      typeof error.details?.retryAfterSeconds === "number"
+    ) {
+      set.headers = set.headers ?? {};
+      set.headers["Retry-After"] = String(error.details.retryAfterSeconds);
+    }
+
+    return {
+      error: error.message,
+      code: error.code,
+      ...(error.details ? error.details : {}),
+    };
   }
 
   set.status = 500;

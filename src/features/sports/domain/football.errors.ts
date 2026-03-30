@@ -41,6 +41,17 @@ export function createFootballUpstreamError(
   return new FootballModuleError(message, status, "FOOTBALL_API_UPSTREAM_ERROR", details);
 }
 
+export function createFootballFixtureTimeoutCooldownError(
+  details?: Record<string, unknown>
+) {
+  return new FootballModuleError(
+    "El fixture esta temporalmente en enfriamiento por timeout upstream",
+    503,
+    "FIXTURE_TIMEOUT_COOLDOWN",
+    details
+  );
+}
+
 export function createFootballUnexpectedError(details?: Record<string, unknown>) {
   return new FootballModuleError(
     "No se pudo obtener la información de Football",

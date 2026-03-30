@@ -9,6 +9,7 @@ import {
   type FootballApiClientOptions,
 } from "./football-api.client";
 import type { FootballCacheStore } from "./football-cache.store";
+import { buildFootballCacheKey } from "./football-cache-key";
 
 class MemoryCacheStore implements FootballCacheStore {
   private readonly storage = new Map<string, unknown>();
@@ -17,8 +18,21 @@ class MemoryCacheStore implements FootballCacheStore {
     return (this.storage.get(key) as T | undefined) ?? null;
   }
 
-  async set<T>(key: string, value: T): Promise<void> {
+  async set<T>(key: string, value: T, _ttlSeconds?: number): Promise<void> {
     this.storage.set(key, value);
+  }
+
+  async del(key: string): Promise<void> {
+    this.storage.delete(key);
+  }
+
+  async setNx<T>(key: string, value: T, _ttlSeconds?: number): Promise<boolean> {
+    if (this.storage.has(key)) {
+      return false;
+    }
+
+    this.storage.set(key, value);
+    return true;
   }
 }
 
@@ -62,7 +76,7 @@ describe("football-api.client", () => {
     expect(requestedUrl).toBe("https://example.test/fixtures?league=39&live=all&season=2024");
   });
 
-  it("traduce rate limit upstream a error de dominio en español", async () => {
+  it("traduce rate limit upstream a error de dominio en espanol", async () => {
     const client = createClient({
       fetchFn: async () =>
         new Response(JSON.stringify({ message: "Too many requests" }), { status: 429 }),
@@ -70,7 +84,7 @@ describe("football-api.client", () => {
 
     await expect(client.getFixtures({ live: "all" })).rejects.toMatchObject({
       status: 429,
-      message: "La consulta excedió el límite permitido",
+      message: "La consulta excedio el limite permitido",
     } satisfies Partial<FootballModuleError>);
   });
 
@@ -89,5 +103,109 @@ describe("football-api.client", () => {
 
     const result = await client.getTimezone();
     expect(result).toEqual(envelope);
+  });
+
+  it("deduplica requests concurrentes al mismo fixture", async () => {
+    let fetchCalls = 0;
+    const envelope: ApiFootballFixturesEnvelope = {
+      get: "fixtures",
+      parameters: { id: "1494568" },
+      errors: [],
+      results: 1,
+      paging: { current: 1, total: 1 },
+      response: [{ fixture: { id: 1494568 } }],
+    } as unknown as ApiFootballFixturesEnvelope;
+
+    const client = createClient({
+      fetchFn: async () => {
+        fetchCalls += 1;
+        await new Promise((resolve) => setTimeout(resolve, 40));
+        return new Response(JSON.stringify(envelope), { status: 200 });
+      },
+    });
+
+    const [first, second] = await Promise.all([
+      client.getFixtures({ id: 1494568 }),
+      client.getFixtures({ id: 1494568 }),
+    ]);
+
+    expect(first).toEqual(envelope);
+    expect(second).toEqual(envelope);
+    expect(fetchCalls).toBe(1);
+  });
+
+  it("sirve stale last_good y activa cooldown despues de timeout en fixture puntual", async () => {
+    const cache = new MemoryCacheStore();
+    let fetchCalls = 0;
+    const fixtureId = 1378130;
+    const envelope: ApiFootballFixturesEnvelope = {
+      get: "fixtures",
+      parameters: { id: String(fixtureId) },
+      errors: [],
+      results: 1,
+      paging: { current: 1, total: 1 },
+      response: [{ fixture: { id: fixtureId } }],
+    } as unknown as ApiFootballFixturesEnvelope;
+
+    const client = createClient({
+      cache,
+      fetchFn: async () => {
+        fetchCalls += 1;
+        if (fetchCalls === 1) {
+          return new Response(JSON.stringify(envelope), { status: 200 });
+        }
+
+        const timeoutError = Object.assign(new Error("The operation timed out."), {
+          name: "TimeoutError",
+          code: 23,
+        });
+        throw timeoutError;
+      },
+    });
+
+    const cacheKey = buildFootballCacheKey("/fixtures", { id: fixtureId });
+    const first = await client.getFixtures({ id: fixtureId });
+    expect(first).toEqual(envelope);
+
+    await cache.del(cacheKey);
+
+    const stale = await client.getFixtures({ id: fixtureId });
+    expect(stale).toEqual(envelope);
+    expect(fetchCalls).toBe(2);
+
+    const secondStale = await client.getFixtures({ id: fixtureId });
+    expect(secondStale).toEqual(envelope);
+    expect(fetchCalls).toBe(2);
+  });
+
+  it("devuelve cooldown estructurado cuando no existe stale para un timeout puntual", async () => {
+    let fetchCalls = 0;
+    const fixtureId = 1489345;
+    const client = createClient({
+      fetchFn: async () => {
+        fetchCalls += 1;
+        const timeoutError = Object.assign(new Error("The operation timed out."), {
+          name: "TimeoutError",
+          code: 23,
+        });
+        throw timeoutError;
+      },
+    });
+
+    await expect(client.getFixtures({ id: fixtureId })).rejects.toMatchObject({
+      status: 503,
+      code: "FIXTURE_TIMEOUT_COOLDOWN",
+      details: {
+        fixtureId,
+        cacheStatus: "miss",
+      },
+    } satisfies Partial<FootballModuleError>);
+
+    await expect(client.getFixtures({ id: fixtureId })).rejects.toMatchObject({
+      status: 503,
+      code: "FIXTURE_TIMEOUT_COOLDOWN",
+    } satisfies Partial<FootballModuleError>);
+
+    expect(fetchCalls).toBe(1);
   });
 });
