@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import type {
+  ApiFootballFixtureItem,
   GetCountriesQuery,
   GetFixtureEventsQuery,
   GetFixtureHeadToHeadQuery,
@@ -43,6 +44,7 @@ import {
   createEmptyFootballLiveSnapshot,
   getFootballLiveSnapshot,
 } from "../infrastructure/football-live.snapshot";
+import { getFootballLiveClockAnchors } from "../infrastructure/football-live-clock-anchor";
 import { DEFAULT_ODDS_BET, DEFAULT_ODDS_BOOKMAKER } from "../infrastructure/football-odds-cache";
 import {
   getCachedOddsResponse as getCachedPrematchOddsResponse,
@@ -148,6 +150,52 @@ function mergeLiveIntoFixture<TFixture extends Record<string, any>>(
       },
     },
   };
+}
+
+const LIVE_STATUS_SHORTS = new Set(["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"]);
+
+function isLiveFixtureItem(fixture: ApiFootballFixtureItem) {
+  return LIVE_STATUS_SHORTS.has(fixture?.fixture?.status?.short ?? "");
+}
+
+async function attachClockAnchorsToFixtures(fixtures: ApiFootballFixtureItem[]) {
+  const liveFixtureIds = Array.from(
+    new Set(
+      fixtures
+        .filter(isLiveFixtureItem)
+        .map((fixture) => fixture?.fixture?.id)
+        .filter((fixtureId): fixtureId is number => typeof fixtureId === "number")
+    )
+  );
+
+  if (!liveFixtureIds.length) {
+    return fixtures;
+  }
+
+  const anchors = await getFootballLiveClockAnchors(liveFixtureIds, Date.now());
+  if (!anchors.size) {
+    return fixtures;
+  }
+
+  return fixtures.map((fixture) => {
+    const fixtureId = fixture?.fixture?.id;
+    if (typeof fixtureId !== "number") {
+      return fixture;
+    }
+
+    const clockAnchor = anchors.get(fixtureId);
+    if (!clockAnchor) {
+      return fixture;
+    }
+
+    return {
+      ...fixture,
+      fixture: {
+        ...fixture.fixture,
+        clockAnchor,
+      },
+    };
+  });
 }
 
 function parseOptionalInteger(value: unknown, field: string) {
@@ -729,7 +777,26 @@ export function createFootballRoutes(service: FootballServiceContract = football
       "/fixtures",
       async ({ query, set }) => {
         try {
-          return await service.getFixtures(toFixturesQuery(query as Record<string, unknown>));
+          const envelope = await service.getFixtures(
+            toFixturesQuery(query as Record<string, unknown>)
+          );
+
+          if (!Array.isArray(envelope.response) || envelope.response.length === 0) {
+            return envelope;
+          }
+
+          const response = await attachClockAnchorsToFixtures(
+            envelope.response as ApiFootballFixtureItem[]
+          );
+
+          if (response === envelope.response) {
+            return envelope;
+          }
+
+          return {
+            ...envelope,
+            response,
+          };
         } catch (error) {
           return handleFootballError(set, error);
         }

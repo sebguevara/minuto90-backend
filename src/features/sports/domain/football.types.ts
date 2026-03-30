@@ -120,6 +120,13 @@ export interface ApiFootballFixtureStatus {
   extra: number | null;
 }
 
+export interface ApiFootballFixtureClockAnchor {
+  elapsed: number;
+  anchoredAtMs: number;
+  serverNowMs: number;
+  source: "match_state" | "snapshot";
+}
+
 export interface ApiFootballFixtureInfo {
   id: number;
   referee: string | null;
@@ -129,6 +136,7 @@ export interface ApiFootballFixtureInfo {
   periods: ApiFootballFixturePeriods;
   venue: ApiFootballVenue;
   status: ApiFootballFixtureStatus;
+  clockAnchor?: ApiFootballFixtureClockAnchor;
 }
 
 export interface ApiFootballFixtureLeague {
