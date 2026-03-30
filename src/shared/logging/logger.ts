@@ -23,6 +23,10 @@ function formatMetaSuffix(meta?: Record<string, unknown>) {
 }
 
 function base(level: Level, msg: string, meta?: Record<string, unknown>) {
+  if (level !== "error") {
+    return;
+  }
+
   const payload = {
     ts: new Date().toISOString(),
     level,
@@ -31,9 +35,7 @@ function base(level: Level, msg: string, meta?: Record<string, unknown>) {
     ...(meta ? { meta } : {}),
   };
   const line = JSON.stringify(payload);
-  if (level === "error") console.error(line);
-  else if (level === "warn") console.warn(line);
-  else console.log(line);
+  console.error(line);
 }
 
 export const logInfo = (msg: string, meta?: Record<string, unknown>) => base("info", msg, meta);

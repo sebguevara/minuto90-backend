@@ -233,14 +233,3 @@ const app = new Elysia()
       ? Number(process.env.PORT ?? 4500)
       : 4500
   );
-
-console.log(`Backend iniciado en http://localhost:${app.server?.port}`);
-console.log(`Swagger UI disponible en http://localhost:${app.server?.port}/swagger`);
-console.log("[rate-limit] Config", {
-  enabled: !isRateLimitGloballyDisabled(),
-  internalKeyBypassEnabled: Boolean(internalApiKeyConfigured()),
-  defaultMax: Number(process.env.RATE_LIMIT_MAX ?? 500000),
-  oddsMax: Number(process.env.RATE_LIMIT_ODDS_MAX ?? 50000),
-  baseballMax: Number(process.env.RATE_LIMIT_BASEBALL_MAX ?? 50000),
-  sitemapMax: Number(process.env.RATE_LIMIT_SITEMAP_MAX ?? 2000),
-});
