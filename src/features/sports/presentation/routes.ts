@@ -44,13 +44,14 @@ import {
   createEmptyFootballLiveSnapshot,
   getFootballLiveSnapshot,
 } from "../infrastructure/football-live.snapshot";
-import { getFootballLiveClockAnchors } from "../infrastructure/football-live-clock-anchor";
 import { DEFAULT_ODDS_BET, DEFAULT_ODDS_BOOKMAKER } from "../infrastructure/football-odds-cache";
 import {
   getCachedOddsResponse as getCachedPrematchOddsResponse,
   hydrateFixturesOddsResponse,
 } from "../infrastructure/football-odds-hydration";
 import { logInfo, logWarn } from "../../../shared/logging/logger";
+import { redisConnection } from "../../../shared/redis/redis.connection";
+import type { StoredMatchState } from "../../notifications/application/diff-engine";
 import {
   coachsQuerySchema,
   countriesQuerySchema,
@@ -109,6 +110,13 @@ type FootballLiveHomeFixture = {
   };
 };
 
+type FootballLiveClockAnchor = {
+  elapsed: number;
+  anchoredAtMs: number;
+  serverNowMs: number;
+  source: "match_state" | "snapshot";
+};
+
 function mergeLiveIntoFixture<TFixture extends Record<string, any>>(
   baseFixture: TFixture,
   liveFixture: FootballLiveHomeFixture
@@ -153,6 +161,123 @@ function mergeLiveIntoFixture<TFixture extends Record<string, any>>(
 }
 
 const LIVE_STATUS_SHORTS = new Set(["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"]);
+
+function matchStateKey(fixtureId: number) {
+  return `match_state:${fixtureId}`;
+}
+
+function parseStoredState(raw: string | null): StoredMatchState | null {
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as StoredMatchState;
+  } catch {
+    return null;
+  }
+}
+
+function buildAnchorFromStoredState(
+  state: StoredMatchState | null,
+  serverNowMs: number
+): FootballLiveClockAnchor | null {
+  if (!state || !isLiveFixtureItem(state.fixture as ApiFootballFixtureItem)) {
+    return null;
+  }
+
+  const elapsed = state.fixture?.fixture?.status?.elapsed;
+  if (typeof elapsed !== "number" || !Number.isFinite(elapsed) || elapsed < 0) {
+    return null;
+  }
+
+  if (!Number.isFinite(state.updatedAtMs) || state.updatedAtMs <= 0) {
+    return null;
+  }
+
+  return {
+    elapsed,
+    anchoredAtMs: state.updatedAtMs,
+    serverNowMs,
+    source: "match_state",
+  };
+}
+
+async function getFootballLiveClockAnchors(
+  fixtureIds: number[],
+  serverNowMs = Date.now()
+): Promise<Map<number, FootballLiveClockAnchor>> {
+  const uniqueIds = Array.from(
+    new Set(
+      fixtureIds.filter(
+        (fixtureId): fixtureId is number =>
+          typeof fixtureId === "number" && Number.isFinite(fixtureId) && fixtureId > 0
+      )
+    )
+  );
+
+  if (!uniqueIds.length) {
+    return new Map();
+  }
+
+  const anchors = new Map<number, FootballLiveClockAnchor>();
+
+  try {
+    const rawStates = await redisConnection.mget(...uniqueIds.map(matchStateKey));
+
+    uniqueIds.forEach((fixtureId, index) => {
+      const anchor = buildAnchorFromStoredState(
+        parseStoredState(rawStates[index] ?? null),
+        serverNowMs
+      );
+
+      if (anchor) {
+        anchors.set(fixtureId, anchor);
+      }
+    });
+  } catch {
+    // Redis read failures fall back to snapshot lookup below.
+  }
+
+  if (anchors.size === uniqueIds.length) {
+    return anchors;
+  }
+
+  const snapshot = await getFootballLiveSnapshot();
+  if (!snapshot?.response?.length) {
+    return anchors;
+  }
+
+  const snapshotAnchoredAtMs = Date.parse(snapshot.updatedAt);
+  if (!Number.isFinite(snapshotAnchoredAtMs) || snapshotAnchoredAtMs <= 0) {
+    return anchors;
+  }
+
+  for (const fixture of snapshot.response) {
+    const fixtureId = fixture?.fixture?.id;
+    if (typeof fixtureId !== "number" || anchors.has(fixtureId)) {
+      continue;
+    }
+
+    const statusShort = fixture.fixture?.status?.short;
+    const elapsed = fixture.fixture?.status?.elapsed;
+
+    if (!LIVE_STATUS_SHORTS.has(statusShort ?? "")) {
+      continue;
+    }
+
+    if (typeof elapsed !== "number" || !Number.isFinite(elapsed) || elapsed < 0) {
+      continue;
+    }
+
+    anchors.set(fixtureId, {
+      elapsed,
+      anchoredAtMs: snapshotAnchoredAtMs,
+      serverNowMs,
+      source: "snapshot",
+    });
+  }
+
+  return anchors;
+}
 
 function isLiveFixtureItem(fixture: ApiFootballFixtureItem) {
   return LIVE_STATUS_SHORTS.has(fixture?.fixture?.status?.short ?? "");
