@@ -11,7 +11,7 @@ export type TemplateCommon = TemplateBase & {
 };
 
 function followMatchLine(matchUrl: string) {
-  return `👉 Seguilo en: ${matchUrl}`;
+  return `Seguilo en: ${matchUrl}`;
 }
 
 export const templates = {
@@ -24,13 +24,13 @@ export const templates = {
     }
   ) =>
     [
-      `⚽ *¡GOOOOOOL de ${input.teamName}!*`,
-      ``,
-      `👤 ${input.playerName} (${input.minute}')`,
-      ...(input.assistName ? [`🅰️ ${input.assistName}`] : []),
-      `🏟️ ${input.homeTeam} *${input.scoreHome} - ${input.scoreAway}* ${input.awayTeam}`,
-      ``,
-      `🏆 ${input.leagueName}`,
+      `GOL de ${input.teamName}`,
+      "",
+      `${input.playerName} (${input.minute}')`,
+      ...(input.assistName ? [`Asistencia: ${input.assistName}`] : []),
+      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      "",
+      input.leagueName,
       followMatchLine(input.matchUrl),
     ].join("\n"),
 
@@ -42,65 +42,76 @@ export const templates = {
     }
   ) =>
     [
-      `🟥 *¡Expulsado! Tarjeta Roja*`,
-      ``,
-      `⚠️ ${input.teamName} se queda con uno menos.`,
-      `👤 ${input.playerName} (${input.minute}')`,
-      ``,
-      `🏟️ ${input.homeTeam} *${input.scoreHome} - ${input.scoreAway}* ${input.awayTeam}`,
-      ``,
-      `🏆 ${input.leagueName}`,
+      "Tarjeta roja",
+      "",
+      `${input.teamName} se queda con uno menos.`,
+      `${input.playerName} (${input.minute}')`,
+      "",
+      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      "",
+      input.leagueName,
       followMatchLine(input.matchUrl),
     ].join("\n"),
 
   varCancelled: (input: TemplateCommon) =>
     [
-      `❌🖥️ *Gol Anulado por VAR*`,
-      `El marcador vuelve atrás.`,
-      ``,
-      `🏟️ ${input.homeTeam} *${input.scoreHome} - ${input.scoreAway}* ${input.awayTeam}`,
-      ``,
-      `🏆 ${input.leagueName}`,
+      "Gol anulado por VAR",
+      "El marcador vuelve atras.",
+      "",
+      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      "",
+      input.leagueName,
       followMatchLine(input.matchUrl),
     ].join("\n"),
 
   kickoff: (input: TemplateBase) =>
     [
-      `🕐 *¡Arranca el partido!*`,
-      ``,
-      `🏟️ ${input.homeTeam} 🆚 ${input.awayTeam}`,
-      ``,
-      `🏆 ${input.leagueName}`,
+      "Arranca el partido",
+      "",
+      `${input.homeTeam} vs ${input.awayTeam}`,
+      "",
+      input.leagueName,
+      followMatchLine(input.matchUrl),
+    ].join("\n"),
+
+  preMatch30m: (input: TemplateBase & { kickoffLabel: string }) =>
+    [
+      "Faltan 30 minutos para el partido",
+      "",
+      `${input.homeTeam} vs ${input.awayTeam}`,
+      `Hora: ${input.kickoffLabel}`,
+      "",
+      input.leagueName,
       followMatchLine(input.matchUrl),
     ].join("\n"),
 
   fullTime: (input: TemplateCommon) =>
     [
-      `🏁 *Final del Partido*`,
-      ``,
-      `🏟️ ${input.homeTeam} *${input.scoreHome} - ${input.scoreAway}* ${input.awayTeam}`,
-      ``,
-      `🏆 ${input.leagueName}`,
+      "Final del partido",
+      "",
+      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      "",
+      input.leagueName,
       followMatchLine(input.matchUrl),
     ].join("\n"),
 
   halfTime: (input: TemplateCommon) =>
     [
-      `⏸️ *Entretiempo*`,
-      ``,
-      `🏟️ ${input.homeTeam} *${input.scoreHome} - ${input.scoreAway}* ${input.awayTeam}`,
-      ``,
-      `🏆 ${input.leagueName}`,
+      "Entretiempo",
+      "",
+      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      "",
+      input.leagueName,
       followMatchLine(input.matchUrl),
     ].join("\n"),
 
   secondHalf: (input: TemplateCommon) =>
     [
-      `▶️ *¡Arranca el segundo tiempo!*`,
-      ``,
-      `🏟️ ${input.homeTeam} *${input.scoreHome} - ${input.scoreAway}* ${input.awayTeam}`,
-      ``,
-      `🏆 ${input.leagueName}`,
+      "Arranca el segundo tiempo",
+      "",
+      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      "",
+      input.leagueName,
       followMatchLine(input.matchUrl),
     ].join("\n"),
 };

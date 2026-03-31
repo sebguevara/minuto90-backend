@@ -12,7 +12,15 @@ model PushSubscription {
   endpoint  String   @unique
   p256dh    String
   auth      String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userAgent String?
+  lastSeenAt DateTime @default(now())
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([lastSeenAt])
 }
 
 model User {
@@ -21,6 +29,7 @@ model User {
   email     String?
   name      String?
   imageUrl  String?
+  role      String   @default("user")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -28,17 +37,47 @@ model User {
   subscribers NotificationSubscriber[]
   news        News[]
   posts       Post[]
+  favorites   Favorite[]
+  pushSubscriptions PushSubscription[]
+}
+
+// ─── Favorites ──────────────────────────────────────────────────────────────
+
+model Favorite {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sport      String
+  entityType String
+  entityId   Int
+  metadata   Json
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, sport, entityType, entityId])
+  @@index([userId, sport])
 }
 
 model NotificationSubscriber {
-  id            String              @id @default(uuid())
-  phoneNumber   String              @unique
-  name          String?
-  createdAt     DateTime            @default(now())
-  isActive      Boolean             @default(true)
-  userId        String?
-  user          User?               @relation(fields: [userId], references: [id])
-  subscriptions MatchSubscription[]
+  id                 String              @id @default(uuid())
+  phoneNumber        String?             @unique
+  name               String?
+  countryCode        String?
+  dialCode           String?
+  nationalNumber     String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @default(now()) @updatedAt
+  isActive           Boolean             @default(true)
+  notifyPreMatch30m  Boolean             @default(true)
+  notifyKickoff      Boolean             @default(true)
+  notifyGoals        Boolean             @default(true)
+  notifyRedCards     Boolean             @default(false)
+  notifyVarCancelled Boolean             @default(false)
+  notifyHalftime     Boolean             @default(false)
+  notifySecondHalf   Boolean             @default(false)
+  notifyFullTime     Boolean             @default(true)
+  userId             String?             @unique
+  user               User?               @relation(fields: [userId], references: [id])
+  subscriptions      MatchSubscription[]
 
   @@index([userId])
 }
@@ -47,14 +86,19 @@ model MatchSubscription {
   id           String                 @id @default(uuid())
   subscriberId String
   fixtureId    Int
+  homeTeamId   Int?
+  awayTeamId   Int?
   homeTeam     String
   awayTeam     String
   leagueName   String?
   matchDate    DateTime
+  sourceType   String?
+  sourceEntityId Int?
   subscriber   NotificationSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
 
   @@unique([subscriberId, fixtureId])
   @@index([fixtureId])
+  @@index([subscriberId, sourceType, sourceEntityId])
 }
 
 model EvolutionInstance {
@@ -69,22 +113,49 @@ model EvolutionInstance {
 
 // ─── News ────────────────────────────────────────────────────────────────────
 
+model NewsCategory {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  color     String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  news News[]
+
+  @@index([isActive, sortOrder])
+}
+
 model News {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   title       String
-  slug        String   @unique
+  slug        String        @unique
   summary     String?
   body        String
   imageUrl    String?
   authorId    String?
-  author      User?    @relation(fields: [authorId], references: [id])
-  publishedAt DateTime @default(now())
-  isDeleted   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  author      User?         @relation(fields: [authorId], references: [id])
+  categoryId  String?
+  category    NewsCategory? @relation(fields: [categoryId], references: [id])
+  featured    Boolean       @default(false)
+  viewCount   Int           @default(0)
+  clickCount  Int           @default(0)
+  publishFrom DateTime?
+  publishTo   DateTime?
+  publishedAt DateTime      @default(now())
+  pushSentAt  DateTime?
+  isDeleted   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   @@index([publishedAt])
+  @@index([pushSentAt])
   @@index([isDeleted, publishedAt])
+  @@index([featured, isDeleted])
+  @@index([categoryId])
+  @@index([viewCount])
 }
 
 // ─── Posts ───────────────────────────────────────────────────────────────────

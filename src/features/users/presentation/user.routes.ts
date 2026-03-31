@@ -3,6 +3,7 @@ import { verifyClerkWebhook } from "../infrastructure/clerk-webhook.verifier";
 import { userService } from "../application/user.service";
 import { minutoPrismaClient } from "../../../lib/minuto-client";
 import { logError, logInfo, logWarn } from "../../../shared/logging/logger";
+import { userNotificationSettingsService } from "../../notifications/application/user-notification-settings.service";
 
 function extractClerkUserData(data: any) {
   const clerkId = data.id as string;
@@ -70,6 +71,116 @@ export const userRoutes = new Elysia()
     },
     {
       detail: { tags: ["Users"], summary: "Clerk webhook handler" },
+    }
+  )
+  .get(
+    "/api/users/:clerkId/profile",
+    async ({ params, set }) => {
+      try {
+        const user = await userService.findByClerkId(params.clerkId);
+        if (!user) {
+          set.status = 404;
+          return { error: "User not found" };
+        }
+        return {
+          data: {
+            id: user.id,
+            clerkId: user.clerkId,
+            name: user.name,
+            email: user.email,
+            imageUrl: user.imageUrl,
+            role: (user as any).role ?? "user",
+          },
+        };
+      } catch (err: any) {
+        logError("users.profile.failed", { err: err?.message ?? String(err) });
+        set.status = 500;
+        return { error: "Internal server error" };
+      }
+    },
+    {
+      detail: { tags: ["Users"], summary: "Get user profile with role" },
+      params: t.Object({ clerkId: t.String() }),
+    }
+  )
+  .get(
+    "/api/users/:clerkId/notification-settings",
+    async ({ params, set }) => {
+      try {
+        return await userNotificationSettingsService.getSettingsByClerkId(params.clerkId);
+      } catch (err: any) {
+        logError("users.notification_settings.get_failed", {
+          clerkId: params.clerkId,
+          err: err?.message ?? String(err),
+        });
+        set.status = err?.message === "User not found" ? 404 : 500;
+        return { error: err?.message === "User not found" ? "User not found" : "Internal server error" };
+      }
+    },
+    {
+      detail: { tags: ["Users"], summary: "Get notification settings for a user" },
+      params: t.Object({ clerkId: t.String() }),
+    }
+  )
+  .patch(
+    "/api/users/:clerkId/notification-settings",
+    async ({ params, body, set }) => {
+      try {
+        return await userNotificationSettingsService.updateSettingsByClerkId(params.clerkId, body);
+      } catch (err: any) {
+        logError("users.notification_settings.patch_failed", {
+          clerkId: params.clerkId,
+          err: err?.message ?? String(err),
+        });
+        if (err?.message === "User not found") {
+          set.status = 404;
+          return { error: "User not found" };
+        }
+        if (String(err?.message ?? "").startsWith("Invalid ")) {
+          set.status = 400;
+          return { error: err.message };
+        }
+        set.status = 500;
+        return { error: "Internal server error" };
+      }
+    },
+    {
+      detail: { tags: ["Users"], summary: "Update notification settings for a user" },
+      params: t.Object({ clerkId: t.String() }),
+      body: t.Object({
+        name: t.Optional(t.Nullable(t.String())),
+        countryCode: t.Optional(t.Nullable(t.String())),
+        dialCode: t.Optional(t.Nullable(t.String())),
+        nationalNumber: t.Optional(t.Nullable(t.String())),
+        isActive: t.Optional(t.Boolean()),
+        notifyPreMatch30m: t.Optional(t.Boolean()),
+        notifyKickoff: t.Optional(t.Boolean()),
+        notifyGoals: t.Optional(t.Boolean()),
+        notifyRedCards: t.Optional(t.Boolean()),
+        notifyVarCancelled: t.Optional(t.Boolean()),
+        notifyHalftime: t.Optional(t.Boolean()),
+        notifySecondHalf: t.Optional(t.Boolean()),
+        notifyFullTime: t.Optional(t.Boolean()),
+      }),
+    }
+  )
+  .get(
+    "/api/users/:clerkId/notification-status",
+    async ({ params, set }) => {
+      try {
+        return await userNotificationSettingsService.getStatusByClerkId(params.clerkId);
+      } catch (err: any) {
+        logError("users.notification_status.get_failed", {
+          clerkId: params.clerkId,
+          err: err?.message ?? String(err),
+        });
+        set.status = err?.message === "User not found" ? 404 : 500;
+        return { error: err?.message === "User not found" ? "User not found" : "Internal server error" };
+      }
+    },
+    {
+      detail: { tags: ["Users"], summary: "Get notification status for a user" },
+      params: t.Object({ clerkId: t.String() }),
     }
   )
   .get(

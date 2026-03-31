@@ -10,9 +10,11 @@
  */
 export type * from './models/PushSubscription.js'
 export type * from './models/User.js'
+export type * from './models/Favorite.js'
 export type * from './models/NotificationSubscriber.js'
 export type * from './models/MatchSubscription.js'
 export type * from './models/EvolutionInstance.js'
+export type * from './models/NewsCategory.js'
 export type * from './models/News.js'
 export type * from './models/Post.js'
 export type * from './commonInputTypes.js'

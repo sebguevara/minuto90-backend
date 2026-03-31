@@ -11,6 +11,10 @@ import { templates } from "../features/notifications/application/templates";
 import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
 import { updateLiveFixturesCache, invalidateStandingsCache } from "./live-cache-updater";
+import {
+  canReceiveWhatsappNotifications,
+  isLiveTriggerEnabled,
+} from "../features/notifications/application/subscriber-preferences";
 
 const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 20000);
 const REDIS_TTL_SECONDS = 60 * 60 * 4;
@@ -101,7 +105,7 @@ async function dispatchTriggers(input: { fixtureId: number; triggers: ReturnType
 
   const activeSubsById = new Map<string, (typeof subs)[number]>();
   for (const sub of subs) {
-    if (!sub?.subscriber?.isActive) continue;
+    if (!sub?.subscriber || !canReceiveWhatsappNotifications(sub.subscriber)) continue;
     if (!activeSubsById.has(sub.subscriberId)) activeSubsById.set(sub.subscriberId, sub);
   }
   if (!activeSubsById.size) return;
@@ -120,10 +124,13 @@ async function dispatchTriggers(input: { fixtureId: number; triggers: ReturnType
     triggersEmitted++;
 
     for (const sub of activeSubsById.values()) {
+      if (!isLiveTriggerEnabled(sub.subscriber, trigger.type)) continue;
+      const phone = sub.subscriber.phoneNumber;
+      if (!phone) continue;
       const msgOk = await shouldEmitMessage(sub.subscriberId, input.fixtureId, trigger.message);
       if (!msgOk) continue;
       jobs.push({
-        phone: sub.subscriber.phoneNumber,
+        phone,
         message: trigger.message,
         fixtureId: input.fixtureId,
         triggerType: trigger.type,
@@ -273,15 +280,24 @@ async function handleDisappearances(currentIds: number[]) {
 
       const message = templates.fullTime({ homeTeam, awayTeam, leagueName, scoreHome, scoreAway, matchUrl });
       const jobs = subs
-        .filter((s) => s.subscriber.isActive)
-        .map((sub) => ({
-          phone: sub.subscriber.phoneNumber,
-          message,
-          fixtureId,
-          triggerType: "FULL_TIME",
-          subscriberId: sub.subscriberId,
-          eventKey: "disappeared",
-        }));
+        .filter(
+          (s) =>
+            canReceiveWhatsappNotifications(s.subscriber) &&
+            isLiveTriggerEnabled(s.subscriber, "FULL_TIME")
+        )
+        .flatMap((sub) => {
+          const phone = sub.subscriber.phoneNumber;
+          if (!phone) return [];
+
+          return [{
+            phone,
+            message,
+            fixtureId,
+            triggerType: "FULL_TIME",
+            subscriberId: sub.subscriberId,
+            eventKey: "disappeared",
+          }];
+        });
 
       await enqueueWhatsappNotificationsBulk(jobs);
 

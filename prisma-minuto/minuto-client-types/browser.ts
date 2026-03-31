@@ -28,6 +28,11 @@ export type PushSubscription = Prisma.PushSubscriptionModel
  */
 export type User = Prisma.UserModel
 /**
+ * Model Favorite
+ * 
+ */
+export type Favorite = Prisma.FavoriteModel
+/**
  * Model NotificationSubscriber
  * 
  */
@@ -42,6 +47,11 @@ export type MatchSubscription = Prisma.MatchSubscriptionModel
  * 
  */
 export type EvolutionInstance = Prisma.EvolutionInstanceModel
+/**
+ * Model NewsCategory
+ * 
+ */
+export type NewsCategory = Prisma.NewsCategoryModel
 /**
  * Model News
  * 

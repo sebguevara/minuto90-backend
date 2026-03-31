@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 import { rateLimit } from "elysia-rate-limit";
-// import { pushRoutes } from "./features/push/presentation/routes";
+import { pushRoutes } from "./features/push/presentation/routes";
 import { footballRoutes } from "./features/sports/presentation/routes";
 import { volleyballRoutes } from "./features/sports/presentation/volleyball.routes";
 import { rugbyRoutes } from "./features/sports/presentation/rugby.routes";
@@ -19,8 +19,11 @@ import { notificationsRoutes } from "./features/notifications/presentation/route
 import { insightsRoutes } from "./features/insights/presentation/insights.routes";
 import { userRoutes } from "./features/users/presentation/user.routes";
 import { newsRoutes } from "./features/news/presentation/news.routes";
+import { categoryRoutes } from "./features/news/presentation/category.routes";
 import { postRoutes } from "./features/posts/presentation/post.routes";
 import { comparatorRoutes } from "./features/comparator/presentation/comparator.routes";
+import { favoritesRoutes } from "./features/favorites/presentation/favorites.routes";
+import { uploadRoutes } from "./features/uploads/presentation/upload.routes";
 
 const SITEMAP_REQUEST_PURPOSE = "sitemap";
 
@@ -208,7 +211,7 @@ const app = new Elysia()
       exclude: [],
     })
   )
-  // .use(pushRoutes)
+  .use(pushRoutes)
   .use(footballRoutes)
   .use(volleyballRoutes)
   .use(rugbyRoutes)
@@ -226,8 +229,11 @@ const app = new Elysia()
   .use(insightsRoutes)
   .use(userRoutes)
   .use(newsRoutes)
+  .use(categoryRoutes)
   .use(postRoutes)
   .use(comparatorRoutes)
+  .use(favoritesRoutes)
+  .use(uploadRoutes)
   .listen(
     process.env.NODE_ENV === "production"
       ? Number(process.env.PORT ?? 4500)

@@ -53,9 +53,11 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   PushSubscription: 'PushSubscription',
   User: 'User',
+  Favorite: 'Favorite',
   NotificationSubscriber: 'NotificationSubscriber',
   MatchSubscription: 'MatchSubscription',
   EvolutionInstance: 'EvolutionInstance',
+  NewsCategory: 'NewsCategory',
   News: 'News',
   Post: 'Post'
 } as const
@@ -81,7 +83,11 @@ export const PushSubscriptionScalarFieldEnum = {
   endpoint: 'endpoint',
   p256dh: 'p256dh',
   auth: 'auth',
-  createdAt: 'createdAt'
+  userId: 'userId',
+  userAgent: 'userAgent',
+  lastSeenAt: 'lastSeenAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
@@ -93,6 +99,7 @@ export const UserScalarFieldEnum = {
   email: 'email',
   name: 'name',
   imageUrl: 'imageUrl',
+  role: 'role',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -101,12 +108,37 @@ export const UserScalarFieldEnum = {
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+export const FavoriteScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  sport: 'sport',
+  entityType: 'entityType',
+  entityId: 'entityId',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type FavoriteScalarFieldEnum = (typeof FavoriteScalarFieldEnum)[keyof typeof FavoriteScalarFieldEnum]
+
+
 export const NotificationSubscriberScalarFieldEnum = {
   id: 'id',
   phoneNumber: 'phoneNumber',
   name: 'name',
+  countryCode: 'countryCode',
+  dialCode: 'dialCode',
+  nationalNumber: 'nationalNumber',
   createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
   isActive: 'isActive',
+  notifyPreMatch30m: 'notifyPreMatch30m',
+  notifyKickoff: 'notifyKickoff',
+  notifyGoals: 'notifyGoals',
+  notifyRedCards: 'notifyRedCards',
+  notifyVarCancelled: 'notifyVarCancelled',
+  notifyHalftime: 'notifyHalftime',
+  notifySecondHalf: 'notifySecondHalf',
+  notifyFullTime: 'notifyFullTime',
   userId: 'userId'
 } as const
 
@@ -117,10 +149,14 @@ export const MatchSubscriptionScalarFieldEnum = {
   id: 'id',
   subscriberId: 'subscriberId',
   fixtureId: 'fixtureId',
+  homeTeamId: 'homeTeamId',
+  awayTeamId: 'awayTeamId',
   homeTeam: 'homeTeam',
   awayTeam: 'awayTeam',
   leagueName: 'leagueName',
-  matchDate: 'matchDate'
+  matchDate: 'matchDate',
+  sourceType: 'sourceType',
+  sourceEntityId: 'sourceEntityId'
 } as const
 
 export type MatchSubscriptionScalarFieldEnum = (typeof MatchSubscriptionScalarFieldEnum)[keyof typeof MatchSubscriptionScalarFieldEnum]
@@ -139,6 +175,20 @@ export const EvolutionInstanceScalarFieldEnum = {
 export type EvolutionInstanceScalarFieldEnum = (typeof EvolutionInstanceScalarFieldEnum)[keyof typeof EvolutionInstanceScalarFieldEnum]
 
 
+export const NewsCategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  color: 'color',
+  sortOrder: 'sortOrder',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NewsCategoryScalarFieldEnum = (typeof NewsCategoryScalarFieldEnum)[keyof typeof NewsCategoryScalarFieldEnum]
+
+
 export const NewsScalarFieldEnum = {
   id: 'id',
   title: 'title',
@@ -147,7 +197,14 @@ export const NewsScalarFieldEnum = {
   body: 'body',
   imageUrl: 'imageUrl',
   authorId: 'authorId',
+  categoryId: 'categoryId',
+  featured: 'featured',
+  viewCount: 'viewCount',
+  clickCount: 'clickCount',
+  publishFrom: 'publishFrom',
+  publishTo: 'publishTo',
   publishedAt: 'publishedAt',
+  pushSentAt: 'pushSentAt',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -177,6 +234,13 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
@@ -191,4 +255,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

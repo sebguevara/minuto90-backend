@@ -3,29 +3,45 @@ import type { CreateUserFromClerkInput, UpdateUserFromClerkInput } from "../doma
 
 export const userService = {
   async createFromClerk(input: CreateUserFromClerkInput) {
-    return minutoPrismaClient.user.create({
-      data: {
+    return minutoPrismaClient.user.upsert({
+      where: { clerkId: input.clerkId },
+      create: {
         clerkId: input.clerkId,
         email: input.email ?? undefined,
         name: input.name ?? undefined,
         imageUrl: input.imageUrl ?? undefined,
+        isActive: true,
+      },
+      update: {
+        email: input.email ?? undefined,
+        name: input.name ?? undefined,
+        imageUrl: input.imageUrl ?? undefined,
+        isActive: true,
       },
     });
   },
 
   async updateFromClerk(clerkId: string, input: UpdateUserFromClerkInput) {
-    return minutoPrismaClient.user.update({
+    return minutoPrismaClient.user.upsert({
       where: { clerkId },
-      data: {
+      create: {
+        clerkId,
         email: input.email ?? undefined,
         name: input.name ?? undefined,
         imageUrl: input.imageUrl ?? undefined,
+        isActive: true,
+      },
+      update: {
+        email: input.email ?? undefined,
+        name: input.name ?? undefined,
+        imageUrl: input.imageUrl ?? undefined,
+        isActive: true,
       },
     });
   },
 
   async deactivateByClerkId(clerkId: string) {
-    return minutoPrismaClient.user.update({
+    return minutoPrismaClient.user.updateMany({
       where: { clerkId },
       data: { isActive: false },
     });
@@ -34,6 +50,16 @@ export const userService = {
   async findByClerkId(clerkId: string) {
     return minutoPrismaClient.user.findUnique({
       where: { clerkId },
+    });
+  },
+
+  async findOrCreateByClerkId(clerkId: string) {
+    return minutoPrismaClient.user.upsert({
+      where: { clerkId },
+      create: {
+        clerkId,
+      },
+      update: {},
     });
   },
 };

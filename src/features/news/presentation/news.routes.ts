@@ -1,15 +1,54 @@
 import { Elysia, t } from "elysia";
 import { newsService } from "../application/news.service";
+import { pushService } from "../../push/application/push.service";
+import { requireAdmin } from "../../../shared/middleware/admin-guard";
 import { logError } from "../../../shared/logging/logger";
 
 export const newsRoutes = new Elysia({ prefix: "/api/news" })
-  // List news (paginated)
+  // Admin overview
+  .get(
+    "/admin/overview",
+    async ({ request, set }) => {
+      try {
+        const clerkId = request.headers.get("x-clerk-user-id");
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
+        const overview = await newsService.getAdminOverview();
+        return { data: overview };
+      } catch (err: any) {
+        logError("news.adminOverview.failed", { err: err?.message ?? String(err) });
+        set.status = 500;
+        return { error: "Internal server error" };
+      }
+    },
+    {
+      detail: { tags: ["News"], summary: "Get news admin overview" },
+    }
+  )
+  // List news (paginated) — public (filtered by date) or admin (all)
   .get(
     "/",
-    async ({ query, set }) => {
+    async ({ query, request, set }) => {
       try {
         const page = Math.max(1, Number(query.page) || 1);
         const limit = Math.min(50, Math.max(1, Number(query.limit) || 20));
+        const isAdmin = query.admin === "true";
+
+        if (isAdmin) {
+          const clerkId = request.headers.get("x-clerk-user-id");
+          const guard = await requireAdmin(clerkId);
+          if (!guard.ok) {
+            set.status = guard.status;
+            return { error: guard.error };
+          }
+          const result = await newsService.listAdmin(page, limit);
+          return { data: result };
+        }
+
         const result = await newsService.list(page, limit);
         return { data: result };
       } catch (err: any) {
@@ -22,6 +61,7 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
       query: t.Object({
         page: t.Optional(t.String()),
         limit: t.Optional(t.String()),
+        admin: t.Optional(t.String()),
       }),
       detail: { tags: ["News"], summary: "List news articles" },
     }
@@ -73,15 +113,35 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
     }
   )
 
-  // Create
+  // Create (admin only)
   .post(
     "/",
-    async ({ body, set }) => {
+    async ({ body, request, set }) => {
       try {
+        const clerkId = request.headers.get("x-clerk-user-id");
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
         const news = await newsService.create({
           ...body,
+          authorId: guard.userId,
+          featured: body.featured ?? false,
+          publishFrom: body.publishFrom ? new Date(body.publishFrom) : null,
+          publishTo: body.publishTo ? new Date(body.publishTo) : null,
           publishedAt: body.publishedAt ? new Date(body.publishedAt) : undefined,
+          categoryId: body.categoryId ?? null,
         });
+        try {
+          await pushService.enqueueNewsPublicationPush(news.id);
+        } catch (pushErr: any) {
+          logError("news.push.enqueue_after_create.failed", {
+            newsId: news.id,
+            err: pushErr?.message ?? String(pushErr),
+          });
+        }
         set.status = 201;
         return { data: news };
       } catch (err: any) {
@@ -101,18 +161,28 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         summary: t.Optional(t.Nullable(t.String())),
         body: t.String({ minLength: 1 }),
         imageUrl: t.Optional(t.Nullable(t.String())),
-        authorId: t.Optional(t.Nullable(t.String())),
+        featured: t.Optional(t.Boolean()),
+        publishFrom: t.Optional(t.Nullable(t.String())),
+        publishTo: t.Optional(t.Nullable(t.String())),
         publishedAt: t.Optional(t.Nullable(t.String())),
+        categoryId: t.Optional(t.Nullable(t.String())),
       }),
-      detail: { tags: ["News"], summary: "Create a news article" },
+      detail: { tags: ["News"], summary: "Create a news article (admin only)" },
     }
   )
 
-  // Update
+  // Update (admin only)
   .patch(
     "/:id",
-    async ({ params, body, set }) => {
+    async ({ params, body, request, set }) => {
       try {
+        const clerkId = request.headers.get("x-clerk-user-id");
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
         const existing = await newsService.getById(params.id);
         if (!existing) {
           set.status = 404;
@@ -120,8 +190,20 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         }
         const news = await newsService.update(params.id, {
           ...body,
+          featured: body.featured,
+          publishFrom: body.publishFrom !== undefined ? (body.publishFrom ? new Date(body.publishFrom) : null) : undefined,
+          publishTo: body.publishTo !== undefined ? (body.publishTo ? new Date(body.publishTo) : null) : undefined,
           publishedAt: body.publishedAt ? new Date(body.publishedAt) : undefined,
+          categoryId: body.categoryId !== undefined ? (body.categoryId ?? null) : undefined,
         });
+        try {
+          await pushService.enqueueNewsPublicationPush(news.id);
+        } catch (pushErr: any) {
+          logError("news.push.enqueue_after_update.failed", {
+            newsId: news.id,
+            err: pushErr?.message ?? String(pushErr),
+          });
+        }
         return { data: news };
       } catch (err: any) {
         if (err?.code === "P2002") {
@@ -141,17 +223,28 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         summary: t.Optional(t.Nullable(t.String())),
         body: t.Optional(t.String({ minLength: 1 })),
         imageUrl: t.Optional(t.Nullable(t.String())),
+        featured: t.Optional(t.Boolean()),
+        publishFrom: t.Optional(t.Nullable(t.String())),
+        publishTo: t.Optional(t.Nullable(t.String())),
         publishedAt: t.Optional(t.Nullable(t.String())),
+        categoryId: t.Optional(t.Nullable(t.String())),
       }),
-      detail: { tags: ["News"], summary: "Update a news article" },
+      detail: { tags: ["News"], summary: "Update a news article (admin only)" },
     }
   )
 
-  // Soft delete
+  // Soft delete (admin only)
   .delete(
     "/:id",
-    async ({ params, set }) => {
+    async ({ params, request, set }) => {
       try {
+        const clerkId = request.headers.get("x-clerk-user-id");
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
         const existing = await newsService.getById(params.id);
         if (!existing) {
           set.status = 404;
@@ -167,6 +260,32 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
     },
     {
       params: t.Object({ id: t.String() }),
-      detail: { tags: ["News"], summary: "Soft delete a news article" },
+      detail: { tags: ["News"], summary: "Soft delete a news article (admin only)" },
+    }
+  )
+
+  // Track view or click (public, no auth)
+  .post(
+    "/:id/track",
+    async ({ params, body, set }) => {
+      try {
+        if (body.type === "view") {
+          await newsService.trackView(params.id);
+        } else {
+          await newsService.trackClick(params.id);
+        }
+        return { data: { tracked: true } };
+      } catch (err: any) {
+        logError("news.track.failed", { err: err?.message ?? String(err) });
+        set.status = 500;
+        return { error: "Internal server error" };
+      }
+    },
+    {
+      params: t.Object({ id: t.String() }),
+      body: t.Object({
+        type: t.Union([t.Literal("view"), t.Literal("click")]),
+      }),
+      detail: { tags: ["News"], summary: "Track a view or click on a news article" },
     }
   );
