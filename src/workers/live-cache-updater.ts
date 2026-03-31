@@ -7,7 +7,7 @@ import {
 import { redisConnection } from "../shared/redis/redis.connection";
 import { logInfo, logWarn } from "../shared/logging/logger";
 
-const LIVE_POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 45000);
+const LIVE_POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 20000);
 const LIVE_CACHE_TTL_SECONDS = Number(
   process.env.LIVE_CACHE_TTL_SECONDS ??
     Math.max(45, Math.ceil(LIVE_POLL_INTERVAL_MS / 1000) * 3)

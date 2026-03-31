@@ -12,7 +12,7 @@ import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
 import { updateLiveFixturesCache, invalidateStandingsCache } from "./live-cache-updater";
 
-const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 45000);
+const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 20000);
 const REDIS_TTL_SECONDS = 60 * 60 * 4;
 const LIVE_SET_KEY = "live_fixtures:last";
 const EVENT_LEDGER_PREFIX = "match_event:";
