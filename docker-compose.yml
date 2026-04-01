@@ -13,6 +13,25 @@ services:
       - NODE_ENV=production
     networks:
       - minuto90-network
+    
+  minuto90-worker:
+    container_name: minuto90-worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    command: bun start worker
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      pg-minuto90:
+        condition: service_healthy
+      minuto90-redis:
+        condition: service_started
+    networks:
+      - minuto90-network
 
   minuto90-redis:
     image: redis:7-alpine
