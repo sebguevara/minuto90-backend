@@ -75,7 +75,7 @@ services:
     image: postgres:17
     restart: always
     ports:
-      - "127.0.0.1:9070:5432"
+      - "9070:5432"
     env_file:
       - .env
     environment:
@@ -102,7 +102,7 @@ services:
     image: postgres:17
     restart: always
     ports:
-      - "127.0.0.1:9080:5432"
+      - "9080:5432"
     env_file:
       - .env
     environment:
@@ -130,7 +130,7 @@ services:
     image: evoapicloud/evolution-api:v2.3.7
     restart: always
     ports:
-      - "127.0.0.1:9090:8080"
+      - "9090:8080"
     depends_on:
       pg-minuto90-evolution:
         condition: service_healthy
