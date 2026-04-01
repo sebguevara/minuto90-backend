@@ -61,6 +61,92 @@ function buildPhoneNumber(input: { dialCode: string | null; nationalNumber: stri
   return `${input.dialCode}${input.nationalNumber}`;
 }
 
+async function moveSubscriptionsBetweenSubscribers(input: {
+  fromSubscriberId: string;
+  toSubscriberId: string;
+}) {
+  const subscriptions = await minutoPrismaClient.matchSubscription.findMany({
+    where: { subscriberId: input.fromSubscriberId },
+    orderBy: { matchDate: "asc" },
+  });
+
+  for (const subscription of subscriptions) {
+    await minutoPrismaClient.matchSubscription.upsert({
+      where: {
+        subscriberId_fixtureId: {
+          subscriberId: input.toSubscriberId,
+          fixtureId: subscription.fixtureId,
+        },
+      },
+      create: {
+        subscriberId: input.toSubscriberId,
+        fixtureId: subscription.fixtureId,
+        homeTeamId: subscription.homeTeamId ?? undefined,
+        awayTeamId: subscription.awayTeamId ?? undefined,
+        homeTeam: subscription.homeTeam,
+        awayTeam: subscription.awayTeam,
+        leagueName: subscription.leagueName ?? undefined,
+        matchDate: subscription.matchDate,
+        sourceType: subscription.sourceType ?? undefined,
+        sourceEntityId: subscription.sourceEntityId ?? undefined,
+      },
+      update: {
+        homeTeamId: subscription.homeTeamId ?? undefined,
+        awayTeamId: subscription.awayTeamId ?? undefined,
+        homeTeam: subscription.homeTeam,
+        awayTeam: subscription.awayTeam,
+        leagueName: subscription.leagueName ?? undefined,
+        matchDate: subscription.matchDate,
+        sourceType: subscription.sourceType ?? undefined,
+        sourceEntityId: subscription.sourceEntityId ?? undefined,
+      },
+    });
+  }
+
+  await minutoPrismaClient.matchSubscription.deleteMany({
+    where: { subscriberId: input.fromSubscriberId },
+  });
+}
+
+async function resolvePhoneNumberConflict(input: {
+  userId: string;
+  subscriberId: string;
+  phoneNumber: string | null;
+}) {
+  if (!input.phoneNumber) return null;
+
+  const conflict = await minutoPrismaClient.notificationSubscriber.findFirst({
+    where: {
+      phoneNumber: input.phoneNumber,
+      NOT: { id: input.subscriberId },
+    },
+    include: {
+      subscriptions: true,
+    },
+  });
+
+  if (!conflict) return null;
+
+  if (conflict.userId && conflict.userId !== input.userId) {
+    const error = new Error("Phone number already linked to another account");
+    (error as Error & { status?: number }).status = 409;
+    throw error;
+  }
+
+  if (conflict.id !== input.subscriberId) {
+    await moveSubscriptionsBetweenSubscribers({
+      fromSubscriberId: conflict.id,
+      toSubscriberId: input.subscriberId,
+    });
+
+    await minutoPrismaClient.notificationSubscriber.delete({
+      where: { id: conflict.id },
+    });
+  }
+
+  return conflict;
+}
+
 function asObject(value: unknown): Record<string, any> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return value as Record<string, any>;
@@ -438,6 +524,12 @@ export const userNotificationSettingsService = {
     );
     const countryCode = trimOrNull(input.countryCode ?? subscriber.countryCode)?.toUpperCase() ?? null;
     const phoneNumber = buildPhoneNumber({ dialCode, nationalNumber });
+
+    await resolvePhoneNumberConflict({
+      userId: user.id,
+      subscriberId: subscriber.id,
+      phoneNumber,
+    });
 
     const data = await minutoPrismaClient.notificationSubscriber.update({
       where: { id: subscriber.id },

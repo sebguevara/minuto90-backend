@@ -140,6 +140,10 @@ export const userRoutes = new Elysia()
           set.status = 400;
           return { error: err.message };
         }
+        if (err?.status === 409 || err?.message === "Phone number already linked to another account") {
+          set.status = 409;
+          return { error: "Phone number already linked to another account" };
+        }
         set.status = 500;
         return { error: "Internal server error" };
       }
