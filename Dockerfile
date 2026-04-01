@@ -20,6 +20,6 @@ RUN bunx prisma generate --schema ./prisma-whoscored/schema.prisma
 # Copiar código fuente
 COPY src ./src
 
-EXPOSE 4500
+EXPOSE 9010
 
 CMD ["bun", "run", "src/index.ts"]
