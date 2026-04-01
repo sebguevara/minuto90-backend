@@ -12,7 +12,7 @@ import { logError, logInfo, logWarn } from "../shared/logging/logger";
 import { userNotificationSettingsService } from "../features/notifications/application/user-notification-settings.service";
 
 const PRE_MATCH_INTERVAL_MS = Number(
-  process.env.PRE_MATCH_NOTIFICATIONS_INTERVAL_MS ?? 5 * 60 * 1000
+  process.env.PRE_MATCH_NOTIFICATIONS_INTERVAL_MS ?? 10 * 60 * 1000
 );
 const PRE_MATCH_WINDOW_MINUTES = Number(
   process.env.PRE_MATCH_WINDOW_MINUTES ?? 30

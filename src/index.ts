@@ -24,6 +24,7 @@ import { postRoutes } from "./features/posts/presentation/post.routes";
 import { comparatorRoutes } from "./features/comparator/presentation/comparator.routes";
 import { favoritesRoutes } from "./features/favorites/presentation/favorites.routes";
 import { uploadRoutes } from "./features/uploads/presentation/upload.routes";
+import { teamColorRoutes } from "./shared/colors/team-color.routes";
 
 const SITEMAP_REQUEST_PURPOSE = "sitemap";
 
@@ -234,6 +235,7 @@ const app = new Elysia()
   .use(comparatorRoutes)
   .use(favoritesRoutes)
   .use(uploadRoutes)
+  .use(teamColorRoutes)
   .listen(
     process.env.NODE_ENV === "production"
       ? Number(process.env.PORT ?? 4500)
