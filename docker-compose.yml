@@ -51,6 +51,34 @@ services:
       retries: 10
     networks:
       - minuto90-network
+
+  pg-whoscored:
+    image: postgres:17
+    restart: always
+    ports:
+      - "127.0.0.1:9080:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_WHOSCORED_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_WHOSCORED_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_WHOSCORED_DB}
+      - TZ=America/Argentina/Buenos_Aires
+      - PGTZ=America/Argentina/Buenos_Aires
+    volumes:
+      - ./whoscored/postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_WHOSCORED_USER} -d ${POSTGRES_WHOSCORED_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - minuto90-network
+      
   pg-minuto90-evolution:
     image: postgres:17
     restart: always
