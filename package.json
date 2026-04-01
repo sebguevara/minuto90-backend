@@ -12,6 +12,8 @@
     "worker:web-push": "bun run src/workers/web-push-notifications.worker.ts",
     "worker:whatsapp": "bun run src/workers/whatsapp-notifications.worker.ts",
     "worker:daily-prewarm": "bun run src/workers/daily-prewarm.worker.ts",
+    "cache:refresh": "bun run src/scripts/refresh-redis.ts",
+    "cache:refresh:football": "bun run src/scripts/refresh-redis.ts football",
     "postinstall": "bunx prisma generate --schema ./prisma-minuto/schema.prisma && bunx prisma generate --schema ./prisma-whoscored/schema.prisma",
     "generate": "bunx prisma generate --schema ./prisma-minuto/schema.prisma && bunx prisma generate --schema ./prisma-whoscored/schema.prisma",
     "migrate": "bunx prisma migrate dev --schema ./prisma-minuto/schema.prisma && bunx prisma migrate dev --schema ./prisma-whoscored/schema.prisma",

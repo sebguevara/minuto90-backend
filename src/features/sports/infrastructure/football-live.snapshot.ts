@@ -5,7 +5,7 @@ import type {
 import { logWarn } from "../../../shared/logging/logger";
 import { redisConnection } from "../../../shared/redis/redis.connection";
 
-const LIVE_POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 20000);
+const LIVE_POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 15000);
 const LIVE_SNAPSHOT_TTL_SECONDS = Number(
   process.env.LIVE_SNAPSHOT_TTL_SECONDS ??
     Math.max(45, Math.ceil(LIVE_POLL_INTERVAL_MS / 1000) * 3)

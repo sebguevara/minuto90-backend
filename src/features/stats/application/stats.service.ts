@@ -1,6 +1,7 @@
 import * as repo from "../infrastructure/stats.repo";
 import { groupTeamTopStats } from "./matchProfile.group";
 import { getFootballTeamsAll } from "../infrastructure/football-teams-all.store";
+import { redisFootballCacheStore } from "../../sports/infrastructure/football-cache.store";
 import type {
   PaginationQuery,
   TeamTournamentsQuery,
@@ -14,6 +15,11 @@ import type {
   TournamentPlayerTablesQuery,
   TournamentBestXIQuery,
 } from "../dtos/stats.dto";
+
+const MATCH_PROFILE_TTL_SECONDS = 60 * 60 * 12; // 12 hours
+function matchProfileCacheKey(teamId: number) {
+  return `minuto90:match-profile:team:${teamId}:v1`;
+}
 
 // ==================== TEAM SERVICES ====================
 
@@ -326,7 +332,20 @@ export async function getAllCompleteByMinId(
 // GET /match-profile/:minId - Perfil completo del equipo para vista de partido
 export async function getTeamMatchProfile(minId: number) {
   const team = await getTeamByMinId(minId);
+  const cacheKey = matchProfileCacheKey(team.id);
+
+  const cached = await redisFootballCacheStore.get<ReturnType<typeof buildMatchProfileResponse>>(cacheKey);
+  if (cached) return cached;
+
   const profile = await repo.fetchMatchProfile(team.id);
+  const response = buildMatchProfileResponse(profile);
+
+  await redisFootballCacheStore.set(cacheKey, response, MATCH_PROFILE_TTL_SECONDS);
+
+  return response;
+}
+
+function buildMatchProfileResponse(profile: Awaited<ReturnType<typeof repo.fetchMatchProfile>>) {
   return {
     data: {
       ...profile,

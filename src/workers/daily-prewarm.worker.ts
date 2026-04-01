@@ -30,6 +30,9 @@ const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European l
  */
 const PREWARM_CRON_SCHEDULE = process.env.PREWARM_CRON_SCHEDULE?.trim() || '0 4,16 * * *';
 const PREWARM_CRON_TIMEZONE = process.env.PREWARM_CRON_TIMEZONE?.trim() || DEFAULT_TIMEZONE;
+const PREWARM_RUN_ON_STARTUP = process.env.PREWARM_RUN_ON_STARTUP?.trim() === 'true';
+const PREWARM_EXIT_AFTER_RUN = process.env.PREWARM_EXIT_AFTER_RUN?.trim() === 'true';
+const PREWARM_MODE = process.env.PREWARM_MODE?.trim().toLowerCase() || 'scheduled';
 
 /** Warm del sitemap del frontend (default cada 24h UTC; override SITEMAP_WARM_CRON_SCHEDULE). */
 const SITEMAP_WARM_CRON_SCHEDULE =
@@ -629,14 +632,35 @@ async function prewarmF1(): Promise<void> {
 // ─── Main run ────────────────────────────────────────────────────────────────
 
 async function runAllPrewarm(): Promise<void> {
-  logInfo('prewarm.daily.start', { timestamp: new Date().toISOString() });
+  logInfo('prewarm.daily.start', {
+    timestamp: new Date().toISOString(),
+    mode: PREWARM_MODE,
+  });
 
   try {
-    // Keep scheduled prewarm focused on football to reduce steady-state cost.
-    await Promise.allSettled([
-      prewarmFootballFixtures(),
-      prewarmFootballHomeFeedByTimezone(),
-    ]);
+    if (PREWARM_MODE === 'full') {
+      await Promise.allSettled([
+        prewarmFootballFixtures(),
+        prewarmFootballHomeFeedByTimezone(),
+        prewarmNba(),
+        prewarmBasketball(),
+        prewarmHockey(),
+        prewarmRugby(),
+        prewarmBaseball(),
+        prewarmHandball(),
+        prewarmVolleyball(),
+        prewarmNfl(),
+        prewarmAfl(),
+        prewarmMma(),
+        prewarmF1(),
+      ]);
+    } else {
+      // Keep scheduled prewarm focused on football to reduce steady-state cost.
+      await Promise.allSettled([
+        prewarmFootballFixtures(),
+        prewarmFootballHomeFeedByTimezone(),
+      ]);
+    }
 
     // Refresh live fixtures cache during the scheduled football prewarm.
     try {
@@ -667,46 +691,68 @@ async function runAllPrewarm(): Promise<void> {
 
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
 
-logInfo('prewarm.startup.disabled', {
-  reason: 'scheduled_only',
-  prewarmSchedule: PREWARM_CRON_SCHEDULE,
-  sitemapSchedule: SITEMAP_WARM_CRON_SCHEDULE,
-});
-
-const job = new CronJob(
-  PREWARM_CRON_SCHEDULE,
-  () => {
-    runAllPrewarm().catch((err) =>
-      logError('prewarm.daily.cron_failed', {
+if (PREWARM_RUN_ON_STARTUP) {
+  runAllPrewarm()
+    .then(() => {
+      if (PREWARM_EXIT_AFTER_RUN) {
+        logInfo('prewarm.startup.exit', { code: 0, mode: PREWARM_MODE });
+        process.exit(0);
+      }
+    })
+    .catch((err) => {
+      logError('prewarm.startup.failed', {
         error: err instanceof Error ? err.message : String(err),
-      })
-    );
-  },
-  null,
-  true,
-  PREWARM_CRON_TIMEZONE
-);
+        mode: PREWARM_MODE,
+      });
+      if (PREWARM_EXIT_AFTER_RUN) {
+        process.exit(1);
+      }
+    });
+}
 
-logInfo('prewarm.daily.scheduled', {
-  schedule: PREWARM_CRON_SCHEDULE,
-  timezone: PREWARM_CRON_TIMEZONE,
-});
+if (!PREWARM_EXIT_AFTER_RUN) {
+  logInfo('prewarm.startup.disabled', {
+    reason: PREWARM_RUN_ON_STARTUP ? 'startup_run_completed' : 'scheduled_only',
+    prewarmSchedule: PREWARM_CRON_SCHEDULE,
+    sitemapSchedule: SITEMAP_WARM_CRON_SCHEDULE,
+    mode: PREWARM_MODE,
+  });
 
-const sitemapWarmJob = new CronJob(
-  SITEMAP_WARM_CRON_SCHEDULE,
-  () => {
-    warmFrontendSitemaps().catch((err) =>
-      logError('prewarm.sitemap.cron_failed', {
-        error: err instanceof Error ? err.message : String(err),
-      })
-    );
-  },
-  null,
-  true,
-  SITEMAP_WARM_CRON_TIMEZONE
-);
+  const job = new CronJob(
+    PREWARM_CRON_SCHEDULE,
+    () => {
+      runAllPrewarm().catch((err) =>
+        logError('prewarm.daily.cron_failed', {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      );
+    },
+    null,
+    true,
+    PREWARM_CRON_TIMEZONE
+  );
 
-logInfo('prewarm.sitemap.scheduled', {
-  schedule: SITEMAP_WARM_CRON_SCHEDULE,
-  timezone: SITEMAP_WARM_CRON_TIMEZONE,
-});
+  logInfo('prewarm.daily.scheduled', {
+    schedule: PREWARM_CRON_SCHEDULE,
+    timezone: PREWARM_CRON_TIMEZONE,
+  });
+
+  const sitemapWarmJob = new CronJob(
+    SITEMAP_WARM_CRON_SCHEDULE,
+    () => {
+      warmFrontendSitemaps().catch((err) =>
+        logError('prewarm.sitemap.cron_failed', {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      );
+    },
+    null,
+    true,
+    SITEMAP_WARM_CRON_TIMEZONE
+  );
+
+  logInfo('prewarm.sitemap.scheduled', {
+    schedule: SITEMAP_WARM_CRON_SCHEDULE,
+    timezone: SITEMAP_WARM_CRON_TIMEZONE,
+  });
+}

@@ -16,7 +16,7 @@ import {
   isLiveTriggerEnabled,
 } from "../features/notifications/application/subscriber-preferences";
 
-const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 20000);
+const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 15000);
 const REDIS_TTL_SECONDS = 60 * 60 * 4;
 const LIVE_SET_KEY = "live_fixtures:last";
 const EVENT_LEDGER_PREFIX = "match_event:";
