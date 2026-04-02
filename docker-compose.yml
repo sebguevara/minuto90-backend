@@ -157,7 +157,7 @@ services:
       - DATABASE_SAVE_DATA_CHATS=true
 
       - CACHE_REDIS_ENABLED=true
-      - CACHE_REDIS_URI=redis://minuto90-redis:6379/1
+      - CACHE_REDIS_URI=redis://:minuto90_redis_password_secure@minuto90-redis:6379/1
       - CACHE_REDIS_PREFIX_KEY=minuto90
       - CACHE_REDIS_SAVE_INSTANCES=true
 
