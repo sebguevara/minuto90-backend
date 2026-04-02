@@ -15,6 +15,7 @@ import {
   nbaTeamsQuerySchema,
 } from "./nba.schemas";
 import { handleApiSportsError, parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
+import { createSwaggerTagDetail } from "./swagger.helpers";
 import { createTeamSportRoutes } from "./team-sport-routes.factory";
 import { nbaSwaggerExamples } from "./multi-sport.swagger.examples";
 
@@ -80,21 +81,21 @@ export function createNbaRoutes(service: NbaServiceContract = nbaService) {
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("NBA", "Obtener jugadores de NBA") })
     .get("/teams/statistics", async ({ query, set }) => {
       try {
         return await nbaApiClient.request("/teams/statistics", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("NBA", "Obtener estadisticas de equipos de NBA") })
     .get("/games/statistics", async ({ query, set }) => {
       try {
         return await nbaApiClient.request("/games/statistics", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    });
+    }, { detail: createSwaggerTagDetail("NBA", "Obtener estadisticas de partidos de NBA") });
 }
 
 export const nbaRoutes = createNbaRoutes();

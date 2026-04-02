@@ -27,7 +27,7 @@ import {
   parseOptionalString,
   parseRequiredInteger,
 } from "./api-sports.route-helpers";
-import { createSwaggerDetail } from "./swagger.helpers";
+import { createSwaggerDetail, createSwaggerTagDetail } from "./swagger.helpers";
 import { createTeamSportRoutes } from "./team-sport-routes.factory";
 import { basketballSwaggerExamples } from "./multi-sport.swagger.examples";
 
@@ -147,49 +147,49 @@ export function createBasketballRoutes(
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Basketball", "Obtener paises de basketball") })
     .get("/standings/stages", async ({ query, set }) => {
       try {
         return await basketballApiClient.request("/standings/stages", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Basketball", "Obtener etapas de standings de basketball") })
     .get("/leagues/seasons", async ({ set }) => {
       try {
         return await basketballApiClient.request("/leagues/seasons");
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Basketball", "Obtener temporadas de ligas de basketball") })
     .get("/games/h2h", async ({ query, set }) => {
       try {
         return await basketballApiClient.request("/games/h2h", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Basketball", "Obtener head to head de basketball") })
     .get("/games/statistics/teams", async ({ query, set }) => {
       try {
         return await basketballApiClient.request("/games/statistics/teams", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Basketball", "Obtener estadisticas de equipos por partido en basketball") })
     .get("/games/statistics/players", async ({ query, set }) => {
       try {
         return await basketballApiClient.request("/games/statistics/players", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Basketball", "Obtener estadisticas de jugadores por partido en basketball") })
     .get("/odds", async ({ query, set }) => {
       try {
         return await basketballApiClient.request("/odds", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    });
+    }, { detail: createSwaggerTagDetail("Basketball", "Obtener cuotas de basketball") });
 }
 
 export const basketballRoutes = createBasketballRoutes();

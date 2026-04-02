@@ -33,3 +33,14 @@ export function createSwaggerDetail(
   };
 }
 
+export function createSwaggerTagDetail(
+  tag: string,
+  summary: string,
+  description?: string
+) {
+  return {
+    tags: [tag],
+    summary,
+    ...(description ? { description } : {}),
+  };
+}

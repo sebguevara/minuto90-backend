@@ -751,6 +751,12 @@ export function createFootballRoutes(service: FootballServiceContract = football
       } catch (error) {
         return handleFootballError(set, error);
       }
+    }, {
+      detail: footballDetail(
+        "Obtener panel live home de football",
+        footballSwaggerExamples.fixtures,
+        "Retorna el merge entre fixtures base y snapshot live para poblar la home en vivo."
+      ),
     })
     .get("/live/stream", ({ request, set }) => {
       set.headers["Content-Type"] = "text/event-stream; charset=utf-8";
@@ -853,6 +859,12 @@ export function createFootballRoutes(service: FootballServiceContract = football
           headers: set.headers as HeadersInit,
         }
       );
+    }, {
+      detail: {
+        tags: ["Football"],
+        summary: "Obtener stream live de football",
+        description: "Stream SSE del snapshot live de football.",
+      },
     })
     .get(
       "/countries",

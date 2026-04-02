@@ -13,6 +13,7 @@ import {
   hockeyTeamsQuerySchema,
 } from "./hockey.schemas";
 import { handleApiSportsError, parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
+import { createSwaggerTagDetail } from "./swagger.helpers";
 import { createTeamSportRoutes } from "./team-sport-routes.factory";
 import { hockeySwaggerExamples } from "./multi-sport.swagger.examples";
 
@@ -71,28 +72,28 @@ export function createHockeyRoutes(service: HockeyServiceContract = hockeyServic
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Hockey", "Obtener paises de hockey") })
     .get("/teams/statistics", async ({ query, set }) => {
       try {
         return await hockeyApiClient.request("/teams/statistics", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Hockey", "Obtener estadisticas de equipos de hockey") })
     .get("/games/h2h", async ({ query, set }) => {
       try {
         return await hockeyApiClient.request("/games/h2h", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Hockey", "Obtener head to head de hockey") })
     .get("/odds", async ({ query, set }) => {
       try {
         return await hockeyApiClient.request("/odds", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    });
+    }, { detail: createSwaggerTagDetail("Hockey", "Obtener cuotas de hockey") });
 }
 
 export const hockeyRoutes = createHockeyRoutes();

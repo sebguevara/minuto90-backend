@@ -16,7 +16,7 @@ import {
   parseOptionalInteger,
   parseOptionalString,
 } from "./api-sports.route-helpers";
-import { createSwaggerDetail } from "./swagger.helpers";
+import { createSwaggerDetail, createSwaggerTagDetail } from "./swagger.helpers";
 import { mmaSwaggerExamples } from "./multi-sport.swagger.examples";
 
 const toLeaguesQuery = (query: Record<string, unknown>): GetMmaLeaguesQuery => ({
@@ -115,28 +115,28 @@ export function createMmaRoutes(service: MmaServiceContract = mmaService) {
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("MMA", "Obtener equipos de MMA") })
     .get("/fighters/records", async ({ query, set }) => {
       try {
         return await mmaApiClient.request("/fighters/records", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("MMA", "Obtener records de peleadores de MMA") })
     .get("/fights/results", async ({ query, set }) => {
       try {
         return await mmaApiClient.request("/fights/results", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("MMA", "Obtener resultados de peleas de MMA") })
     .get("/fights/statistics", async ({ query, set }) => {
       try {
         return await mmaApiClient.request("/fights/statistics", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    });
+    }, { detail: createSwaggerTagDetail("MMA", "Obtener estadisticas de peleas de MMA") });
 }
 
 export const mmaRoutes = createMmaRoutes();

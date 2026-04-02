@@ -13,6 +13,7 @@ import {
   aflTeamsQuerySchema,
 } from "./afl.schemas";
 import { handleApiSportsError, parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
+import { createSwaggerTagDetail } from "./swagger.helpers";
 import { createTeamSportRoutes } from "./team-sport-routes.factory";
 import { aflSwaggerExamples } from "./multi-sport.swagger.examples";
 
@@ -72,42 +73,42 @@ export function createAflRoutes(service: AflServiceContract = aflService) {
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("AFL", "Obtener jugadores de AFL") })
     .get("/games/quarters", async ({ query, set }) => {
       try {
         return await aflApiClient.request("/games/quarters", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("AFL", "Obtener cuartos de partidos de AFL") })
     .get("/games/events", async ({ query, set }) => {
       try {
         return await aflApiClient.request("/games/events", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("AFL", "Obtener eventos de partidos de AFL") })
     .get("/games/statistics/teams", async ({ query, set }) => {
       try {
         return await aflApiClient.request("/games/statistics/teams", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("AFL", "Obtener estadisticas de equipos por partido en AFL") })
     .get("/games/statistics/players", async ({ query, set }) => {
       try {
         return await aflApiClient.request("/games/statistics/players", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("AFL", "Obtener estadisticas de jugadores por partido en AFL") })
     .get("/players/statistics", async ({ query, set }) => {
       try {
         return await aflApiClient.request("/players/statistics", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    });
+    }, { detail: createSwaggerTagDetail("AFL", "Obtener estadisticas de jugadores de AFL") });
 }
 
 export const aflRoutes = createAflRoutes();

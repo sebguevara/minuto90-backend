@@ -22,7 +22,7 @@ import {
   parseOptionalString,
   parseRequiredInteger,
 } from "./api-sports.route-helpers";
-import { createSwaggerDetail } from "./swagger.helpers";
+import { createSwaggerDetail, createSwaggerTagDetail } from "./swagger.helpers";
 import { formula1SwaggerExamples } from "./multi-sport.swagger.examples";
 
 const toRacesQuery = (query: Record<string, unknown>): GetFormula1RacesQuery => ({
@@ -166,42 +166,42 @@ export function createFormula1Routes(
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Formula 1", "Obtener competiciones de Formula 1") })
     .get("/circuits", async ({ query, set }) => {
       try {
         return await formula1ApiClient.request("/circuits", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Formula 1", "Obtener circuitos de Formula 1") })
     .get("/rankings/races", async ({ query, set }) => {
       try {
         return await formula1ApiClient.request("/rankings/races", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Formula 1", "Obtener ranking de carreras de Formula 1") })
     .get("/rankings/fastestlaps", async ({ query, set }) => {
       try {
         return await formula1ApiClient.request("/rankings/fastestlaps", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Formula 1", "Obtener ranking de vueltas rapidas de Formula 1") })
     .get("/rankings/startinggrid", async ({ query, set }) => {
       try {
         return await formula1ApiClient.request("/rankings/startinggrid", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("Formula 1", "Obtener ranking de grilla de salida de Formula 1") })
     .get("/pitstops", async ({ query, set }) => {
       try {
         return await formula1ApiClient.request("/pitstops", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    });
+    }, { detail: createSwaggerTagDetail("Formula 1", "Obtener pitstops de Formula 1") });
 }
 
 export const formula1Routes = createFormula1Routes();

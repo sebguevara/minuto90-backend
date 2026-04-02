@@ -13,6 +13,7 @@ import {
   nflTeamsQuerySchema,
 } from "./nfl.schemas";
 import { handleApiSportsError, parseOptionalInteger, parseOptionalString } from "./api-sports.route-helpers";
+import { createSwaggerTagDetail } from "./swagger.helpers";
 import { createTeamSportRoutes } from "./team-sport-routes.factory";
 import { nflSwaggerExamples } from "./multi-sport.swagger.examples";
 
@@ -73,42 +74,42 @@ export function createNflRoutes(service: NflServiceContract = nflService) {
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("NFL", "Obtener jugadores de NFL") })
     .get("/games/events", async ({ query, set }) => {
       try {
         return await nflApiClient.request("/games/events", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("NFL", "Obtener eventos de partidos de NFL") })
     .get("/games/statistics/players", async ({ query, set }) => {
       try {
         return await nflApiClient.request("/games/statistics/players", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("NFL", "Obtener estadisticas de jugadores por partido en NFL") })
     .get("/standings/conferences", async ({ query, set }) => {
       try {
         return await nflApiClient.request("/standings/conferences", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("NFL", "Obtener standings por conferencia en NFL") })
     .get("/standings/divisions", async ({ query, set }) => {
       try {
         return await nflApiClient.request("/standings/divisions", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    })
+    }, { detail: createSwaggerTagDetail("NFL", "Obtener standings por division en NFL") })
     .get("/players/statistics", async ({ query, set }) => {
       try {
         return await nflApiClient.request("/players/statistics", query as Record<string, unknown>);
       } catch (error) {
         return handleApiSportsError(set, error);
       }
-    });
+    }, { detail: createSwaggerTagDetail("NFL", "Obtener estadisticas de jugadores de NFL") });
 }
 
 export const nflRoutes = createNflRoutes();
