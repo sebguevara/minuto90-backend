@@ -37,7 +37,7 @@ services:
     image: redis:7-alpine
     restart: always
     ports:
-      - "127.0.0.1:9030:6379"
+      - "9030:6379"
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - minuto90-redis-data:/data
