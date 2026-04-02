@@ -946,7 +946,10 @@ export function createFootballRoutes(service: FootballServiceContract = football
 
           const response = await attachClockAnchorsToFixtures(fixtures);
 
-          if (response === fixtures && !isSingleLookup) {
+          if (isSingleLookup) {
+            // Live match view — never cache, always return fresh elapsed/clock data.
+            set.headers["Cache-Control"] = "no-store";
+          } else if (response === fixtures) {
             return envelope;
           }
 
