@@ -185,9 +185,10 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
     }
   }
 
-  if (hasRelevantChanges || !oldState) {
-    await setNewState(fixtureId, newState);
-  }
+  // Always persist state so updatedAtMs stays fresh (≤ POLL_INTERVAL_MS old).
+  // The clock anchor on the client interpolates elapsed from updatedAtMs — a stale
+  // timestamp causes the displayed minute to drift away from reality.
+  await setNewState(fixtureId, newState);
 }
 
 async function getLastLiveSet(): Promise<number[]> {

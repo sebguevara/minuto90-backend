@@ -918,19 +918,35 @@ export function createFootballRoutes(service: FootballServiceContract = football
       "/fixtures",
       async ({ query, set }) => {
         try {
-          const envelope = await service.getFixtures(
-            toFixturesQuery(query as Record<string, unknown>)
-          );
+          const parsedQuery = toFixturesQuery(query as Record<string, unknown>);
+          const envelope = await service.getFixtures(parsedQuery);
 
           if (!Array.isArray(envelope.response) || envelope.response.length === 0) {
             return envelope;
           }
 
-          const response = await attachClockAnchorsToFixtures(
-            envelope.response as ApiFootballFixtureItem[]
-          );
+          // When fetching by id/ids, merge with live snapshot so elapsed/goals/status
+          // are always from the latest poll (same source as /live/home).
+          const isSingleLookup = parsedQuery.id != null || parsedQuery.ids != null;
+          let fixtures = envelope.response as ApiFootballFixtureItem[];
 
-          if (response === envelope.response) {
+          if (isSingleLookup) {
+            const snapshot = await getFootballLiveSnapshot();
+            if (snapshot?.response?.length) {
+              const liveMap = new Map<number, (typeof snapshot.response)[number]>();
+              for (const lf of snapshot.response) {
+                if (lf?.fixture?.id) liveMap.set(lf.fixture.id, lf);
+              }
+              fixtures = fixtures.map((base) => {
+                const lf = liveMap.get(base?.fixture?.id as number);
+                return lf ? (mergeLiveIntoFixture(base, lf) as ApiFootballFixtureItem) : base;
+              });
+            }
+          }
+
+          const response = await attachClockAnchorsToFixtures(fixtures);
+
+          if (response === fixtures && !isSingleLookup) {
             return envelope;
           }
 

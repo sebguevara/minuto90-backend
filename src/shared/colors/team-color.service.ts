@@ -4,7 +4,7 @@ import {
   FALLBACK_COLORS,
   type TeamColors,
 } from './team-color-extractor';
-import { getCachedTeamColors, setCachedTeamColors } from './team-color.store';
+import { getCachedTeamColors, setCachedTeamColors, deleteCachedTeamColors } from './team-color.store';
 import { logInfo, logWarn } from '../logging/logger';
 
 export type { TeamColors };
@@ -25,13 +25,15 @@ export async function getTeamColors(
 
   const cached = await getCachedTeamColors(cacheKey);
   if (cached) {
-    logInfo('team_colors.resolve.cache_hit', {
-      sport,
-      teamId,
-      cacheKey,
-      colors: cached,
-    });
-    return cached;
+    const isCachedFallback =
+      cached.dark === FALLBACK_COLORS.dark && cached.light === FALLBACK_COLORS.light;
+    if (!isCachedFallback) {
+      logInfo('team_colors.resolve.cache_hit', { sport, teamId, cacheKey, colors: cached });
+      return cached;
+    }
+    // Stale fallback in Redis — evict it so we re-extract below.
+    await deleteCachedTeamColors(cacheKey);
+    logWarn('team_colors.resolve.stale_fallback_evicted', { sport, teamId, cacheKey });
   }
 
   const colors = await extractTeamColors(logoUrl);
@@ -46,15 +48,17 @@ export async function getTeamColors(
       hasLogoUrl: Boolean(logoUrl),
       colors,
     });
-  } else {
-    logInfo('team_colors.resolve.extracted', {
-      sport,
-      teamId,
-      cacheKey,
-      hasLogoUrl: Boolean(logoUrl),
-      colors,
-    });
+    // Don't cache fallback colors — next request will retry extraction.
+    return colors;
   }
+
+  logInfo('team_colors.resolve.extracted', {
+    sport,
+    teamId,
+    cacheKey,
+    hasLogoUrl: Boolean(logoUrl),
+    colors,
+  });
 
   await setCachedTeamColors(cacheKey, colors);
   return colors;

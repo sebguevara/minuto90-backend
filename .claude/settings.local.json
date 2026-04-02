@@ -3,7 +3,8 @@
     "allow": [
       "Bash(bun build:*)",
       "Bash(grep:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(find:*)"
     ]
   }
 }

@@ -19,6 +19,17 @@ export async function getCachedTeamColors(cacheKey: string): Promise<TeamColors 
   }
 }
 
+export async function deleteCachedTeamColors(cacheKey: string): Promise<void> {
+  try {
+    await redisConnection.del(cacheKey);
+  } catch (err) {
+    logWarn('team_colors.cache.del_failed', {
+      key: cacheKey,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 export async function setCachedTeamColors(
   cacheKey: string,
   colors: TeamColors
