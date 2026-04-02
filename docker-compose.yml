@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
-    command: bun start worker
+    command: bun run worker
     env_file:
       - .env
     environment:

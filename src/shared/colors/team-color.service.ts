@@ -75,13 +75,19 @@ export async function getTeamColorsIfCached(
   const cacheKey = buildTeamColorCacheKey(sport, teamId);
   const cached = await getCachedTeamColors(cacheKey);
 
-  logInfo('team_colors.resolve.cache_lookup', {
-    sport,
-    teamId,
-    cacheKey,
-    hit: Boolean(cached),
-    colors: cached,
-  });
+  if (!cached) {
+    logInfo('team_colors.resolve.cache_lookup', { sport, teamId, cacheKey, hit: false, colors: null });
+    return null;
+  }
 
+  const isFallback = cached.dark === FALLBACK_COLORS.dark && cached.light === FALLBACK_COLORS.light;
+  if (isFallback) {
+    // Stale fallback — evict and signal cache miss so caller can re-extract.
+    await deleteCachedTeamColors(cacheKey);
+    logWarn('team_colors.resolve.stale_fallback_evicted', { sport, teamId, cacheKey });
+    return null;
+  }
+
+  logInfo('team_colors.resolve.cache_lookup', { sport, teamId, cacheKey, hit: true, colors: cached });
   return cached;
 }
