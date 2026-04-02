@@ -13,7 +13,7 @@ services:
       - NODE_ENV=production
     networks:
       - minuto90-network
-    
+
   minuto90-worker:
     container_name: minuto90-worker
     build:
@@ -38,7 +38,14 @@ services:
     restart: always
     ports:
       - "9030:6379"
-    command: ["redis-server", "--appendonly", "yes"]
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--requirepass",
+        "minuto90_redis_password_secure",
+      ]
     volumes:
       - minuto90-redis-data:/data
     networks:
