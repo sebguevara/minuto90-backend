@@ -139,6 +139,77 @@ const CORS_ALLOW_HEADERS =
 const CORS_ALLOW_METHODS =
   process.env.CORS_ALLOW_METHODS ?? "GET, POST, PUT, PATCH, DELETE, OPTIONS";
 
+const swaggerTags = [
+  { name: "Football", description: "Football matches and seasons endpoints" },
+  { name: "Volleyball", description: "Volleyball endpoints" },
+  { name: "Rugby", description: "Rugby endpoints" },
+  { name: "NFL", description: "American football endpoints" },
+  { name: "NBA", description: "NBA endpoints" },
+  { name: "Basketball", description: "Global basketball endpoints" },
+  { name: "Hockey", description: "Ice hockey endpoints" },
+  { name: "Handball", description: "Handball endpoints" },
+  { name: "Baseball", description: "Baseball endpoints" },
+  { name: "AFL", description: "Aussie Rules endpoints" },
+  { name: "MMA", description: "MMA endpoints" },
+  { name: "Formula 1", description: "Formula 1 endpoints" },
+  {
+    name: "Stats",
+    description:
+      "Estadisticas de equipos, torneos, tablas, perfiles de partido, rankings e insights",
+  },
+  {
+    name: "Notifications",
+    description: "Gestion de suscriptores y suscripciones de notificaciones",
+  },
+  { name: "Evolution API", description: "Instancias y operaciones de Evolution API" },
+  { name: "Insights", description: "Generacion de resumenes de partido e insights con IA" },
+  { name: "Users", description: "Gestion de usuarios y webhooks de Clerk" },
+  { name: "News", description: "Noticias y categorias" },
+  { name: "Posts", description: "Posts y publicaciones" },
+  { name: "Comparador", description: "Comparador de equipos" },
+  { name: "Push", description: "Web push y suscripciones del cliente" },
+  { name: "Favorites", description: "Favoritos del usuario" },
+  { name: "Uploads", description: "Uploads administrativos" },
+  { name: "Team Colors", description: "Colores y branding de equipos" },
+];
+
+const swaggerTagGroups = [
+  {
+    name: "Sports",
+    tags: [
+      "Football",
+      "Volleyball",
+      "Rugby",
+      "NFL",
+      "NBA",
+      "Basketball",
+      "Hockey",
+      "Handball",
+      "Baseball",
+      "AFL",
+      "MMA",
+      "Formula 1",
+      "Stats",
+      "Comparador",
+    ],
+  },
+  { name: "Frontend", tags: ["Users", "Push", "Favorites", "Team Colors"] },
+  { name: "AI", tags: ["Insights"] },
+  { name: "Evolution API", tags: ["Evolution API"] },
+  { name: "Content", tags: ["News", "Posts", "Uploads"] },
+  { name: "Notifications", tags: ["Notifications"] },
+];
+
+const swaggerDocumentation = {
+  info: {
+    title: "Minuto 90 Score API",
+    version: "1.0.0",
+    description: "Read-only REST API for multi-sport statistics and fixtures",
+  },
+  tags: swaggerTags,
+  "x-tagGroups": swaggerTagGroups,
+} as any;
+
 const app = new Elysia()
   .use(
     rateLimit({
@@ -172,42 +243,7 @@ const app = new Elysia()
   })
   .use(
     swagger({
-      documentation: {
-        info: {
-          title: "Minuto 90 Score API",
-          version: "1.0.0",
-          description: "Read-only REST API for multi-sport statistics and fixtures",
-        },
-        tags: [
-          { name: "Football", description: "Football matches and seasons endpoints" },
-          { name: "Volleyball", description: "Volleyball endpoints" },
-          { name: "Rugby", description: "Rugby endpoints" },
-          { name: "NFL", description: "American football endpoints" },
-          { name: "NBA", description: "NBA endpoints" },
-          { name: "Basketball", description: "Global basketball endpoints" },
-          { name: "Hockey", description: "Ice hockey endpoints" },
-          { name: "Handball", description: "Handball endpoints" },
-          { name: "Baseball", description: "Baseball endpoints" },
-          { name: "AFL", description: "Aussie Rules endpoints" },
-          { name: "MMA", description: "MMA endpoints" },
-          { name: "Formula 1", description: "Formula 1 endpoints" },
-          {
-            name: "Stats",
-            description:
-              "Estadísticas de equipos, torneos, tablas, perfiles de partido, rankings e insights",
-          },
-          { name: "Insights", description: "Generación de resúmenes de partido e insights con IA" },
-          {
-            name: "Notifications",
-            description:
-              "Gestión de suscriptores, suscripciones, instancias de Evolution y endpoints de debug",
-          },
-          { name: "Users", description: "Gestión de usuarios y webhooks de Clerk" },
-          { name: "News", description: "Noticias — CRUD con soft delete" },
-          { name: "Posts", description: "Posts — CRUD con soft delete" },
-          { name: "Comparador", description: "Comparador de equipos — perfiles normalizados de API-Football + WhoScored" },
-        ],
-      },
+      documentation: swaggerDocumentation,
       path: "/swagger",
       exclude: [],
     })

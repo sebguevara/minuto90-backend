@@ -32,7 +32,7 @@ export const comparatorRoutes = new Elysia({ prefix: "/api/comparator" }).get(
       ids: t.String({ description: "Comma-separated API-Football team IDs (2–6)" }),
     }),
     detail: {
-      tags: ["Stats"],
+      tags: ["Comparador"],
       summary: "Comparar equipos",
       description:
         "Devuelve perfiles normalizados de 2 a 6 equipos para comparación side-by-side. Combina datos de API-Football y WhoScored.",

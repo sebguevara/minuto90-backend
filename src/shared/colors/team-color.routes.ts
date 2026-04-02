@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { getTeamColors, getTeamColorsIfCached, FALLBACK_COLORS } from "./team-color.service";
 import { logInfo, logWarn } from "../logging/logger";
 
@@ -77,5 +77,18 @@ export const teamColorRoutes = new Elysia({ prefix: "/api/team-colors" }).get(
       });
       return { response: FALLBACK_COLORS, cached: false, fallback: true };
     }
+  },
+  {
+    query: t.Object({
+      sport: t.Optional(t.String()),
+      teamId: t.String({ description: "Team identifier used by the sport provider" }),
+      logoUrl: t.Optional(t.String({ description: "Team logo URL used when cache is empty" })),
+    }),
+    detail: {
+      tags: ["Team Colors"],
+      summary: "Get team colors",
+      description:
+        "Returns cached or extracted branding colors for a team. If no cache exists and no logo URL is provided, it falls back to default colors.",
+    },
   }
 );

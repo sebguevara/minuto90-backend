@@ -331,7 +331,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
       }
     },
     {
-      detail: { tags: ["Notifications"], summary: "List Evolution instances" },
+      detail: { tags: ["Evolution API"], summary: "List Evolution instances" },
     }
   )
   .get(
@@ -358,7 +358,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
       }
     },
     {
-      detail: { tags: ["Notifications"], summary: "List active Evolution instances" },
+      detail: { tags: ["Evolution API"], summary: "List active Evolution instances" },
     }
   )
   .post(
@@ -390,7 +390,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
       }
     },
     {
-      detail: { tags: ["Notifications"], summary: "Create Evolution instance" },
+      detail: { tags: ["Evolution API"], summary: "Create Evolution instance" },
       body: t.Object({
         instanceName: t.String(),
         baseUrl: t.String(),
@@ -428,7 +428,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
       }
     },
     {
-      detail: { tags: ["Notifications"], summary: "Update Evolution instance" },
+      detail: { tags: ["Evolution API"], summary: "Update Evolution instance" },
       params: t.Object({ id: t.String() }),
       body: t.Object({
         instanceName: t.Optional(t.String()),
@@ -462,7 +462,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
       }
     },
     {
-      detail: { tags: ["Notifications"], summary: "Activate Evolution instance" },
+      detail: { tags: ["Evolution API"], summary: "Activate Evolution instance" },
       params: t.Object({ id: t.String() }),
     }
   )
@@ -490,7 +490,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
       }
     },
     {
-      detail: { tags: ["Notifications"], summary: "Deactivate Evolution instance" },
+      detail: { tags: ["Evolution API"], summary: "Deactivate Evolution instance" },
       params: t.Object({ id: t.String() }),
     }
   )
@@ -527,7 +527,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
       }
     },
     {
-      detail: { tags: ["Notifications"], summary: "Set active Evolution instances (exclusive)" },
+      detail: { tags: ["Evolution API"], summary: "Set active Evolution instances (exclusive)" },
       body: t.Object({
         activeIds: t.Array(t.String()),
       }),
@@ -568,7 +568,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
       }
     },
     {
-      detail: { tags: ["Notifications"], summary: "DEBUG: send WhatsApp message now via Evolution API" },
+      detail: { tags: ["Evolution API"], summary: "DEBUG: send WhatsApp message now via Evolution API" },
       body: t.Object({
         to: t.String(),
         message: t.String(),
@@ -604,7 +604,7 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
       }
     },
     {
-      detail: { tags: ["Notifications"], summary: "DEBUG: enqueue WhatsApp job (tests BullMQ + worker + Evolution)" },
+      detail: { tags: ["Evolution API"], summary: "DEBUG: enqueue WhatsApp job (tests BullMQ + worker + Evolution)" },
       body: t.Object({
         to: t.String(),
         message: t.String(),
