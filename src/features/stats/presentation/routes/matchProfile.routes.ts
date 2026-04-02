@@ -16,7 +16,9 @@ export const matchProfileRoutes = new Elysia({ prefix: "/match-profile" }).get(
         return paramValidation.error;
       }
 
-      return await service.getTeamMatchProfile(paramValidation.data!.minId);
+      const result = await service.getTeamMatchProfile(paramValidation.data!.minId);
+      set.headers["Cache-Control"] = "public, max-age=14400";
+      return result;
     } catch (error: any) {
       if (error.message === "Team not found") {
         set.status = 404;

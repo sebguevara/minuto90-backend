@@ -16,7 +16,7 @@ import type {
   TournamentBestXIQuery,
 } from "../dtos/stats.dto";
 
-const MATCH_PROFILE_TTL_SECONDS = 60 * 60 * 12; // 12 hours
+const MATCH_PROFILE_TTL_SECONDS = 60 * 60 * 4; // 4 hours
 function matchProfileCacheKey(teamId: number) {
   return `minuto90:match-profile:team:${teamId}:v1`;
 }

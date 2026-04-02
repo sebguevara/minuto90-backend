@@ -15,6 +15,7 @@ import {
   canReceiveWhatsappNotifications,
   isLiveTriggerEnabled,
 } from "../features/notifications/application/subscriber-preferences";
+import { footballApiClient } from "../features/sports/infrastructure/football-api.client";
 
 const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 15000);
 const REDIS_TTL_SECONDS = 60 * 60 * 4;
@@ -320,6 +321,51 @@ async function handleDisappearances(currentIds: number[]) {
 }
 
 const CURRENT_SEASON = new Date().getFullYear() - 1;
+const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
+const UPCOMING_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const UPCOMING_WINDOW_MS = 20 * 60 * 1000; // fixtures starting in next 20 minutes
+
+async function logHeartbeat(liveCount: number) {
+  const liveIds = await getLastLiveSet();
+  logInfo("live.heartbeat", {
+    liveFixtures: liveIds.length,
+    lastPollLive: liveCount,
+    pollIntervalMs: POLL_INTERVAL_MS,
+    uptimeSeconds: Math.round(process.uptime()),
+  });
+}
+
+async function checkUpcomingFixtures() {
+  const now = Date.now();
+  const today = new Date().toISOString().split("T")[0];
+  try {
+    const envelope = await footballApiClient.getFixtures({ date: today, timezone: "UTC" });
+    const fixtures = envelope.response ?? [];
+
+    const upcoming = fixtures.filter((fx) => {
+      const ts = fx.fixture?.timestamp;
+      if (!ts) return false;
+      const ms = ts * 1000;
+      return ms > now && ms <= now + UPCOMING_WINDOW_MS;
+    });
+
+    if (upcoming.length > 0) {
+      logInfo("live.upcoming.fixtures", {
+        count: upcoming.length,
+        fixtures: upcoming.map((fx) => ({
+          id: fx.fixture.id,
+          home: fx.teams?.home?.name,
+          away: fx.teams?.away?.name,
+          startsInMin: Math.round(((fx.fixture.timestamp ?? 0) * 1000 - now) / 60000),
+        })),
+      });
+    } else {
+      logInfo("live.upcoming.none", { windowMinutes: UPCOMING_WINDOW_MS / 60000 });
+    }
+  } catch (err: any) {
+    logWarn("live.upcoming.check_failed", { err: err?.message ?? String(err) });
+  }
+}
 
 async function pollOnce() {
   const startedAt = Date.now();
@@ -354,14 +400,22 @@ async function pollOnce() {
 
 async function main() {
   await assertRedisReady();
-  logInfo("live.poller.started", { intervalMs: POLL_INTERVAL_MS });
+  logInfo("live.poller.started", {
+    intervalMs: POLL_INTERVAL_MS,
+    heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
+    upcomingCheckIntervalMs: UPCOMING_CHECK_INTERVAL_MS,
+    upcomingWindowMs: UPCOMING_WINDOW_MS,
+  });
 
   let running = false;
+  let lastLiveCount = 0;
   const loop = async () => {
     if (running) return;
     running = true;
     try {
       await pollOnce();
+      const ids = await getLastLiveSet();
+      lastLiveCount = ids.length;
     } catch (err: any) {
       logError("live.poll.failed", { err: err?.message ?? String(err) });
     } finally {
@@ -371,6 +425,21 @@ async function main() {
 
   await loop();
   setInterval(loop, POLL_INTERVAL_MS);
+
+  // Heartbeat log every 5 minutes
+  setInterval(() => {
+    logHeartbeat(lastLiveCount).catch((err: any) =>
+      logWarn("live.heartbeat.failed", { err: err?.message ?? String(err) })
+    );
+  }, HEARTBEAT_INTERVAL_MS);
+
+  // Check upcoming fixtures every 5 minutes
+  checkUpcomingFixtures().catch(() => {});
+  setInterval(() => {
+    checkUpcomingFixtures().catch((err: any) =>
+      logWarn("live.upcoming.interval_failed", { err: err?.message ?? String(err) })
+    );
+  }, UPCOMING_CHECK_INTERVAL_MS);
 }
 
 main().catch((e) => {

@@ -739,6 +739,7 @@ export function createFootballRoutes(service: FootballServiceContract = football
           mergedResults: mergedResponse.length,
         });
 
+        set.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30";
         return {
           source: "redis+base",
           date,

@@ -16,6 +16,7 @@ import { setFootballTeamsAll, type FootballTeamRef } from '../features/stats/inf
 import { insightsService } from '../features/insights/application/insights.service';
 import { logInfo, logError, logWarn } from '../shared/logging/logger';
 import { updateLiveFixturesCache } from './live-cache-updater';
+import { getTeamMatchProfile } from '../features/stats/application/stats.service';
 
 const DEFAULT_TIMEZONE = 'UTC';
 const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European leagues in 2026
@@ -30,7 +31,7 @@ const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European l
  */
 const PREWARM_CRON_SCHEDULE = process.env.PREWARM_CRON_SCHEDULE?.trim() || '0 4,16 * * *';
 const PREWARM_CRON_TIMEZONE = process.env.PREWARM_CRON_TIMEZONE?.trim() || DEFAULT_TIMEZONE;
-const PREWARM_RUN_ON_STARTUP = process.env.PREWARM_RUN_ON_STARTUP?.trim() === 'true';
+const PREWARM_RUN_ON_STARTUP = process.env.PREWARM_RUN_ON_STARTUP?.trim() !== 'false';
 const PREWARM_EXIT_AFTER_RUN = process.env.PREWARM_EXIT_AFTER_RUN?.trim() === 'true';
 const PREWARM_MODE = process.env.PREWARM_MODE?.trim().toLowerCase() || 'scheduled';
 
@@ -629,6 +630,45 @@ async function prewarmF1(): Promise<void> {
   logInfo('prewarm.f1.done', {});
 }
 
+// ─── Match profiles ──────────────────────────────────────────────────────────
+
+async function prewarmMatchProfiles(): Promise<void> {
+  logInfo('prewarm.match_profiles.start', {});
+  const dates = [formatDate(new Date())];
+  const teamIds = new Set<number>();
+
+  for (const date of dates) {
+    try {
+      const envelope = await footballApiClient.getFixtures({ date, timezone: DEFAULT_TIMEZONE });
+      const fixtures = envelope.response ?? [];
+      for (const fx of fixtures) {
+        if (fx.teams?.home?.id) teamIds.add(fx.teams.home.id);
+        if (fx.teams?.away?.id) teamIds.add(fx.teams.away.id);
+      }
+    } catch (err) {
+      logWarn('prewarm.match_profiles.fixtures_failed', {
+        date,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  logInfo('prewarm.match_profiles.teams_found', { count: teamIds.size });
+
+  let ok = 0;
+  let failed = 0;
+  for (const minId of teamIds) {
+    try {
+      await getTeamMatchProfile(minId);
+      ok++;
+    } catch {
+      failed++;
+    }
+  }
+
+  logInfo('prewarm.match_profiles.done', { ok, failed, total: teamIds.size });
+}
+
 // ─── Main run ────────────────────────────────────────────────────────────────
 
 async function runAllPrewarm(): Promise<void> {
@@ -679,6 +719,9 @@ async function runAllPrewarm(): Promise<void> {
     // Pre-cache standings for major leagues
     await prewarmFootballStandings();
     await prewarmFootballInsights();
+
+    // Pre-cache match profiles for today's teams
+    await prewarmMatchProfiles();
   } catch (err) {
     logError('prewarm.daily.fatal', {
       error: err instanceof Error ? err.message : String(err),
