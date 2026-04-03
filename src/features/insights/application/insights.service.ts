@@ -722,6 +722,19 @@ REGLAS:
         ),
       }))?.[0] ?? null;
 
+    let resolvedPercent = prediction?.predictions?.percent ?? null;
+    if (matchWinnerBet?.values.home && matchWinnerBet?.values.draw && matchWinnerBet?.values.away) {
+      const h = 1 / parseFloat(matchWinnerBet.values.home);
+      const d = 1 / parseFloat(matchWinnerBet.values.draw);
+      const a = 1 / parseFloat(matchWinnerBet.values.away);
+      const t = h + d + a;
+      resolvedPercent = {
+        home: `${Math.round((h / t) * 100)}%`,
+        draw: `${Math.round((d / t) * 100)}%`,
+        away: `${Math.round((a / t) * 100)}%`,
+      };
+    }
+
     const preMatchContext = {
       tournament: league.name,
       round: league.round,
@@ -744,7 +757,7 @@ REGLAS:
             winner: prediction.predictions?.winner?.name ?? null,
             winOrDraw: prediction.predictions?.win_or_draw ?? null,
             advice: prediction.predictions?.advice ?? null,
-            percent: prediction.predictions?.percent ?? null,
+            percent: resolvedPercent,
             underOver: prediction.predictions?.under_over ?? null,
           }
         : null,

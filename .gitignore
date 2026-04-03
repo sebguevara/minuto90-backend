@@ -60,3 +60,8 @@ package-lock.json
 .agents
 .claude
 */skills
+
+/minuto90/postgres/*
+/whoscored/*
+/minuto90-evolution/postgres/*
+/minuto90-evolution/*
