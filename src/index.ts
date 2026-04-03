@@ -131,9 +131,12 @@ const parseCorsOrigins = (value: string): string[] =>
 const defaultOrigins = "https://minuto90score.com, https://www.minuto90score.com, http://localhost:3000";
 const CORS_ALLOW_ORIGIN_RAW = process.env.CORS_ALLOW_ORIGIN ?? defaultOrigins;
 const CORS_ALLOW_ALL_ORIGINS = CORS_ALLOW_ORIGIN_RAW.trim() === "*";
+const CORS_EXTRA_ORIGINS = process.env.CORS_EXTRA_ORIGINS
+  ? parseCorsOrigins(process.env.CORS_EXTRA_ORIGINS)
+  : [];
 const CORS_ALLOWED_ORIGINS = CORS_ALLOW_ALL_ORIGINS
   ? []
-  : parseCorsOrigins(CORS_ALLOW_ORIGIN_RAW);
+  : [...parseCorsOrigins(CORS_ALLOW_ORIGIN_RAW), ...CORS_EXTRA_ORIGINS];
 const CORS_ALLOW_HEADERS =
   process.env.CORS_ALLOW_HEADERS ?? "Content-Type, Authorization";
 const CORS_ALLOW_METHODS =
@@ -273,7 +276,7 @@ const app = new Elysia()
   .use(uploadRoutes)
   .use(teamColorRoutes)
   .listen(
-    process.env.NODE_ENV === "production"
+    process.env.NODE_ENV !== "development"
       ? Number(process.env.PORT ?? 4500)
       : 4500
   );

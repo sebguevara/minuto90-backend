@@ -117,6 +117,31 @@ type FootballLiveClockAnchor = {
   source: "match_state" | "snapshot";
 };
 
+function isLiveStatusShort(statusShort: string | null | undefined): boolean {
+  if (!statusShort) return false;
+  return LIVE_STATUS_SHORTS.has(statusShort);
+}
+
+function shouldApplyLiveOverlay(
+  baseFixture: Record<string, any>,
+  liveFixture: FootballLiveHomeFixture
+): boolean {
+  const baseStatusShort = baseFixture?.fixture?.status?.short;
+  const liveStatusShort = liveFixture?.fixture?.status?.short;
+
+  // If base already says the match is no longer live, trust base over a stale live snapshot.
+  if (!isLiveStatusShort(baseStatusShort)) {
+    return false;
+  }
+
+  // Ignore malformed or non-live snapshot entries.
+  if (!isLiveStatusShort(liveStatusShort)) {
+    return false;
+  }
+
+  return true;
+}
+
 function mergeLiveIntoFixture<TFixture extends Record<string, any>>(
   baseFixture: TFixture,
   liveFixture: FootballLiveHomeFixture
@@ -719,10 +744,11 @@ export function createFootballRoutes(service: FootballServiceContract = football
           if (typeof fixtureId !== "number") continue;
 
           const baseFixture = mergedMap.get(fixtureId);
-          if (!baseFixture) continue;
+        if (!baseFixture) continue;
+        if (!shouldApplyLiveOverlay(baseFixture, liveFixture)) continue;
 
-          mergedMap.set(fixtureId, mergeLiveIntoFixture(baseFixture, liveFixture));
-        }
+        mergedMap.set(fixtureId, mergeLiveIntoFixture(baseFixture, liveFixture));
+      }
 
         const mergedResponse = Array.from(mergedMap.values()).sort((left, right) => {
           const leftTs = Number(left?.fixture?.timestamp ?? 0);

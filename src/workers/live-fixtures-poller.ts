@@ -10,6 +10,7 @@ import { logError, logInfo, logWarn } from "../shared/logging/logger";
 import { templates } from "../features/notifications/application/templates";
 import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
+import { getSubscriptionBaseline, type SubscriptionBaseline } from "../features/notifications/application/subscription-baseline";
 import { updateLiveFixturesCache, invalidateStandingsCache } from "./live-cache-updater";
 import {
   canReceiveWhatsappNotifications,
@@ -25,6 +26,8 @@ const MISSING_PREFIX = "match_missing:";
 const MISSING_POLLS_BEFORE_FULL_TIME = Number(process.env.LIVE_FULL_TIME_MISSING_POLLS ?? 6);
 const MESSAGE_DEDUP_TTL_SECONDS = Number(process.env.LIVE_MESSAGE_DEDUP_TTL_SECONDS ?? 90);
 const DISAPPEARANCE_FALLBACK_MAX_AGE_MS = Number(process.env.LIVE_DISAPPEARANCE_FALLBACK_MAX_AGE_MS ?? 20 * 60 * 1000);
+const terminalStatuses = new Set(["FT", "AET", "PEN"]);
+const breakStatuses = new Set(["HT", "BT", "INT"]);
 
 function stateKey(fixtureId: number) {
   return `match_state:${fixtureId}`;
@@ -94,7 +97,57 @@ async function shouldEmitTrigger(fixtureId: number, eventKey: string): Promise<b
   return res === "OK";
 }
 
-async function dispatchTriggers(input: { fixtureId: number; triggers: ReturnType<typeof computeDiffTriggers>["triggers"] }) {
+function isTerminalStatus(statusShort: string | null | undefined) {
+  return terminalStatuses.has(statusShort ?? "");
+}
+
+function isHalftimeOrLater(statusShort: string | null | undefined) {
+  return breakStatuses.has(statusShort ?? "") || statusShort === "2H" || isTerminalStatus(statusShort);
+}
+
+function isSecondHalfOrLater(statusShort: string | null | undefined) {
+  return statusShort === "2H" || isTerminalStatus(statusShort);
+}
+
+function isBaselineTriggerAlreadyCovered(
+  baseline: SubscriptionBaseline | null,
+  trigger: ReturnType<typeof computeDiffTriggers>["triggers"][number],
+  newState: StoredMatchState
+) {
+  if (!baseline) return false;
+
+  switch (trigger.type) {
+    case "KICKOFF":
+      return baseline.statusShort !== null && baseline.statusShort !== "NS";
+    case "GOAL":
+      if (trigger.eventKey.startsWith("event:")) {
+        return baseline.eventKeys.includes(trigger.eventKey.slice("event:".length));
+      }
+      return baseline.goalsHome === newState.goalsHome && baseline.goalsAway === newState.goalsAway;
+    case "VAR_CANCELLED":
+      return baseline.goalsHome === newState.goalsHome && baseline.goalsAway === newState.goalsAway;
+    case "RED_CARD":
+      if (trigger.eventKey.startsWith("event:")) {
+        return baseline.eventKeys.includes(trigger.eventKey.slice("event:".length));
+      }
+      return baseline.redCards === newState.redCards;
+    case "HALFTIME":
+      return isHalftimeOrLater(baseline.statusShort);
+    case "SECOND_HALF":
+      return isSecondHalfOrLater(baseline.statusShort);
+    case "FULL_TIME":
+    case "FULL_TIME_DISAPPEARED":
+      return isTerminalStatus(baseline.statusShort);
+    default:
+      return false;
+  }
+}
+
+async function dispatchTriggers(input: {
+  fixtureId: number;
+  triggers: ReturnType<typeof computeDiffTriggers>["triggers"];
+  newState: StoredMatchState;
+}) {
   if (!input.triggers.length) return;
 
   const subs = await minutoPrismaClient.matchSubscription.findMany({
@@ -111,6 +164,14 @@ async function dispatchTriggers(input: { fixtureId: number; triggers: ReturnType
   }
   if (!activeSubsById.size) return;
 
+  const baselineEntries = await Promise.all(
+    Array.from(activeSubsById.values()).map(async (sub) => [
+      sub.subscriberId,
+      await getSubscriptionBaseline(sub.subscriberId, input.fixtureId),
+    ] as const)
+  );
+  const baselineBySubscriberId = new Map<string, SubscriptionBaseline | null>(baselineEntries);
+
   const jobs: Parameters<typeof enqueueWhatsappNotificationsBulk>[0] = [];
   let triggersDedupSkipped = 0;
   let triggersEmitted = 0;
@@ -126,6 +187,8 @@ async function dispatchTriggers(input: { fixtureId: number; triggers: ReturnType
 
     for (const sub of activeSubsById.values()) {
       if (!isLiveTriggerEnabled(sub.subscriber, trigger.type)) continue;
+      const baseline = baselineBySubscriberId.get(sub.subscriberId) ?? null;
+      if (isBaselineTriggerAlreadyCovered(baseline, trigger, input.newState)) continue;
       const phone = sub.subscriber.phoneNumber;
       if (!phone) continue;
       const msgOk = await shouldEmitMessage(sub.subscriberId, input.fixtureId, trigger.message);
@@ -174,7 +237,7 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
   }
 
   if (triggers.length) {
-    await dispatchTriggers({ fixtureId, triggers });
+    await dispatchTriggers({ fixtureId, triggers, newState });
 
     const hasFullTime = triggers.some((t) => t.type === "FULL_TIME");
     if (hasFullTime) {

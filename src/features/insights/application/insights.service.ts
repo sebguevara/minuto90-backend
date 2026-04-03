@@ -82,6 +82,18 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function withRetry<T>(fn: () => Promise<T>, retries = 2, delayMs = 600): Promise<T> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      await sleep(delayMs);
+    }
+  }
+  throw new Error("unreachable");
+}
+
 function getFixtureKickoffDate(fixture: ApiFootballFixtureItem) {
   return fixture.fixture?.date ?? null;
 }
@@ -619,12 +631,14 @@ REGLAS:
 - NO inventes datos que no estén en el input.
 - Devuelve directamente el texto sin encabezados markdown, sin emojis, sin introducciones conversacionales.`;
 
-    const completion = await openai.responses.create({
-      model: "gpt-5-mini",
-      reasoning: { effort: "low" },
-      instructions: systemPrompt,
-      input: `Datos del partido:\n\n${JSON.stringify(matchContext, null, 2)}`,
-    });
+    const completion = await withRetry(() =>
+      openai.responses.create({
+        model: "gpt-5-mini",
+        reasoning: { effort: "low" },
+        instructions: systemPrompt,
+        input: `Datos del partido:\n\n${JSON.stringify(matchContext, null, 2)}`,
+      })
+    );
 
     return completion.output_text || "No se pudo generar el resumen del partido.";
   }
@@ -766,27 +780,30 @@ REGLAS:
 
 ESTRUCTURA (2 párrafos máximo, cortos y directos):
 1. Contexto y claves — posiciones en la tabla (qué se juega cada equipo: título, clasificación, descenso, nada), forma reciente, historial directo.${hasLineups ? " Si hay alineaciones, analiza las formaciones (ej: 4-3-3 agresivo vs 5-4-1 defensivo), jugadores clave y qué plantea tácticamente cada técnico." : ""}
-2. Cuotas 1xBet y pronóstico — analiza las cuotas de 1xBet: quién paga más, quién menos, qué refleja el mercado. Menciona las cuotas exactas (ej: "1xBet paga 1.50 al local, 4.20 al empate y 5.80 a la visita"). Cierra con un pronóstico razonado. No seas absoluto, presenta matices.
+2. Cuotas y pronóstico — si el campo "odds" en los datos NO es null, analiza las cuotas exactas de 1xBet (menciónalas: "1xBet paga X al local, Y al empate y Z a la visita") y qué refleja el mercado. Si "odds" ES null, basa el pronóstico en la comparación de forma, historial directo y posición en tabla. Cierra con un pronóstico razonado. No seas absoluto, presenta matices.
 
 DATOS CLAVE:
 - "standings": posición y puntos en la tabla. "description" indica si pelea por algo (Champions, descenso, etc).
 - "homeFormLast5"/"awayFormLast5": forma reciente. "form" es % de rendimiento (100% = todas victorias). "goals" tiene goles a favor/contra en últimos 5.
 - "comparison": comparación porcentual forma/ataque/defensa entre equipos.
-- "odds": cuotas de 1xBet. Cuota más baja = mayor favoritismo.${hasLineups ? '\n- "lineups": alineaciones confirmadas. "pos" indica posición (G=portero, D=defensa, M=mediocampista, F=delantero). La formación revela la intención táctica del DT.' : ""}
+- "odds": cuotas de 1xBet (puede ser null si no están disponibles). Cuota más baja = mayor favoritismo.${hasLineups ? '\n- "lineups": alineaciones confirmadas. "pos" indica posición (G=portero, D=defensa, M=mediocampista, F=delantero). La formación revela la intención táctica del DT.' : ""}
 
 REGLAS:
 - Idioma: español. Tono: profesional y conciso.
 - Máximo 5-6 oraciones por párrafo.
 - Cuando menciones forma, traduce el porcentaje a contexto (ej: "80%" = "4 de 5 positivos").
-- Siempre menciona "1xBet" por nombre al hablar de cuotas.
+- Si "odds" es null, NUNCA menciones la ausencia de cuotas. Simplemente omite ese dato y sustituye por análisis basado en los demás datos.
+- Cuando haya cuotas, siempre menciona "1xBet" por nombre.
 - NO inventes datos. Sin markdown, sin emojis, sin introducciones.`;
 
-    const completion = await openai.responses.create({
-      model: "gpt-5-mini",
-      reasoning: { effort: "low" },
-      instructions: systemPrompt,
-      input: `Datos previos al partido:\n\n${JSON.stringify(preMatchContext, null, 2)}`,
-    });
+    const completion = await withRetry(() =>
+      openai.responses.create({
+        model: "gpt-5-mini",
+        reasoning: { effort: "low" },
+        instructions: systemPrompt,
+        input: `Datos previos al partido:\n\n${JSON.stringify(preMatchContext, null, 2)}`,
+      })
+    );
 
     return completion.output_text || "No se pudo generar el análisis previo.";
   }
@@ -878,21 +895,24 @@ CONTEXTO: El partido lleva ${elapsed ?? "?"} minutos y va ${goals.home ?? 0}-${g
 
 ESTRUCTURA (2 párrafos máximo, cortos y directos):
 1. Lo que está pasando — analiza el marcador actual, quién domina según las estadísticas en vivo (posesión, tiros, tiros al arco), eventos clave (goles, tarjetas, cambios). Comenta las formaciones y si algún equipo cambió su planteamiento. Sé concreto con datos del partido.
-2. Cuotas en vivo 1xBet y lectura — si hay cuotas en vivo, analiza cómo se han movido: ¿el mercado cree que puede haber remontada? ¿el favorito sigue siendo el mismo? Menciona las cuotas exactas. Da tu lectura de cómo puede terminar basándote en lo que ves en los datos.
+2. Proyección y cuotas — si el campo "liveOdds" en los datos NO es null, analiza las cuotas exactas de 1xBet y qué refleja el mercado sobre el resultado. Si "liveOdds" ES null, en lugar de cuotas analiza el dominio del partido: ¿qué equipo está mejor posicionado para ganar según los datos en vivo? ¿qué necesitaría el otro para remontar o sostener el resultado?
 
 REGLAS:
 - Idioma: español. Tono: directo, presente ("está dominando", "lleva", "tiene").
 - NUNCA hables en futuro como si el partido no hubiera empezado. El partido YA está en juego.
 - Máximo 5-6 oraciones por párrafo.
-- Siempre menciona "1xBet" por nombre al hablar de cuotas.
+- Si "liveOdds" es null, NUNCA escribas frases como "no hay cuotas", "no se encontraron cuotas", "las cuotas no están disponibles" ni ninguna variante. Simplemente omite el tema de cuotas.
+- Cuando haya cuotas, siempre menciona "1xBet" por nombre.
 - NO inventes datos. Sin markdown, sin emojis, sin introducciones.`;
 
-    const completion = await openai.responses.create({
-      model: "gpt-5-mini",
-      reasoning: { effort: "low" },
-      instructions: systemPrompt,
-      input: `Datos en vivo del partido:\n\n${JSON.stringify(liveContext, null, 2)}`,
-    });
+    const completion = await withRetry(() =>
+      openai.responses.create({
+        model: "gpt-5-mini",
+        reasoning: { effort: "low" },
+        instructions: systemPrompt,
+        input: `Datos en vivo del partido:\n\n${JSON.stringify(liveContext, null, 2)}`,
+      })
+    );
 
     return completion.output_text || "No se pudo generar el análisis en vivo.";
   }

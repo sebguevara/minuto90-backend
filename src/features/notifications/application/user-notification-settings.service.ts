@@ -4,6 +4,11 @@ import { footballService } from "../../sports/application/football.service";
 import type { ApiFootballFixtureItem } from "../../sports/domain/football.types";
 import type { ToggleFavoriteInput } from "../../favorites/domain/favorites.types";
 import { logWarn } from "../../../shared/logging/logger";
+import {
+  captureSubscriptionBaseline,
+  deleteSubscriptionBaseline,
+  moveSubscriptionBaseline,
+} from "./subscription-baseline";
 
 const FOOTBALL_TIMEZONE = "UTC";
 const TEAM_FAVORITE_LOOKAHEAD = Number(
@@ -71,6 +76,16 @@ async function moveSubscriptionsBetweenSubscribers(input: {
   });
 
   for (const subscription of subscriptions) {
+    const targetAlreadyExists = await minutoPrismaClient.matchSubscription.findUnique({
+      where: {
+        subscriberId_fixtureId: {
+          subscriberId: input.toSubscriberId,
+          fixtureId: subscription.fixtureId,
+        },
+      },
+      select: { id: true },
+    });
+
     await minutoPrismaClient.matchSubscription.upsert({
       where: {
         subscriberId_fixtureId: {
@@ -101,6 +116,16 @@ async function moveSubscriptionsBetweenSubscribers(input: {
         sourceEntityId: subscription.sourceEntityId ?? undefined,
       },
     });
+
+    if (!targetAlreadyExists) {
+      await moveSubscriptionBaseline(
+        input.fromSubscriberId,
+        input.toSubscriberId,
+        subscription.fixtureId
+      ).catch(() => {});
+    } else {
+      await deleteSubscriptionBaseline(input.fromSubscriberId, subscription.fixtureId).catch(() => {});
+    }
   }
 
   await minutoPrismaClient.matchSubscription.deleteMany({
@@ -315,36 +340,46 @@ async function upsertMatchSubscription(
         }
       : input.source;
 
-  return minutoPrismaClient.matchSubscription.upsert({
-    where: {
-      subscriberId_fixtureId: {
-        subscriberId: input.subscriberId,
-        fixtureId: input.fixture.fixtureId,
+  const data = {
+    homeTeamId: input.fixture.homeTeamId ?? undefined,
+    awayTeamId: input.fixture.awayTeamId ?? undefined,
+    homeTeam: input.fixture.homeTeam,
+    awayTeam: input.fixture.awayTeam,
+    leagueName: input.fixture.leagueName ?? undefined,
+    matchDate: input.fixture.matchDate,
+    sourceType: nextSource.sourceType,
+    sourceEntityId: nextSource.sourceEntityId,
+  };
+
+  if (existing) {
+    return minutoPrismaClient.matchSubscription.update({
+      where: {
+        subscriberId_fixtureId: {
+          subscriberId: input.subscriberId,
+          fixtureId: input.fixture.fixtureId,
+        },
       },
-    },
-    create: {
+      data,
+    });
+  }
+
+  const subscription = await minutoPrismaClient.matchSubscription.create({
+    data: {
       subscriberId: input.subscriberId,
       fixtureId: input.fixture.fixtureId,
-      homeTeamId: input.fixture.homeTeamId ?? undefined,
-      awayTeamId: input.fixture.awayTeamId ?? undefined,
-      homeTeam: input.fixture.homeTeam,
-      awayTeam: input.fixture.awayTeam,
-      leagueName: input.fixture.leagueName ?? undefined,
-      matchDate: input.fixture.matchDate,
-      sourceType: nextSource.sourceType,
-      sourceEntityId: nextSource.sourceEntityId,
-    },
-    update: {
-      homeTeamId: input.fixture.homeTeamId ?? undefined,
-      awayTeamId: input.fixture.awayTeamId ?? undefined,
-      homeTeam: input.fixture.homeTeam,
-      awayTeam: input.fixture.awayTeam,
-      leagueName: input.fixture.leagueName ?? undefined,
-      matchDate: input.fixture.matchDate,
-      sourceType: nextSource.sourceType,
-      sourceEntityId: nextSource.sourceEntityId,
+      ...data,
     },
   });
+
+  captureSubscriptionBaseline(input.subscriberId, input.fixture.fixtureId).catch((error: any) => {
+    logWarn("notifications.subscription_baseline.capture_failed", {
+      subscriberId: input.subscriberId,
+      fixtureId: input.fixture.fixtureId,
+      err: error?.message ?? String(error),
+    });
+  });
+
+  return subscription;
 }
 
 async function removeSubscriptionIfUncovered(input: {
@@ -360,6 +395,7 @@ async function removeSubscriptionIfUncovered(input: {
         fixtureId: input.fixture.fixtureId,
       },
     });
+    await deleteSubscriptionBaseline(input.subscriberId, input.fixture.fixtureId).catch(() => {});
     return;
   }
 
