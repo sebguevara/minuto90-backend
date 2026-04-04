@@ -39,7 +39,7 @@ const FOOTBALL_ODDS_HISTORY_FUTURE_DAYS = getFootballOddsHistoryFutureDays();
  */
 const PREWARM_CRON_SCHEDULE = process.env.PREWARM_CRON_SCHEDULE?.trim() || '0 4,16 * * *';
 const PREWARM_CRON_TIMEZONE = process.env.PREWARM_CRON_TIMEZONE?.trim() || DEFAULT_TIMEZONE;
-const PREWARM_RUN_ON_STARTUP = process.env.PREWARM_RUN_ON_STARTUP?.trim() !== 'false';
+const PREWARM_RUN_ON_STARTUP = process.env.PREWARM_RUN_ON_STARTUP?.trim() === 'true';
 const PREWARM_EXIT_AFTER_RUN = process.env.PREWARM_EXIT_AFTER_RUN?.trim() === 'true';
 const PREWARM_MODE = process.env.PREWARM_MODE?.trim().toLowerCase() || 'scheduled';
 

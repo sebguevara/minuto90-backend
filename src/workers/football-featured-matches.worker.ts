@@ -14,6 +14,8 @@ const DEFAULT_TIMEZONE = "UTC";
 const FEATURED_MATCHES_LIMIT = 8;
 const FEATURED_MATCHES_CRON_TIMEZONE =
   process.env.FOOTBALL_FEATURED_MATCHES_CRON_TIMEZONE?.trim() || DEFAULT_TIMEZONE;
+const FEATURED_MATCHES_RUN_ON_STARTUP =
+  process.env.FOOTBALL_FEATURED_MATCHES_RUN_ON_STARTUP?.trim() === "true";
 
 function formatUtcDateKey(offsetDays = 0) {
   const date = new Date();
@@ -80,11 +82,17 @@ async function bootstrapFeaturedRefreshes() {
   ]);
 }
 
-bootstrapFeaturedRefreshes().catch((error) => {
-  logError("worker.football.featured.refresh.bootstrap_failed", {
-    error: error instanceof Error ? error.message : String(error),
+if (FEATURED_MATCHES_RUN_ON_STARTUP) {
+  bootstrapFeaturedRefreshes().catch((error) => {
+    logError("worker.football.featured.refresh.bootstrap_failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
   });
-});
+} else {
+  logInfo("worker.football.featured.refresh.startup_skipped", {
+    reason: "scheduled_only",
+  });
+}
 
 const scheduleRefresh = (cronExpression: string, runner: () => Promise<void>, label: string) =>
   new CronJob(

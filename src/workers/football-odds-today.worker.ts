@@ -14,6 +14,8 @@ import { logError, logInfo, logWarn } from "../shared/logging/logger";
 const DEFAULT_TIMEZONE = "UTC";
 const FOOTBALL_ODDS_CRON_TIMEZONE =
   process.env.FOOTBALL_ODDS_CRON_TIMEZONE?.trim() || DEFAULT_TIMEZONE;
+const FOOTBALL_ODDS_RUN_ON_STARTUP =
+  process.env.FOOTBALL_ODDS_RUN_ON_STARTUP?.trim() === "true";
 
 function formatUtcDateKey(offsetDays = 0) {
   const date = new Date();
@@ -80,11 +82,17 @@ async function bootstrapOddsRefreshes() {
   ]);
 }
 
-bootstrapOddsRefreshes().catch((error) => {
-  logError("worker.football.odds.refresh.bootstrap_failed", {
-    error: error instanceof Error ? error.message : String(error),
+if (FOOTBALL_ODDS_RUN_ON_STARTUP) {
+  bootstrapOddsRefreshes().catch((error) => {
+    logError("worker.football.odds.refresh.bootstrap_failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
   });
-});
+} else {
+  logInfo("worker.football.odds.refresh.startup_skipped", {
+    reason: "scheduled_only",
+  });
+}
 
 const scheduleRefresh = (cronExpression: string, runner: () => Promise<void>, label: string) =>
   new CronJob(
