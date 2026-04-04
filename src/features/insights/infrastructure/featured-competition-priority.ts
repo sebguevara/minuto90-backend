@@ -1,7 +1,7 @@
 import {
   HOME_FEATURED_COMPETITIONS,
   leaguePriority,
-} from "../../../../../minuto90/src/shared/consts/football/leagues";
+} from "./featured-competitions.constants";
 
 export type FeaturedCompetitionGroup =
   | "user_country"
