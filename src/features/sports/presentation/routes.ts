@@ -52,6 +52,7 @@ import {
 import { logInfo, logWarn } from "../../../shared/logging/logger";
 import { redisConnection } from "../../../shared/redis/redis.connection";
 import type { StoredMatchState } from "../../notifications/application/diff-engine";
+import type { ApiFootballFixtureEvent } from "../../notifications/infrastructure/api-football-live.client";
 import {
   coachsQuerySchema,
   countriesQuerySchema,
@@ -108,6 +109,8 @@ type FootballLiveHomeFixture = {
     home?: number | null;
     away?: number | null;
   };
+  /** Eventos del snapshot live (goles, tarjetas, etc.) para clientes que hacen diff in-app. */
+  events?: ApiFootballFixtureEvent[];
 };
 
 type FootballLiveClockAnchor = {
@@ -182,6 +185,9 @@ function mergeLiveIntoFixture<TFixture extends Record<string, any>>(
           : {}),
       },
     },
+    ...(Array.isArray(liveFixture.events) && liveFixture.events.length > 0
+      ? { events: liveFixture.events }
+      : {}),
   };
 }
 

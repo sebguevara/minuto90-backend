@@ -10,8 +10,8 @@ export type TemplateCommon = TemplateBase & {
   scoreAway: number;
 };
 
-function followMatchLine(matchUrl: string) {
-  return `Seguilo en: ${matchUrl}`;
+function matchLinkLine(matchUrl: string) {
+  return `🔗 ${matchUrl}`;
 }
 
 export const templates = {
@@ -24,14 +24,16 @@ export const templates = {
     }
   ) =>
     [
-      `GOL de ${input.teamName}`,
+      "⚽ *Gol*",
       "",
-      `${input.playerName} (${input.minute}')`,
-      ...(input.assistName ? [`Asistencia: ${input.assistName}`] : []),
-      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      `*${input.teamName}*`,
+      `*${input.playerName}* · _${input.minute}′_`,
+      ...(input.assistName ? [`_Asistencia: ${input.assistName}_`] : []),
       "",
-      input.leagueName,
-      followMatchLine(input.matchUrl),
+      `*${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}*`,
+      "",
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
     ].join("\n"),
 
   redCard: (
@@ -42,76 +44,80 @@ export const templates = {
     }
   ) =>
     [
-      "Tarjeta roja",
+      "🟥 *Tarjeta roja*",
       "",
-      `${input.teamName} se queda con uno menos.`,
-      `${input.playerName} (${input.minute}')`,
+      `*${input.teamName}* — expulsión, _un jugador menos_.`,
+      `*${input.playerName}* · _${input.minute}′_`,
       "",
-      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      `*${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}*`,
       "",
-      input.leagueName,
-      followMatchLine(input.matchUrl),
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
     ].join("\n"),
 
   varCancelled: (input: TemplateCommon) =>
     [
-      "Gol anulado por VAR",
-      "El marcador vuelve atras.",
+      "📺 *Gol anulado (VAR)*",
       "",
-      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      "Marcador actualizado.",
       "",
-      input.leagueName,
-      followMatchLine(input.matchUrl),
+      `*${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}*`,
+      "",
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
     ].join("\n"),
 
   kickoff: (input: TemplateBase) =>
     [
-      "Arranca el partido",
+      "▶️ *Comienza el partido*",
       "",
-      `${input.homeTeam} vs ${input.awayTeam}`,
+      `*${input.homeTeam}* vs *${input.awayTeam}*`,
       "",
-      input.leagueName,
-      followMatchLine(input.matchUrl),
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
     ].join("\n"),
 
   preMatch30m: (input: TemplateBase & { kickoffLabel: string }) =>
     [
-      "Faltan 30 minutos para el partido",
+      "⏰ *Recordatorio*",
       "",
-      `${input.homeTeam} vs ${input.awayTeam}`,
-      `Hora: ${input.kickoffLabel}`,
+      "Quedan *30 minutos* para el inicio.",
       "",
-      input.leagueName,
-      followMatchLine(input.matchUrl),
+      `*${input.homeTeam}* vs *${input.awayTeam}*`,
+      "",
+      `_Inicio:_ ${input.kickoffLabel}`,
+      "",
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
     ].join("\n"),
 
   fullTime: (input: TemplateCommon) =>
     [
-      "Final del partido",
+      "🏁 *Final del partido*",
       "",
-      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      `*${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}*`,
       "",
-      input.leagueName,
-      followMatchLine(input.matchUrl),
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
     ].join("\n"),
 
   halfTime: (input: TemplateCommon) =>
     [
-      "Entretiempo",
+      "⏱️ *Descanso*",
       "",
-      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      `*${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}*`,
       "",
-      input.leagueName,
-      followMatchLine(input.matchUrl),
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
     ].join("\n"),
 
   secondHalf: (input: TemplateCommon) =>
     [
-      "Arranca el segundo tiempo",
+      "▶️ *Segunda mitad*",
       "",
-      `${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}`,
+      `*${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}*`,
       "",
-      input.leagueName,
-      followMatchLine(input.matchUrl),
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
     ].join("\n"),
 };

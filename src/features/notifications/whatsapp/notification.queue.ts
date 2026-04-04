@@ -48,8 +48,14 @@ export async function enqueueWhatsappNotification(job: WhatsappNotificationJob) 
 
 export async function enqueueWhatsappNotificationsBulk(jobs: WhatsappNotificationJob[]) {
   if (!jobs.length) return;
+  const byJobId = new Map<string, WhatsappNotificationJob>();
+  for (const job of jobs) {
+    const jobId = buildJobId(job);
+    if (!byJobId.has(jobId)) byJobId.set(jobId, job);
+  }
+  const uniqueJobs = [...byJobId.values()];
   await notificationQueue.addBulk(
-    jobs.map((job) => {
+    uniqueJobs.map((job) => {
       const jobId = buildJobId(job);
       return {
         name: "send",
@@ -66,6 +72,9 @@ export async function enqueueWhatsappNotificationsBulk(jobs: WhatsappNotificatio
   );
 
   if (process.env.NOTIFICATIONS_DEBUG === "true") {
-    logInfo("whatsapp.notifications.enqueued.bulk", { jobs: jobs.length });
+    logInfo("whatsapp.notifications.enqueued.bulk", {
+      jobs: uniqueJobs.length,
+      deduped: jobs.length - uniqueJobs.length,
+    });
   }
 }

@@ -80,6 +80,11 @@ export type NewsCategory = Prisma.NewsCategoryModel
  */
 export type News = Prisma.NewsModel
 /**
+ * Model NewsTag
+ * 
+ */
+export type NewsTag = Prisma.NewsTagModel
+/**
  * Model Post
  * 
  */

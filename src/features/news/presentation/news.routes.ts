@@ -127,13 +127,18 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         }
 
         const news = await newsService.create({
-          ...body,
-          authorId: guard.userId,
+          title: body.title,
+          slug: body.slug,
+          summary: body.summary,
+          body: body.body,
+          imageUrl: body.imageUrl,
           featured: body.featured ?? false,
           publishFrom: body.publishFrom ? new Date(body.publishFrom) : null,
           publishTo: body.publishTo ? new Date(body.publishTo) : null,
           publishedAt: body.publishedAt ? new Date(body.publishedAt) : undefined,
-          categoryId: body.categoryId ?? null,
+          categoryId: body.categoryId,
+          tagIds: body.tagIds,
+          authorId: guard.userId,
         });
         try {
           await pushService.enqueueNewsPublicationPush(news.id);
@@ -166,7 +171,8 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         publishFrom: t.Optional(t.Nullable(t.String())),
         publishTo: t.Optional(t.Nullable(t.String())),
         publishedAt: t.Optional(t.Nullable(t.String())),
-        categoryId: t.Optional(t.Nullable(t.String())),
+        categoryId: t.String({ minLength: 1 }),
+        tagIds: t.Optional(t.Array(t.String())),
       }),
       detail: { tags: ["News"], summary: "Create a news article (admin only)" },
     }
@@ -189,13 +195,40 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
           set.status = 404;
           return { error: "News not found" };
         }
+
+        if (
+          body.categoryId !== undefined &&
+          (!body.categoryId || String(body.categoryId).trim() === "")
+        ) {
+          set.status = 400;
+          return { error: "Se requiere una categoria" };
+        }
+
         const news = await newsService.update(params.id, {
-          ...body,
-          featured: body.featured,
-          publishFrom: body.publishFrom !== undefined ? (body.publishFrom ? new Date(body.publishFrom) : null) : undefined,
-          publishTo: body.publishTo !== undefined ? (body.publishTo ? new Date(body.publishTo) : null) : undefined,
-          publishedAt: body.publishedAt ? new Date(body.publishedAt) : undefined,
-          categoryId: body.categoryId !== undefined ? (body.categoryId ?? null) : undefined,
+          ...(body.title !== undefined && { title: body.title }),
+          ...(body.slug !== undefined && { slug: body.slug }),
+          ...(body.summary !== undefined && { summary: body.summary }),
+          ...(body.body !== undefined && { body: body.body }),
+          ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl }),
+          ...(body.featured !== undefined && { featured: body.featured }),
+          publishFrom:
+            body.publishFrom !== undefined
+              ? body.publishFrom
+                ? new Date(body.publishFrom)
+                : null
+              : undefined,
+          publishTo:
+            body.publishTo !== undefined
+              ? body.publishTo
+                ? new Date(body.publishTo)
+                : null
+              : undefined,
+          ...(body.publishedAt !== undefined &&
+            (body.publishedAt
+              ? { publishedAt: new Date(body.publishedAt) }
+              : {})),
+          ...(body.categoryId !== undefined && { categoryId: body.categoryId }),
+          ...(body.tagIds !== undefined && { tagIds: body.tagIds }),
         });
         try {
           await pushService.enqueueNewsPublicationPush(news.id);
@@ -228,7 +261,8 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         publishFrom: t.Optional(t.Nullable(t.String())),
         publishTo: t.Optional(t.Nullable(t.String())),
         publishedAt: t.Optional(t.Nullable(t.String())),
-        categoryId: t.Optional(t.Nullable(t.String())),
+        categoryId: t.Optional(t.String({ minLength: 1 })),
+        tagIds: t.Optional(t.Array(t.String())),
       }),
       detail: { tags: ["News"], summary: "Update a news article (admin only)" },
     }

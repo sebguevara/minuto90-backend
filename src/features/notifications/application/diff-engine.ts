@@ -55,6 +55,10 @@ function lastEvent(events: ApiFootballFixtureEvent[] | undefined, predicate: (e:
   return null;
 }
 
+/**
+ * Identidad del evento para diff/dedup: sin `comments` (API-Football suele agregarlo después
+ * y eso cambiaba la clave → mismo gol/tarjeta/etc. disparaba notificaciones duplicadas).
+ */
 export function buildEventKey(event: ApiFootballFixtureEvent): string {
   const elapsed = event?.time?.elapsed ?? "";
   const extra = event?.time?.extra ?? "";
@@ -62,8 +66,18 @@ export function buildEventKey(event: ApiFootballFixtureEvent): string {
   const player = event?.player?.id ?? event?.player?.name ?? "";
   const type = event?.type ?? "";
   const detail = event?.detail ?? "";
+  return [type, detail, team, player, elapsed, extra].join("|");
+}
+
+/** Formato anterior (incluía comments); sirve para no re-notificar eventos ya guardados en Redis. */
+function buildEventKeyLegacy(event: ApiFootballFixtureEvent): string {
   const comments = event?.comments ?? "";
-  return [type, detail, team, player, elapsed, extra, comments].join("|");
+  return `${buildEventKey(event)}|${comments}`;
+}
+
+function isEventAlreadyKnown(oldSet: Set<string>, event: ApiFootballFixtureEvent): boolean {
+  if (oldSet.has(buildEventKey(event))) return true;
+  return oldSet.has(buildEventKeyLegacy(event));
 }
 
 function buildEventKeys(events: ApiFootballFixtureEvent[] | undefined): string[] {
@@ -184,7 +198,7 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
       const playerName = scorerFromEvent(e);
       if (!playerName) continue;
       const k = buildEventKey(e);
-      if (oldEventKeySet.has(k)) continue;
+      if (isEventAlreadyKnown(oldEventKeySet, e)) continue;
       triggers.push({
         fixtureId,
         type: "GOAL",
@@ -242,7 +256,7 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     for (const e of newEvents) {
       if (e?.type !== "Card" || e?.detail !== "Red Card") continue;
       const k = buildEventKey(e);
-      if (oldEventKeySet.has(k)) continue;
+      if (isEventAlreadyKnown(oldEventKeySet, e)) continue;
       triggers.push({
         fixtureId,
         type: "RED_CARD",

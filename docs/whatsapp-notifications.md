@@ -92,7 +92,8 @@ Opciones:
 - Crear un row en `EvolutionInstance` con `isActive=true` (se usa el más nuevo por `createdAt desc`).
 
 ### Poller
-- `LIVE_POLL_INTERVAL_MS` (default: `5000`)
+- `LIVE_POLL_INTERVAL_MS` (default: `5000`): tiempo entre polls al endpoint live; menor = notificaciones más reactivas (más llamadas a la API).
+- `LIVE_FULL_TIME_MISSING_POLLS` (default: `3`): encuestas seguidas en las que el partido ya no aparece en la lista live antes de enviar el fallback de “final” (evita esperas largas si el proveedor quita el fixture antes de exponer `FT`).
 - `LIVE_POLL_CONCURRENCY` (default: `10`)
 - `NOTIFICATIONS_DEBUG` (`true` para logs de jobs completados)
 

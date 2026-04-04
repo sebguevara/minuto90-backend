@@ -78,6 +78,7 @@ export const newsService = {
       include: {
         author: { select: { id: true, name: true, imageUrl: true } },
         category: { select: { id: true, name: true, slug: true, color: true } },
+        tags: { select: { id: true, name: true, slug: true } },
       },
     });
   },
@@ -88,6 +89,7 @@ export const newsService = {
       include: {
         author: { select: { id: true, name: true, imageUrl: true } },
         category: { select: { id: true, name: true, slug: true, color: true } },
+        tags: { select: { id: true, name: true, slug: true } },
       },
     });
   },
@@ -105,7 +107,15 @@ export const newsService = {
         publishFrom: input.publishFrom ?? null,
         publishTo: input.publishTo ?? null,
         publishedAt: input.publishedAt ?? new Date(),
-        categoryId: input.categoryId ?? null,
+        categoryId: input.categoryId,
+        ...(input.tagIds?.length
+          ? { tags: { connect: input.tagIds.map((tid) => ({ id: tid })) } }
+          : {}),
+      },
+      include: {
+        author: { select: { id: true, name: true, imageUrl: true } },
+        category: { select: { id: true, name: true, slug: true, color: true } },
+        tags: { select: { id: true, name: true, slug: true } },
       },
     });
   },
@@ -124,6 +134,14 @@ export const newsService = {
         ...(input.publishTo !== undefined && { publishTo: input.publishTo }),
         ...(input.publishedAt !== undefined && { publishedAt: input.publishedAt }),
         ...(input.categoryId !== undefined && { categoryId: input.categoryId }),
+        ...(input.tagIds !== undefined && {
+          tags: { set: input.tagIds.map((tid) => ({ id: tid })) },
+        }),
+      },
+      include: {
+        author: { select: { id: true, name: true, imageUrl: true } },
+        category: { select: { id: true, name: true, slug: true, color: true } },
+        tags: { select: { id: true, name: true, slug: true } },
       },
     });
   },

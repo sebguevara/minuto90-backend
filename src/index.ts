@@ -20,6 +20,7 @@ import { insightsRoutes } from "./features/insights/presentation/insights.routes
 import { userRoutes } from "./features/users/presentation/user.routes";
 import { newsRoutes } from "./features/news/presentation/news.routes";
 import { categoryRoutes } from "./features/news/presentation/category.routes";
+import { tagRoutes } from "./features/news/presentation/tag.routes";
 import { postRoutes } from "./features/posts/presentation/post.routes";
 import { comparatorRoutes } from "./features/comparator/presentation/comparator.routes";
 import { favoritesRoutes } from "./features/favorites/presentation/favorites.routes";
@@ -270,6 +271,7 @@ const app = new Elysia()
   .use(userRoutes)
   .use(newsRoutes)
   .use(categoryRoutes)
+  .use(tagRoutes)
   .use(postRoutes)
   .use(comparatorRoutes)
   .use(favoritesRoutes)

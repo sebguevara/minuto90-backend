@@ -113,7 +113,7 @@ export function getFeaturedMatchesTtlSeconds(date: string, now: Date = new Date(
   const offsetDays = getDateOffsetDays(date, now);
 
   if (offsetDays <= 0) {
-    return 90 * 60;
+    return 2 * 60; // 2 minutes — ensures live status propagates quickly
   }
 
   if (offsetDays <= 3) {

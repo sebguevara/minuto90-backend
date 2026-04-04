@@ -11,6 +11,7 @@ import {
   buildFeaturedMatchesCacheKey,
   buildInsightsLockKey,
   buildMatchInsightsCacheKey,
+  buildMatchSummaryStateCacheKey,
 } from "../infrastructure/insights-cache-key";
 import {
   getDailyInsightsTtlSeconds,
@@ -523,7 +524,8 @@ export class InsightsService {
       kickoffAt: getFixtureKickoffDate(fixtureData),
     });
     const ttlSeconds = getMatchSummaryTtlSeconds(state);
-    const cacheKey = buildMatchInsightsCacheKey("match_summary", fixtureId);
+    const stateSlot = isFinished ? "finished" : isLive ? "live" : "prematch";
+    const cacheKey = buildMatchSummaryStateCacheKey(fixtureId, stateSlot);
 
     const result = await this.getOrComputeCachedValue<string>({
       cacheKey,
@@ -836,7 +838,7 @@ REGLAS:
     const elapsed = fixtureData.fixture.status.elapsed ?? null;
     const statusLong = fixtureData.fixture.status.long ?? "";
 
-    const [statsRes, eventsRes, lineupsRes, liveOddsRes] = await Promise.all([
+    const [statsRes, eventsRes, lineupsRes, liveOddsRes, predictionsRes, preOddsRes] = await Promise.all([
       footballService
         .getFixtureStatistics({ fixture: fixtureId })
         .catch(() => ({ response: [] })),
@@ -849,12 +851,19 @@ REGLAS:
       footballService
         .getOddsLive({ fixture: fixtureId })
         .catch(() => ({ response: [] })),
+      footballService
+        .getPredictions({ fixture: fixtureId })
+        .catch(() => ({ response: [] })),
+      footballService
+        .getOdds({ fixture: fixtureId })
+        .catch(() => ({ response: [] })),
     ]);
 
     const statistics = statsRes.response || [];
     const events = eventsRes.response || [];
     const lineups = lineupsRes.response || [];
     const liveOdds = liveOddsRes.response?.[0] ?? null;
+    const prediction = predictionsRes.response?.[0] ?? null;
 
     // Extract 1xBet live odds
     const oneXBetLiveOdds = liveOdds?.odds
@@ -870,6 +879,48 @@ REGLAS:
         {} as { home?: string; draw?: string; away?: string }
       ) ?? null;
 
+    // Compute internal Minuto90 prediction from pre-match 1xBet odds (same logic as pre-match analysis)
+    const preOddsData = preOddsRes.response?.[0] ?? null;
+    const preOneXBetBookmaker = preOddsData?.bookmakers?.find(
+      (bk) => bk.name.toLowerCase().includes("1xbet")
+    );
+    const preMatchWinnerBet = preOneXBetBookmaker?.bets
+      ?.filter((b) => b.name === "Match Winner")
+      .map((b) => ({
+        values: b.values.reduce(
+          (acc, v) => {
+            const label = String(v.value);
+            if (label === "Home") acc.home = v.odd;
+            else if (label === "Draw") acc.draw = v.odd;
+            else if (label === "Away") acc.away = v.odd;
+            return acc;
+          },
+          {} as { home?: string; draw?: string; away?: string }
+        ),
+      }))?.[0] ?? null;
+
+    let m90Prediction: { home: string; draw: string; away: string; winner: string | null } | null = null;
+    if (preMatchWinnerBet?.values.home && preMatchWinnerBet?.values.draw && preMatchWinnerBet?.values.away) {
+      const h = 1 / parseFloat(preMatchWinnerBet.values.home);
+      const d = 1 / parseFloat(preMatchWinnerBet.values.draw);
+      const a = 1 / parseFloat(preMatchWinnerBet.values.away);
+      const t = h + d + a;
+      m90Prediction = {
+        home: `${Math.round((h / t) * 100)}%`,
+        draw: `${Math.round((d / t) * 100)}%`,
+        away: `${Math.round((a / t) * 100)}%`,
+        winner: prediction?.predictions?.winner?.name ?? null,
+      };
+    } else if (prediction?.predictions?.percent) {
+      const p = prediction.predictions.percent;
+      m90Prediction = {
+        home: p.home ?? "?",
+        draw: p.draw ?? "?",
+        away: p.away ?? "?",
+        winner: prediction.predictions.winner?.name ?? null,
+      };
+    }
+
     const liveContext = {
       tournament: league.name,
       round: league.round,
@@ -878,6 +929,7 @@ REGLAS:
       score: `${goals.home ?? 0} - ${goals.away ?? 0}`,
       elapsed,
       status: statusLong,
+      m90Prediction,
       events: events.map((e) => ({
         time: `${e.time.elapsed}${e.time.extra ? "+" + e.time.extra : ""}'`,
         team: e.team.name,
@@ -915,7 +967,11 @@ CONTEXTO: El partido lleva ${elapsed ?? "?"} minutos y va ${goals.home ?? 0}-${g
 
 ESTRUCTURA (2 párrafos máximo, cortos y directos):
 1. Lo que está pasando — analiza el marcador actual, quién domina según las estadísticas en vivo (posesión, tiros, tiros al arco), eventos clave (goles, tarjetas, cambios). Comenta las formaciones y si algún equipo cambió su planteamiento. Sé concreto con datos del partido.
-2. Proyección y cuotas — si el campo "liveOdds" en los datos NO es null, analiza las cuotas exactas de 1xBet y qué refleja el mercado sobre el resultado. Si "liveOdds" ES null, en lugar de cuotas analiza el dominio del partido: ¿qué equipo está mejor posicionado para ganar según los datos en vivo? ¿qué necesitaría el otro para remontar o sostener el resultado?
+2. Proyección y cuotas — si el campo "liveOdds" en los datos NO es null, analiza las cuotas exactas de 1xBet y qué refleja el mercado sobre el resultado. Contrasta con el pronóstico previo de Minuto 90 ("m90Prediction") si está disponible: ¿el partido está siguiendo el pronóstico o hay sorpresa? Si "liveOdds" ES null pero "m90Prediction" NO es null, usa el pronóstico de Minuto 90 para contextualizar: ¿el partido va según lo esperado o hay sorpresa? Si ambos son null, analiza el dominio del partido según los datos en vivo.
+
+DATOS CLAVE:
+- "m90Prediction": pronóstico propio de Minuto 90 calculado antes del partido (probabilidades home/draw/away y favorito). Úsalo siempre que esté disponible para comparar con lo que está pasando.
+- "liveOdds": cuotas en vivo de 1xBet. Si están disponibles, tienen prioridad sobre el pronóstico previo para proyectar el resultado.
 
 REGLAS:
 - Idioma: español. Tono: directo, presente ("está dominando", "lleva", "tiene").
@@ -923,6 +979,7 @@ REGLAS:
 - Máximo 5-6 oraciones por párrafo.
 - Si "liveOdds" es null, NUNCA escribas frases como "no hay cuotas", "no se encontraron cuotas", "las cuotas no están disponibles" ni ninguna variante. Simplemente omite el tema de cuotas.
 - Cuando haya cuotas, siempre menciona "1xBet" por nombre.
+- Cuando uses el pronóstico de Minuto 90, menciona "Minuto 90" por nombre.
 - NO inventes datos. Sin markdown, sin emojis, sin introducciones.`;
 
     const completion = await withRetry(() =>
@@ -1010,26 +1067,50 @@ Formato:
 
   /**
    * Returns featured/highlighted matches for a given date, scored automatically.
+   * Uses dynamic TTL: 60s when any match is live, otherwise from policy.
    */
   async getFeaturedMatches(
     date: string,
     limit = 10,
     userCountry?: string | null
   ): Promise<FeaturedMatch[]> {
-    const ttlSeconds = getFeaturedMatchesTtlSeconds(date);
     const cacheKey = buildFeaturedMatchesCacheKey(date, userCountry);
 
-    const result = await this.getOrComputeCachedValue<FeaturedMatch[]>({
-      cacheKey,
-      ttlSeconds,
-      compute: () => this.computeFeaturedMatches(date, limit, userCountry),
-    });
-
-    if (result.cacheHit) {
-      logInfo("insights.featured.cache_hit", { date, userCountry, cacheKey, ttlSeconds });
+    const cached = await redisInsightsCacheStore.get<FeaturedMatch[]>(cacheKey);
+    if (cached !== null) {
+      logInfo("insights.featured.cache_hit", { date, userCountry, cacheKey });
+      return cached;
     }
 
-    return result.value;
+    const lockKey = buildInsightsLockKey(cacheKey);
+    const lockAcquired = await redisInsightsCacheStore.setNx(lockKey, "1", LOCK_TTL_SECONDS);
+
+    const computeAndCache = async (): Promise<FeaturedMatch[]> => {
+      const data = await this.computeFeaturedMatches(date, limit, userCountry);
+      const hasLive = data.some((m) =>
+        LIVE_MATCH_STATUS.has((m.status ?? "").toUpperCase())
+      );
+      const ttlSeconds = hasLive ? 60 : getFeaturedMatchesTtlSeconds(date);
+      await redisInsightsCacheStore.set(cacheKey, data, ttlSeconds);
+      logInfo("insights.featured.computed", { date, userCountry, hasLive, ttlSeconds });
+      return data;
+    };
+
+    if (lockAcquired) {
+      try {
+        return await computeAndCache();
+      } finally {
+        await redisInsightsCacheStore.del(lockKey);
+      }
+    }
+
+    for (let retry = 0; retry < LOCK_MAX_RETRIES; retry++) {
+      await sleep(LOCK_WAIT_MS);
+      const fromCache = await redisInsightsCacheStore.get<FeaturedMatch[]>(cacheKey);
+      if (fromCache !== null) return fromCache;
+    }
+
+    return computeAndCache();
   }
 
   private async computeFeaturedMatches(
@@ -1100,6 +1181,8 @@ Formato:
         fixtureId: f.fixture.id,
         date: f.fixture.date,
         status: f.fixture.status.short,
+        elapsed: f.fixture.status.elapsed ?? null,
+        extra: f.fixture.status.extra ?? null,
         league: {
           id: f.league.id,
           name: f.league.name,
@@ -1134,7 +1217,52 @@ Formato:
       };
     });
 
-    const sorted = scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    const competitionGroupOrder: Record<FeaturedCompetitionGroup, number> = {
+      user_country: 0,
+      international: 1,
+      europe: 2,
+      latin_america: 3,
+      other: 4,
+    };
+
+    const prioritizeUserCountry = Boolean(userCountry?.trim());
+
+    const compareFeaturedItems = (
+      a: (typeof scored)[number],
+      b: (typeof scored)[number]
+    ) => {
+      // Con país del usuario: competiciones locales primero aunque no estén en vivo
+      if (prioritizeUserCountry) {
+        const groupA = competitionGroupOrder[a._meta.competitionGroup] ?? Number.MAX_SAFE_INTEGER;
+        const groupB = competitionGroupOrder[b._meta.competitionGroup] ?? Number.MAX_SAFE_INTEGER;
+        if (groupA !== groupB) return groupA - groupB;
+      }
+
+      const liveA = LIVE_MATCH_STATUS.has((a.status ?? "").toUpperCase()) ? 0 : 1;
+      const liveB = LIVE_MATCH_STATUS.has((b.status ?? "").toUpperCase()) ? 0 : 1;
+      if (liveA !== liveB) return liveA - liveB;
+
+      const priorityA = a._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER;
+      const priorityB = b._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+
+      if (!prioritizeUserCountry) {
+        const groupA = competitionGroupOrder[a._meta.competitionGroup] ?? Number.MAX_SAFE_INTEGER;
+        const groupB = competitionGroupOrder[b._meta.competitionGroup] ?? Number.MAX_SAFE_INTEGER;
+        if (groupA !== groupB) return groupA - groupB;
+      }
+
+      if (a.tier !== b.tier) return a.tier - b.tier;
+      if (a.relevanceScore !== b.relevanceScore) return b.relevanceScore - a.relevanceScore;
+
+      const kickoffA = new Date(a.date).getTime();
+      const kickoffB = new Date(b.date).getTime();
+      if (kickoffA !== kickoffB) return kickoffA - kickoffB;
+
+      return a.fixtureId - b.fixtureId;
+    };
+
+    const sorted = scored.sort(compareFeaturedItems);
     const allowedUserCountryLeagueIds = new Set<number>();
 
     if (userCountry) {
@@ -1147,21 +1275,11 @@ Formato:
 
       const bestLeague = userCountryCandidates
         .filter((item) => item._meta.competitionType === "League")
-        .sort(
-          (a, b) =>
-            (a._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER) -
-              (b._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER) ||
-            b.relevanceScore - a.relevanceScore
-        )[0];
+        .sort(compareFeaturedItems)[0];
 
       const bestCup = userCountryCandidates
         .filter((item) => item._meta.competitionType === "Cup")
-        .sort(
-          (a, b) =>
-            (a._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER) -
-              (b._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER) ||
-            b.relevanceScore - a.relevanceScore
-        )[0];
+        .sort(compareFeaturedItems)[0];
 
       if (bestLeague) allowedUserCountryLeagueIds.add(bestLeague.league.id);
       if (bestCup) allowedUserCountryLeagueIds.add(bestCup.league.id);
@@ -1189,6 +1307,8 @@ Formato:
         fixtureId: item.fixtureId,
         date: item.date,
         status: item.status,
+        elapsed: item.elapsed,
+        extra: item.extra,
         league: item.league,
         homeTeam: item.homeTeam,
         awayTeam: item.awayTeam,
@@ -1214,6 +1334,8 @@ export type FeaturedMatch = {
   fixtureId: number;
   date: string;
   status: string;
+  elapsed: number | null;
+  extra: number | null;
   league: {
     id: number;
     name: string;

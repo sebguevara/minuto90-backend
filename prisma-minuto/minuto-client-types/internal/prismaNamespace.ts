@@ -392,6 +392,7 @@ export const ModelName = {
   EvolutionInstance: 'EvolutionInstance',
   NewsCategory: 'NewsCategory',
   News: 'News',
+  NewsTag: 'NewsTag',
   Post: 'Post'
 } as const
 
@@ -408,7 +409,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "pushSubscription" | "user" | "favorite" | "notificationSubscriber" | "matchSubscription" | "evolutionInstance" | "newsCategory" | "news" | "post"
+    modelProps: "pushSubscription" | "user" | "favorite" | "notificationSubscriber" | "matchSubscription" | "evolutionInstance" | "newsCategory" | "news" | "newsTag" | "post"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1004,6 +1005,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    NewsTag: {
+      payload: Prisma.$NewsTagPayload<ExtArgs>
+      fields: Prisma.NewsTagFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NewsTagFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NewsTagFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload>
+        }
+        findFirst: {
+          args: Prisma.NewsTagFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NewsTagFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload>
+        }
+        findMany: {
+          args: Prisma.NewsTagFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload>[]
+        }
+        create: {
+          args: Prisma.NewsTagCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload>
+        }
+        createMany: {
+          args: Prisma.NewsTagCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NewsTagCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload>[]
+        }
+        delete: {
+          args: Prisma.NewsTagDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload>
+        }
+        update: {
+          args: Prisma.NewsTagUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload>
+        }
+        deleteMany: {
+          args: Prisma.NewsTagDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NewsTagUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NewsTagUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload>[]
+        }
+        upsert: {
+          args: Prisma.NewsTagUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NewsTagPayload>
+        }
+        aggregate: {
+          args: Prisma.NewsTagAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNewsTag>
+        }
+        groupBy: {
+          args: Prisma.NewsTagGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NewsTagGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NewsTagCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NewsTagCountAggregateOutputType> | number
+        }
+      }
+    }
     Post: {
       payload: Prisma.$PostPayload<ExtArgs>
       fields: Prisma.PostFieldRefs
@@ -1252,6 +1327,17 @@ export const NewsScalarFieldEnum = {
 export type NewsScalarFieldEnum = (typeof NewsScalarFieldEnum)[keyof typeof NewsScalarFieldEnum]
 
 
+export const NewsTagScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NewsTagScalarFieldEnum = (typeof NewsTagScalarFieldEnum)[keyof typeof NewsTagScalarFieldEnum]
+
+
 export const PostScalarFieldEnum = {
   id: 'id',
   content: 'content',
@@ -1490,6 +1576,7 @@ export type GlobalOmitConfig = {
   evolutionInstance?: Prisma.EvolutionInstanceOmit
   newsCategory?: Prisma.NewsCategoryOmit
   news?: Prisma.NewsOmit
+  newsTag?: Prisma.NewsTagOmit
   post?: Prisma.PostOmit
 }
 

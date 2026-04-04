@@ -9,7 +9,8 @@ export type CreateNewsInput = {
   publishFrom?: Date | null;
   publishTo?: Date | null;
   publishedAt?: Date;
-  categoryId?: string | null;
+  categoryId: string;
+  tagIds?: string[];
 };
 
 export type UpdateNewsInput = {
@@ -22,7 +23,8 @@ export type UpdateNewsInput = {
   publishFrom?: Date | null;
   publishTo?: Date | null;
   publishedAt?: Date;
-  categoryId?: string | null;
+  categoryId?: string;
+  tagIds?: string[];
 };
 
 export type CreateCategoryInput = {

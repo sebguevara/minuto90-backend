@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { minutoPrismaClient } from "../lib/minuto-client";
 import { templates } from "../features/notifications/application/templates";
+import { formatMatchKickoffForSubscriber } from "../features/notifications/application/notification-datetime";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
 import {
   canReceiveWhatsappNotifications,
@@ -34,19 +35,6 @@ async function shouldEmitPreMatch(subscriberId: string, fixtureId: number) {
     "NX"
   );
   return res === "OK";
-}
-
-function buildKickoffLabel(matchDate: Date) {
-  const formatted = new Intl.DateTimeFormat("es-AR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "UTC",
-  }).format(matchDate);
-
-  return `${formatted} UTC`;
 }
 
 async function pollOnce() {
@@ -97,7 +85,10 @@ async function pollOnce() {
         awayTeam: subscription.awayTeam,
         leagueName: subscription.leagueName ?? "Liga",
         matchUrl,
-        kickoffLabel: buildKickoffLabel(subscription.matchDate),
+        kickoffLabel: formatMatchKickoffForSubscriber(
+          subscription.matchDate,
+          subscription.subscriber
+        ),
       }),
       fixtureId: subscription.fixtureId,
       triggerType: "PRE_MATCH_30M",

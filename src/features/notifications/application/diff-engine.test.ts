@@ -68,6 +68,44 @@ describe("diff-engine", () => {
     expect(d.triggers).toHaveLength(0);
   });
 
+  it("does not fire GOAL twice when the provider only adds comments to the same goal event", () => {
+    const old = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 10 } } });
+    const a = apply(null, old);
+
+    const goalV1 = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 42 } },
+      goals: { home: 1, away: 0 },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { name: "Mallorca" },
+          player: { name: "M. Morlanes" },
+          time: { elapsed: 42 },
+        },
+      ],
+    });
+    const b = apply(a.state, goalV1);
+    expect(b.triggers.map((t) => t.type)).toEqual(["GOAL"]);
+
+    const goalV2 = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 42 } },
+      goals: { home: 1, away: 0 },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { name: "Mallorca" },
+          player: { name: "M. Morlanes" },
+          time: { elapsed: 42 },
+          comments: "API added comment later",
+        },
+      ],
+    });
+    const c = apply(b.state, goalV2);
+    expect(c.triggers).toHaveLength(0);
+  });
+
   it("fires multiple GOAL triggers when multiple new goal events appear in one poll", () => {
     const old = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 10 } } });
     const a = apply(null, old);
@@ -100,6 +138,42 @@ describe("diff-engine", () => {
     });
     const b = apply(a.state, now);
     expect(b.triggers.map((t) => t.type)).toEqual(["VAR_CANCELLED"]);
+  });
+
+  it("does not fire RED_CARD twice when the provider only adds comments to the same card event", () => {
+    const was = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 50 } } });
+    const a = apply(null, was);
+
+    const cardV1 = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 55 } },
+      events: [
+        {
+          type: "Card",
+          detail: "Red Card",
+          team: { name: "River" },
+          player: { name: "Jugador X" },
+          time: { elapsed: 55 },
+        },
+      ],
+    });
+    const b = apply(a.state, cardV1);
+    expect(b.triggers.map((t) => t.type)).toEqual(["RED_CARD"]);
+
+    const cardV2 = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 55 } },
+      events: [
+        {
+          type: "Card",
+          detail: "Red Card",
+          team: { name: "River" },
+          player: { name: "Jugador X" },
+          time: { elapsed: 55 },
+          comments: "VAR check",
+        },
+      ],
+    });
+    const c = apply(b.state, cardV2);
+    expect(c.triggers).toHaveLength(0);
   });
 
   it("fires RED_CARD when red card count increases", () => {

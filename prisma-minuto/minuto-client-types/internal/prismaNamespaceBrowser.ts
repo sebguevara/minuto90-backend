@@ -59,6 +59,7 @@ export const ModelName = {
   EvolutionInstance: 'EvolutionInstance',
   NewsCategory: 'NewsCategory',
   News: 'News',
+  NewsTag: 'NewsTag',
   Post: 'Post'
 } as const
 
@@ -211,6 +212,17 @@ export const NewsScalarFieldEnum = {
 } as const
 
 export type NewsScalarFieldEnum = (typeof NewsScalarFieldEnum)[keyof typeof NewsScalarFieldEnum]
+
+
+export const NewsTagScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NewsTagScalarFieldEnum = (typeof NewsTagScalarFieldEnum)[keyof typeof NewsTagScalarFieldEnum]
 
 
 export const PostScalarFieldEnum = {

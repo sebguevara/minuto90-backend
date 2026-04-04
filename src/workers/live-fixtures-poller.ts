@@ -11,20 +11,22 @@ import { templates } from "../features/notifications/application/templates";
 import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
 import { getSubscriptionBaseline, type SubscriptionBaseline } from "../features/notifications/application/subscription-baseline";
-import { updateLiveFixturesCache, invalidateStandingsCache } from "./live-cache-updater";
+import { updateLiveFixturesCache, patchStandingsWithResult } from "./live-cache-updater";
 import {
   canReceiveWhatsappNotifications,
   isLiveTriggerEnabled,
 } from "../features/notifications/application/subscriber-preferences";
 import { footballApiClient } from "../features/sports/infrastructure/football-api.client";
 
-const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 15000);
+/** Por defecto 5s: notificaciones en vivo (p. ej. final) dependen del siguiente poll. Subir vía env si hay límite de API. */
+const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 5000);
 const REDIS_TTL_SECONDS = 60 * 60 * 4;
 const LIVE_SET_KEY = "live_fixtures:last";
 const EVENT_LEDGER_PREFIX = "match_event:";
 const MISSING_PREFIX = "match_missing:";
-const MISSING_POLLS_BEFORE_FULL_TIME = Number(process.env.LIVE_FULL_TIME_MISSING_POLLS ?? 6);
-const MESSAGE_DEDUP_TTL_SECONDS = Number(process.env.LIVE_MESSAGE_DEDUP_TTL_SECONDS ?? 600);
+/** Encuestas seguidas sin el fixture en la lista live antes de asumir final (fallback si no hubo transición FT en diff). */
+const MISSING_POLLS_BEFORE_FULL_TIME = Number(process.env.LIVE_FULL_TIME_MISSING_POLLS ?? 3);
+const MESSAGE_DEDUP_TTL_SECONDS = Number(process.env.LIVE_MESSAGE_DEDUP_TTL_SECONDS ?? 1800);
 const DISAPPEARANCE_FALLBACK_MAX_AGE_MS = Number(process.env.LIVE_DISAPPEARANCE_FALLBACK_MAX_AGE_MS ?? 20 * 60 * 1000);
 const terminalStatuses = new Set(["FT", "AET", "PEN"]);
 const breakStatuses = new Set(["HT", "BT", "INT"]);
@@ -53,17 +55,23 @@ function isLikelyHalftime(statusShort: string, elapsed: number | null) {
 
 function missingPollThresholdFor(oldStatus: string, elapsed: number | null) {
   if (isLikelyHalftime(oldStatus, elapsed)) return Math.max(6, MISSING_POLLS_BEFORE_FULL_TIME);
-  if (oldStatus === "2H" && typeof elapsed === "number" && elapsed >= 75) return 2;
+  // Cerca del final: el proveedor suele sacar el partido del listado live antes de que veamos FT en diff.
+  if (oldStatus === "2H" && typeof elapsed === "number" && elapsed >= 70) return 2;
   return Math.max(2, MISSING_POLLS_BEFORE_FULL_TIME);
 }
 
-function messageKey(subscriberId: string, fixtureId: number, messageHash: string) {
-  return `match_msg:${subscriberId}:${fixtureId}:${messageHash}`;
+function messageKey(subscriberId: string, fixtureId: number, triggerType: string, messageHash: string) {
+  return `match_msg:${subscriberId}:${fixtureId}:${triggerType}:${messageHash}`;
 }
 
-async function shouldEmitMessage(subscriberId: string, fixtureId: number, message: string): Promise<boolean> {
+async function shouldEmitMessage(
+  subscriberId: string,
+  fixtureId: number,
+  triggerType: string,
+  message: string
+): Promise<boolean> {
   const messageHash = createHash("sha1").update(message).digest("hex");
-  const key = messageKey(subscriberId, fixtureId, messageHash);
+  const key = messageKey(subscriberId, fixtureId, triggerType, messageHash);
   const res = await redisConnection.set(key, "1", "EX", MESSAGE_DEDUP_TTL_SECONDS, "NX");
   return res === "OK";
 }
@@ -191,7 +199,7 @@ async function dispatchTriggers(input: {
       if (isBaselineTriggerAlreadyCovered(baseline, trigger, input.newState)) continue;
       const phone = sub.subscriber.phoneNumber;
       if (!phone) continue;
-      const msgOk = await shouldEmitMessage(sub.subscriberId, input.fixtureId, trigger.message);
+      const msgOk = await shouldEmitMessage(sub.subscriberId, input.fixtureId, trigger.type, trigger.message);
       if (!msgOk) continue;
       jobs.push({
         phone,
@@ -242,8 +250,25 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
     const hasFullTime = triggers.some((t) => t.type === "FULL_TIME");
     if (hasFullTime) {
       const leagueId = fixture.league?.id;
-      if (typeof leagueId === "number") {
-        invalidateStandingsCache(leagueId, CURRENT_SEASON).catch(() => {});
+      const homeTeamId = fixture.teams?.home?.id;
+      const awayTeamId = fixture.teams?.away?.id;
+      const homeGoals = fixture.goals?.home ?? 0;
+      const awayGoals = fixture.goals?.away ?? 0;
+      const season = fixture.league?.season ?? CURRENT_SEASON;
+
+      if (
+        typeof leagueId === "number" &&
+        typeof homeTeamId === "number" &&
+        typeof awayTeamId === "number"
+      ) {
+        patchStandingsWithResult({
+          leagueId,
+          season,
+          homeTeamId,
+          awayTeamId,
+          homeGoals,
+          awayGoals,
+        }).catch(() => {});
       }
     }
   }
@@ -344,31 +369,47 @@ async function handleDisappearances(currentIds: number[]) {
       if (!subs.length) continue;
 
       const message = templates.fullTime({ homeTeam, awayTeam, leagueName, scoreHome, scoreAway, matchUrl });
-      const jobs = subs
-        .filter(
-          (s) =>
-            canReceiveWhatsappNotifications(s.subscriber) &&
-            isLiveTriggerEnabled(s.subscriber, "FULL_TIME")
-        )
-        .flatMap((sub) => {
-          const phone = sub.subscriber.phoneNumber;
-          if (!phone) return [];
-
-          return [{
-            phone,
-            message,
-            fixtureId,
-            triggerType: "FULL_TIME",
-            subscriberId: sub.subscriberId,
-            eventKey: "disappeared",
-          }];
+      const jobs: Parameters<typeof enqueueWhatsappNotificationsBulk>[0] = [];
+      for (const sub of subs) {
+        if (
+          !canReceiveWhatsappNotifications(sub.subscriber) ||
+          !isLiveTriggerEnabled(sub.subscriber, "FULL_TIME")
+        ) {
+          continue;
+        }
+        const phone = sub.subscriber.phoneNumber;
+        if (!phone) continue;
+        const msgOk = await shouldEmitMessage(sub.subscriberId, fixtureId, "FULL_TIME", message);
+        if (!msgOk) continue;
+        jobs.push({
+          phone,
+          message,
+          fixtureId,
+          triggerType: "FULL_TIME",
+          subscriberId: sub.subscriberId,
+          eventKey: "disappeared",
         });
+      }
 
       await enqueueWhatsappNotificationsBulk(jobs);
 
       const leagueId = fixture.league?.id;
-      if (typeof leagueId === "number") {
-        invalidateStandingsCache(leagueId, CURRENT_SEASON).catch(() => {});
+      const homeTeamId = fixture.teams?.home?.id;
+      const awayTeamId = fixture.teams?.away?.id;
+      const season = fixture.league?.season ?? CURRENT_SEASON;
+      if (
+        typeof leagueId === "number" &&
+        typeof homeTeamId === "number" &&
+        typeof awayTeamId === "number"
+      ) {
+        patchStandingsWithResult({
+          leagueId,
+          season,
+          homeTeamId,
+          awayTeamId,
+          homeGoals: scoreHome,
+          awayGoals: scoreAway,
+        }).catch(() => {});
       }
 
       logInfo("live.disappeared.full_time.enqueued", {

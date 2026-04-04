@@ -1,4 +1,5 @@
 import { Worker } from "bullmq";
+import { createHash } from "crypto";
 import { redisConnection } from "../shared/redis/redis.connection";
 import {
   evolutionApiClient,
@@ -8,7 +9,38 @@ import {
 import { selectEvolutionInstance } from "../features/notifications/infrastructure/evolution-instance.selector";
 import type { WhatsappNotificationJob } from "../features/notifications/whatsapp/notification.queue";
 import { logError, logInfo } from "../shared/logging/logger";
-import { createHash } from "crypto";
+
+const WHATSAPP_SEND_DEDUPE_TTL_SECONDS = Number(
+  process.env.WHATSAPP_SEND_DEDUPE_TTL_SECONDS ?? 180
+);
+
+function normalizePhoneForDedupe(phone: string) {
+  return String(phone ?? "").replace(/\D/g, "");
+}
+
+function whatsappSendDedupeKey(phone: string, fixtureId: number, triggerType: string, message: string) {
+  const norm = normalizePhoneForDedupe(phone);
+  const h = createHash("sha1")
+    .update(`${norm}|${fixtureId}|${triggerType}|${message}`)
+    .digest("hex");
+  return `wa:send:dedupe:${h}`;
+}
+
+async function tryClaimWhatsappSend(
+  phone: string,
+  fixtureId: number,
+  triggerType: string,
+  message: string
+): Promise<boolean> {
+  const key = whatsappSendDedupeKey(phone, fixtureId, triggerType, message);
+  const res = await redisConnection.set(key, "1", "EX", WHATSAPP_SEND_DEDUPE_TTL_SECONDS, "NX");
+  return res === "OK";
+}
+
+async function releaseWhatsappSendClaim(phone: string, fixtureId: number, triggerType: string, message: string) {
+  const key = whatsappSendDedupeKey(phone, fixtureId, triggerType, message);
+  await redisConnection.del(key);
+}
 
 let instancesCache: EvolutionInstanceConfig[] = [];
 let instancesCacheAtMs = 0;
@@ -40,9 +72,27 @@ const worker = new Worker<WhatsappNotificationJob>(
       });
     }
 
+    const claimed = await tryClaimWhatsappSend(phone, fixtureId, triggerType, message);
+    if (!claimed) {
+      if (process.env.NOTIFICATIONS_DEBUG === "true") {
+        logInfo("whatsapp.send.skipped_duplicate", {
+          jobId: job.id,
+          fixtureId,
+          triggerType,
+          subscriberId,
+        });
+      }
+      return;
+    }
+
     const instances = await getInstancesCached();
     const instance = await selectEvolutionInstance(instances);
-    await evolutionApiClient.sendText({ number: phone, text: message, instance });
+    try {
+      await evolutionApiClient.sendText({ number: phone, text: message, instance });
+    } catch (sendErr) {
+      await releaseWhatsappSendClaim(phone, fixtureId, triggerType, message);
+      throw sendErr;
+    }
 
     if (process.env.NOTIFICATIONS_DEBUG === "true") {
       logInfo("whatsapp.send.ok", {
