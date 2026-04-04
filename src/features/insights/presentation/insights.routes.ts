@@ -78,7 +78,11 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
     async ({ query, set }) => {
       try {
         const limit = Math.min(30, Math.max(1, Number(query.limit) || 10));
-        const featured = await insightsService.getFeaturedMatches(query.date, limit);
+        const featured = await insightsService.getFeaturedMatches(
+          query.date,
+          limit,
+          query.userCountry ?? null
+        );
         return { success: true, data: featured };
       } catch (error: any) {
         set.status = 500;
@@ -89,6 +93,7 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
       query: t.Object({
         date: t.String({ description: "Date in YYYY-MM-DD format", examples: ["2025-03-26"] }),
         limit: t.Optional(t.String({ description: "Max results (default 10, max 30)" })),
+        userCountry: t.Optional(t.String({ description: "User country for localized ranking" })),
       }),
       detail: {
         tags: ["Insights"],

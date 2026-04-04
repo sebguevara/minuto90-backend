@@ -17,6 +17,8 @@ type MatchState = "live" | "upcoming_near" | "upcoming_far" | "finished_recent" 
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+const HOUR_SECONDS = 60 * 60;
+const DAY_SECONDS = 24 * HOUR_SECONDS;
 
 function normalizeDate(input: string | number | Date | null | undefined): Date | null {
   if (!input) return null;
@@ -89,9 +91,38 @@ export function getDailyInsightsTtlSeconds(date: string, now: Date = new Date())
   return date === today ? 60 * 30 : 60 * 60 * 24 * 7;
 }
 
-export function getFeaturedMatchesTtlSeconds(date: string, now: Date = new Date()) {
-  const today = now.toISOString().slice(0, 10);
-  // Today: refresh every 30 min (odds/lineups change). Past: cache 7 days.
-  return date === today ? 60 * 30 : 60 * 60 * 24 * 7;
+function toUtcDateKey(date: Date) {
+  return date.toISOString().slice(0, 10);
 }
 
+function toUtcMidnightMs(dateKey: string) {
+  return Date.parse(`${dateKey}T00:00:00.000Z`);
+}
+
+function getDateOffsetDays(date: string, now = new Date()) {
+  const normalizedDate = date.trim();
+  const targetMs = toUtcMidnightMs(normalizedDate);
+  const todayMs = toUtcMidnightMs(toUtcDateKey(now));
+  if (!Number.isFinite(targetMs) || !Number.isFinite(todayMs)) {
+    return 0;
+  }
+  return Math.round((targetMs - todayMs) / (ONE_DAY_MS));
+}
+
+export function getFeaturedMatchesTtlSeconds(date: string, now: Date = new Date()) {
+  const offsetDays = getDateOffsetDays(date, now);
+
+  if (offsetDays <= 0) {
+    return 90 * 60;
+  }
+
+  if (offsetDays <= 3) {
+    return 6 * HOUR_SECONDS;
+  }
+
+  if (offsetDays <= 10) {
+    return 12 * HOUR_SECONDS;
+  }
+
+  return 7 * DAY_SECONDS;
+}

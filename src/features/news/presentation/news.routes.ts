@@ -3,6 +3,7 @@ import { newsService } from "../application/news.service";
 import { pushService } from "../../push/application/push.service";
 import { requireAdmin } from "../../../shared/middleware/admin-guard";
 import { logError } from "../../../shared/logging/logger";
+import { openai } from "../../insights/infrastructure/openai.client";
 
 export const newsRoutes = new Elysia({ prefix: "/api/news" })
   // Admin overview
@@ -261,6 +262,42 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
     {
       params: t.Object({ id: t.String() }),
       detail: { tags: ["News"], summary: "Soft delete a news article (admin only)" },
+    }
+  )
+
+  // AI summary generation (admin only)
+  .post(
+    "/ai-summary",
+    async ({ body, request, set }) => {
+      try {
+        const clerkId = request.headers.get("x-clerk-user-id");
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
+        const completion = await openai.responses.create({
+          model: "gpt-5-mini",
+          instructions:
+            "Sos un editor de contenido deportivo. Dado un título y cuerpo de una noticia, generá un resumen conciso en español de máximo 280 caracteres que capture lo más importante. Respondé únicamente con el texto del resumen, sin comillas ni explicaciones.",
+          input: `Título: ${body.title}\n\nCuerpo: ${body.body}`,
+        });
+
+        const summary = completion.output_text?.trim() ?? "";
+        return { data: summary };
+      } catch (err: any) {
+        logError("news.aiSummary.failed", { err: err?.message ?? String(err) });
+        set.status = 500;
+        return { error: "No se pudo generar el resumen" };
+      }
+    },
+    {
+      body: t.Object({
+        title: t.String({ minLength: 1 }),
+        body: t.String({ minLength: 1 }),
+      }),
+      detail: { tags: ["News"], summary: "Generate AI summary for a news article (admin only)" },
     }
   )
 

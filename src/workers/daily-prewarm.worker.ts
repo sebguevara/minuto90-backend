@@ -339,7 +339,7 @@ async function prewarmFootballStandings(): Promise<void> {
 
 async function prewarmFootballInsights(): Promise<void> {
   logInfo('prewarm.football.insights.start', {});
-  const dates = getDatesRange(1, 1);
+  const dates = getDatesRange(1, 10);
 
   try {
     for (const date of dates) {
@@ -359,6 +359,15 @@ async function prewarmFootballInsights(): Promise<void> {
             error: err instanceof Error ? err.message : String(err),
           });
         }
+      }
+
+      try {
+        await insightsService.getFeaturedMatches(date, 8);
+      } catch (err) {
+        logWarn('prewarm.football.insights.featured_failed', {
+          date,
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
 

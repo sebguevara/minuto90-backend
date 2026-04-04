@@ -19,6 +19,13 @@ import {
   getMatchSummaryTtlSeconds,
   resolveMatchState,
 } from "../infrastructure/insights-cache-ttl.policy";
+import {
+  getFeaturedCompetitionGroup,
+  getFeaturedCompetitionType,
+  getFeaturedLeaguePriority,
+  isFeaturedCompetitionId,
+  type FeaturedCompetitionGroup,
+} from "../infrastructure/featured-competition-priority";
 import { redisInsightsCacheStore } from "../infrastructure/insights-cache.store";
 
 const COMPLETED_MATCH_STATUS = new Set(["FT", "AET", "PEN"]);
@@ -1004,18 +1011,22 @@ Formato:
   /**
    * Returns featured/highlighted matches for a given date, scored automatically.
    */
-  async getFeaturedMatches(date: string, limit = 10): Promise<FeaturedMatch[]> {
+  async getFeaturedMatches(
+    date: string,
+    limit = 10,
+    userCountry?: string | null
+  ): Promise<FeaturedMatch[]> {
     const ttlSeconds = getFeaturedMatchesTtlSeconds(date);
-    const cacheKey = buildFeaturedMatchesCacheKey(date);
+    const cacheKey = buildFeaturedMatchesCacheKey(date, userCountry);
 
     const result = await this.getOrComputeCachedValue<FeaturedMatch[]>({
       cacheKey,
       ttlSeconds,
-      compute: () => this.computeFeaturedMatches(date, limit),
+      compute: () => this.computeFeaturedMatches(date, limit, userCountry),
     });
 
     if (result.cacheHit) {
-      logInfo("insights.featured.cache_hit", { date, cacheKey, ttlSeconds });
+      logInfo("insights.featured.cache_hit", { date, userCountry, cacheKey, ttlSeconds });
     }
 
     return result.value;
@@ -1023,10 +1034,13 @@ Formato:
 
   private async computeFeaturedMatches(
     date: string,
-    limit: number
+    limit: number,
+    userCountry?: string | null
   ): Promise<FeaturedMatch[]> {
     const fixturesRes = await footballService.getFixtures({ date });
-    const fixtures = fixturesRes.response ?? [];
+    const fixtures = (fixturesRes.response ?? []).filter((fixture) =>
+      isFeaturedCompetitionId(fixture.league.id)
+    );
 
     if (fixtures.length === 0) return [];
 
@@ -1060,12 +1074,21 @@ Formato:
     // Score each fixture
     const scored = fixtures.map((f) => {
       const leagueTier = getLeagueTier(f.league.id);
+      const competitionGroup = getFeaturedCompetitionGroup({
+        leagueId: f.league.id,
+        leagueCountry: f.league.country,
+        userCountry,
+      });
+      const leaguePriority = getFeaturedLeaguePriority(f.league.id);
+      const competitionType = getFeaturedCompetitionType(f.league.id);
       const standings = standingsMap.get(f.league.id) ?? [];
       const homeRank = standings.find((s) => s.team?.id === f.teams.home.id)?.rank ?? null;
       const awayRank = standings.find((s) => s.team?.id === f.teams.away.id)?.rank ?? null;
       const round = f.league.round ?? "";
 
       const score = computeMatchRelevanceScore({
+        competitionGroup,
+        leaguePriority,
         leagueTier,
         homeRank,
         awayRank,
@@ -1102,12 +1125,84 @@ Formato:
         },
         relevanceScore: score,
         tier: leagueTier,
-      } satisfies FeaturedMatch;
+        _meta: {
+          competitionGroup,
+          competitionType,
+          leaguePriority,
+          countryKey: (f.league.country ?? "unknown").trim().toLowerCase(),
+        },
+      };
     });
 
-    return scored
-      .sort((a, b) => b.relevanceScore - a.relevanceScore)
-      .slice(0, limit);
+    const sorted = scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    const allowedUserCountryLeagueIds = new Set<number>();
+
+    if (userCountry) {
+      const userCountryCandidates = sorted.filter(
+        (item) =>
+          item._meta.competitionGroup === "user_country" &&
+          item._meta.competitionType !== null &&
+          item._meta.leaguePriority !== null
+      );
+
+      const bestLeague = userCountryCandidates
+        .filter((item) => item._meta.competitionType === "League")
+        .sort(
+          (a, b) =>
+            (a._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER) -
+              (b._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER) ||
+            b.relevanceScore - a.relevanceScore
+        )[0];
+
+      const bestCup = userCountryCandidates
+        .filter((item) => item._meta.competitionType === "Cup")
+        .sort(
+          (a, b) =>
+            (a._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER) -
+              (b._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER) ||
+            b.relevanceScore - a.relevanceScore
+        )[0];
+
+      if (bestLeague) allowedUserCountryLeagueIds.add(bestLeague.league.id);
+      if (bestCup) allowedUserCountryLeagueIds.add(bestCup.league.id);
+    }
+
+    const perCountryCount = new Map<string, number>();
+    const selected: FeaturedMatch[] = [];
+
+    for (const item of sorted) {
+      if (
+        item._meta.competitionGroup === "user_country" &&
+        allowedUserCountryLeagueIds.size > 0 &&
+        !allowedUserCountryLeagueIds.has(item.league.id)
+      ) {
+        continue;
+      }
+
+      const count = perCountryCount.get(item._meta.countryKey) ?? 0;
+      if (count >= 2) {
+        continue;
+      }
+
+      perCountryCount.set(item._meta.countryKey, count + 1);
+      selected.push({
+        fixtureId: item.fixtureId,
+        date: item.date,
+        status: item.status,
+        league: item.league,
+        homeTeam: item.homeTeam,
+        awayTeam: item.awayTeam,
+        score: item.score,
+        relevanceScore: item.relevanceScore,
+        tier: item.tier,
+      });
+
+      if (selected.length >= limit) {
+        break;
+      }
+    }
+
+    return selected;
   }
 }
 
@@ -1217,6 +1312,8 @@ function getLeagueTier(leagueId: number): number {
 // ─── Scoring ─────────────────────────────────────────────────────────────────
 
 function computeMatchRelevanceScore(input: {
+  competitionGroup: FeaturedCompetitionGroup;
+  leaguePriority: number | null;
   leagueTier: number;
   homeRank: number | null;
   awayRank: number | null;
@@ -1224,7 +1321,30 @@ function computeMatchRelevanceScore(input: {
   totalTeams: number;
 }): number {
   let score = 0;
-  const { leagueTier, homeRank, awayRank, round, totalTeams } = input;
+  const { competitionGroup, leaguePriority, leagueTier, homeRank, awayRank, round, totalTeams } =
+    input;
+
+  switch (competitionGroup) {
+    case "user_country":
+      score += 400;
+      break;
+    case "international":
+      score += 260;
+      break;
+    case "europe":
+      score += 180;
+      break;
+    case "latin_america":
+      score += 120;
+      break;
+    default:
+      score += 20;
+      break;
+  }
+
+  if (leaguePriority !== null) {
+    score += Math.max(0, 32 - Math.min(leaguePriority, 120) / 4);
+  }
 
   // 1. League tier (max 40)
   switch (leagueTier) {
@@ -1282,4 +1402,3 @@ function computeMatchRelevanceScore(input: {
 
   return score;
 }
-
