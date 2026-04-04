@@ -44,6 +44,7 @@ import {
   createEmptyFootballLiveSnapshot,
   getFootballLiveSnapshot,
 } from "../infrastructure/football-live.snapshot";
+import { getFixtureEventsMap } from "../../../workers/live-cache-updater";
 import { DEFAULT_ODDS_BET, DEFAULT_ODDS_BOOKMAKER } from "../infrastructure/football-odds-cache";
 import {
   getCachedOddsResponse as getCachedPrematchOddsResponse,
@@ -751,10 +752,41 @@ export function createFootballRoutes(service: FootballServiceContract = football
 
           const baseFixture = mergedMap.get(fixtureId);
         if (!baseFixture) continue;
-        if (!shouldApplyLiveOverlay(baseFixture, liveFixture)) continue;
 
-        mergedMap.set(fixtureId, mergeLiveIntoFixture(baseFixture, liveFixture));
+        if (shouldApplyLiveOverlay(baseFixture, liveFixture)) {
+          mergedMap.set(fixtureId, mergeLiveIntoFixture(baseFixture, liveFixture));
+        } else if (
+          Array.isArray(liveFixture.events) &&
+          liveFixture.events.length > 0 &&
+          (!Array.isArray(baseFixture.events) || baseFixture.events.length === 0)
+        ) {
+          // Match is no longer live in base data but snapshot still has events
+          // (brief window between FT and snapshot expiry) — apply events only.
+          mergedMap.set(fixtureId, { ...baseFixture, events: liveFixture.events });
+        }
       }
+
+        // For finished fixtures that have no events in the base data, hydrate from
+        // the per-fixture events cache written by the live poller (6h TTL).
+        const TERMINAL_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
+        const fixturesNeedingEvents = Array.from(mergedMap.values()).filter((f) => {
+          const status = f?.fixture?.status?.short;
+          return (
+            TERMINAL_STATUSES.has(status) &&
+            (!Array.isArray(f.events) || f.events.length === 0)
+          );
+        });
+
+        if (fixturesNeedingEvents.length > 0) {
+          const ids = fixturesNeedingEvents
+            .map((f) => f?.fixture?.id)
+            .filter((id): id is number => typeof id === "number");
+          const eventsMap = await getFixtureEventsMap(ids);
+          for (const [fixtureId, events] of eventsMap) {
+            const base = mergedMap.get(fixtureId);
+            if (base) mergedMap.set(fixtureId, { ...base, events });
+          }
+        }
 
         const mergedResponse = Array.from(mergedMap.values()).sort((left, right) => {
           const leftTs = Number(left?.fixture?.timestamp ?? 0);

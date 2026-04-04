@@ -11,7 +11,7 @@ import { templates } from "../features/notifications/application/templates";
 import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
 import { getSubscriptionBaseline, type SubscriptionBaseline } from "../features/notifications/application/subscription-baseline";
-import { updateLiveFixturesCache, patchStandingsWithResult } from "./live-cache-updater";
+import { updateLiveFixturesCache, patchStandingsWithResult, saveFixtureEvents } from "./live-cache-updater";
 import {
   canReceiveWhatsappNotifications,
   isLiveTriggerEnabled,
@@ -60,18 +60,19 @@ function missingPollThresholdFor(oldStatus: string, elapsed: number | null) {
   return Math.max(2, MISSING_POLLS_BEFORE_FULL_TIME);
 }
 
-function messageKey(subscriberId: string, fixtureId: number, triggerType: string, messageHash: string) {
-  return `match_msg:${subscriberId}:${fixtureId}:${triggerType}:${messageHash}`;
+function messageKey(subscriberId: string, fixtureId: number, triggerType: string, dedupeHash: string) {
+  return `match_msg:${subscriberId}:${fixtureId}:${triggerType}:${dedupeHash}`;
 }
 
+/** Dedup por `eventKey` del diff (no por texto): mismo gol con minuto corregido no reenvía. */
 async function shouldEmitMessage(
   subscriberId: string,
   fixtureId: number,
   triggerType: string,
-  message: string
+  dedupeId: string
 ): Promise<boolean> {
-  const messageHash = createHash("sha1").update(message).digest("hex");
-  const key = messageKey(subscriberId, fixtureId, triggerType, messageHash);
+  const dedupeHash = createHash("sha1").update(dedupeId).digest("hex");
+  const key = messageKey(subscriberId, fixtureId, triggerType, dedupeHash);
   const res = await redisConnection.set(key, "1", "EX", MESSAGE_DEDUP_TTL_SECONDS, "NX");
   return res === "OK";
 }
@@ -199,7 +200,7 @@ async function dispatchTriggers(input: {
       if (isBaselineTriggerAlreadyCovered(baseline, trigger, input.newState)) continue;
       const phone = sub.subscriber.phoneNumber;
       if (!phone) continue;
-      const msgOk = await shouldEmitMessage(sub.subscriberId, input.fixtureId, trigger.type, trigger.message);
+      const msgOk = await shouldEmitMessage(sub.subscriberId, input.fixtureId, trigger.type, trigger.eventKey);
       if (!msgOk) continue;
       jobs.push({
         phone,
@@ -272,6 +273,12 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
         }).catch(() => {});
       }
     }
+  }
+
+  // Persist events so they survive beyond the short live-snapshot TTL and remain
+  // available for finished matches in the home feed (red cards, goals, etc.).
+  if (Array.isArray(fixture.events) && fixture.events.length > 0) {
+    saveFixtureEvents(fixtureId, fixture.events).catch(() => {});
   }
 
   // Always persist state so updatedAtMs stays fresh (≤ POLL_INTERVAL_MS old).
@@ -380,7 +387,7 @@ async function handleDisappearances(currentIds: number[]) {
         }
         const phone = sub.subscriber.phoneNumber;
         if (!phone) continue;
-        const msgOk = await shouldEmitMessage(sub.subscriberId, fixtureId, "FULL_TIME", message);
+        const msgOk = await shouldEmitMessage(sub.subscriberId, fixtureId, "FULL_TIME", "disappeared");
         if (!msgOk) continue;
         jobs.push({
           phone,

@@ -35,6 +35,7 @@ export type StoredMatchState = {
 
 const terminalStatuses = new Set(["FT", "AET", "PEN"]);
 const breakStatuses = new Set(["HT", "BT", "INT"]);
+const ignoredGoalDetails = new Set(["Missed Penalty"]);
 
 function asScore(value: number | null | undefined): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
@@ -102,6 +103,73 @@ function countRedCards(events: ApiFootballFixtureEvent[] | undefined): number {
 function minuteFromEvent(e: ApiFootballFixtureEvent | null): number | string {
   const m = e?.time?.elapsed;
   return typeof m === "number" && Number.isFinite(m) ? m : "?";
+}
+
+/** Firma estable del gol (sin minuto/extra): API-Football a veces corrige 35′→36′ y cambiaba la clave → doble WhatsApp. */
+function goalSignature(e: ApiFootballFixtureEvent): string {
+  const team = e?.team?.id ?? e?.team?.name ?? "";
+  const player = e?.player?.id ?? e?.player?.name ?? "";
+  const detail = e?.detail ?? "";
+  return `${detail}|${team}|${player}`;
+}
+
+function countSignatureGoals(events: ApiFootballFixtureEvent[] | undefined, sig: string): number {
+  if (!events?.length) return 0;
+  let n = 0;
+  for (const e of events) {
+    if (isNotifiableGoalEvent(e) && goalSignature(e) === sig) n++;
+  }
+  return n;
+}
+
+function isNotifiableGoalEvent(event: ApiFootballFixtureEvent | null | undefined) {
+  if (!event || event.type !== "Goal") return false;
+  const detail = event.detail ?? "";
+  return !ignoredGoalDetails.has(detail);
+}
+
+/** Goles nuevos en `newEvents` respetando orden (misma firma: enésima ocurrencia > la que había en old). */
+function collectNewGoalEvents(
+  oldEvents: ApiFootballFixtureEvent[] | undefined,
+  newEvents: ApiFootballFixtureEvent[]
+): ApiFootballFixtureEvent[] {
+  const ordered: ApiFootballFixtureEvent[] = [];
+  const nthBySig = new Map<string, number>();
+  for (const e of newEvents) {
+    if (!isNotifiableGoalEvent(e)) continue;
+    const sig = goalSignature(e);
+    const prevCount = countSignatureGoals(oldEvents, sig);
+    const nth = (nthBySig.get(sig) ?? 0) + 1;
+    nthBySig.set(sig, nth);
+    if (nth > prevCount) ordered.push(e);
+  }
+  return ordered;
+}
+
+function bumpScoreForGoal(
+  e: ApiFootballFixtureEvent,
+  fixture: ApiFootballLiveFixture,
+  rh: number,
+  ra: number
+): [number, number] {
+  const tid = e.team?.id;
+  const homeId = fixture.teams?.home?.id;
+  const awayId = fixture.teams?.away?.id;
+  if (typeof tid === "number" && typeof homeId === "number" && tid === homeId) return [rh + 1, ra];
+  if (typeof tid === "number" && typeof awayId === "number" && tid === awayId) return [rh, ra + 1];
+
+  const homeTeam = fixture.teams?.home?.name ?? "";
+  const awayTeam = fixture.teams?.away?.name ?? "";
+  const t = (e.team?.name ?? "").trim().toLowerCase();
+  const h = homeTeam.trim().toLowerCase();
+  const a = awayTeam.trim().toLowerCase();
+  if (t && h && t === h) return [rh + 1, ra];
+  if (t && a && t === a) return [rh, ra + 1];
+  return [rh, ra + 1];
+}
+
+function goalTransitionEventKey(rh: number, ra: number, nh: number, na: number) {
+  return `transition:${rh}-${ra}-${nh}-${na}`;
 }
 
 function scorerFromEvent(e: ApiFootballFixtureEvent | null): string | null {
@@ -191,63 +259,64 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     });
   }
 
-  // GOAL (multi-event): generate one trigger per NEW goal event not seen before
+  // GOAL: dedup estable (firma sin minuto) + misma clave ledger que fallback (transición de marcador).
   if (!isColdStart) {
-    for (const e of newEvents) {
-      if (e?.type !== "Goal") continue;
+    const oldFeed = oldState?.fixture?.events;
+    const newGoalsOrdered = collectNewGoalEvents(oldFeed, newEvents);
+    let rh = oldScoreHome;
+    let ra = oldScoreAway;
+
+    for (const e of newGoalsOrdered) {
       const playerName = scorerFromEvent(e);
       if (!playerName) continue;
-      const k = buildEventKey(e);
-      if (isEventAlreadyKnown(oldEventKeySet, e)) continue;
+      const [nh, na] = bumpScoreForGoal(e, newFixture, rh, ra);
       triggers.push({
         fixtureId,
         type: "GOAL",
-        eventKey: `event:${k}`,
+        eventKey: goalTransitionEventKey(rh, ra, nh, na),
         message: templates.goal({
           homeTeam,
           awayTeam,
           leagueName,
           matchUrl,
-          scoreHome: newScoreHome,
-          scoreAway: newScoreAway,
+          scoreHome: nh,
+          scoreAway: na,
           teamName: teamFromEvent(e, newFixture),
           playerName,
           assistName: assistFromEvent(e),
           minute: minuteFromEvent(e),
         }),
       });
+      rh = nh;
+      ra = na;
     }
-  }
 
-  // Fallback for GOAL when score increases but events are missing/incomplete
-  if (
-    !isColdStart &&
-    (newScoreHome > oldScoreHome || newScoreAway > oldScoreAway) &&
-    !triggers.some((t) => t.type === "GOAL")
-  ) {
-    const goalEvent = lastEvent(newFixture.events, (e) => e?.type === "Goal");
-    const playerName = scorerFromEvent(goalEvent);
-    if (!playerName) {
-      // Don't send incomplete goal notifications; wait until provider includes scorer.
-      // If provider never includes events, we prefer to skip rather than send wrong/duplicate messages.
-    } else {
-    triggers.push({
-      fixtureId,
-      type: "GOAL",
-      eventKey: `score:${oldScoreHome}-${oldScoreAway}->${newScoreHome}-${newScoreAway}`,
-      message: templates.goal({
-        homeTeam,
-        awayTeam,
-        leagueName,
-        matchUrl,
-        scoreHome: newScoreHome,
-        scoreAway: newScoreAway,
-        teamName: teamFromEvent(goalEvent, newFixture),
-        playerName,
-        assistName: assistFromEvent(goalEvent),
-        minute: minuteFromEvent(goalEvent),
-      }),
-    });
+    // Fallback: sube el marcador pero no hay fila de gol “nueva” (API sin events o scorer tarde).
+    if (
+      (newScoreHome > oldScoreHome || newScoreAway > oldScoreAway) &&
+      !triggers.some((t) => t.type === "GOAL")
+    ) {
+      const goalEvent = lastEvent(newFixture.events, (ev) => isNotifiableGoalEvent(ev));
+      const playerName = scorerFromEvent(goalEvent);
+      if (playerName) {
+        triggers.push({
+          fixtureId,
+          type: "GOAL",
+          eventKey: goalTransitionEventKey(oldScoreHome, oldScoreAway, newScoreHome, newScoreAway),
+          message: templates.goal({
+            homeTeam,
+            awayTeam,
+            leagueName,
+            matchUrl,
+            scoreHome: newScoreHome,
+            scoreAway: newScoreAway,
+            teamName: teamFromEvent(goalEvent, newFixture),
+            playerName,
+            assistName: assistFromEvent(goalEvent),
+            minute: minuteFromEvent(goalEvent),
+          }),
+        });
+      }
     }
   }
 

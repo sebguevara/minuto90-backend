@@ -44,6 +44,58 @@ describe("diff-engine", () => {
     expect(c.triggers).toHaveLength(0);
   });
 
+  it("uses the score implied by the goal event when provider events arrive before goals snapshot updates", () => {
+    const old = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 39 } } });
+    const a = apply(null, old);
+
+    const goalWithStaleScore = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 40 } },
+      goals: { home: 0, away: 0 },
+      teams: { home: { id: 10, name: "Independiente" }, away: { id: 20, name: "Racing Club" } },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { id: 20, name: "Racing Club" },
+          player: { name: "Adrian Martinez" },
+          assist: { name: "Adrian Martinez" },
+          time: { elapsed: 40 },
+        },
+      ],
+    });
+
+    const b = apply(a.state, goalWithStaleScore);
+    expect(b.triggers.map((t) => t.type)).toEqual(["GOAL"]);
+    expect(b.triggers[0]?.message).toContain("Independiente 0 - 1 Racing Club");
+    expect(b.triggers[0]?.message).not.toContain("Independiente 0 - 0 Racing Club");
+  });
+
+  it("does not send GOAL notification for missed penalties", () => {
+    const old = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 64 } },
+      teams: { home: { id: 10, name: "Independiente" }, away: { id: 20, name: "Racing Club" } },
+    });
+    const a = apply(null, old);
+
+    const missedPenalty = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 65 } },
+      goals: { home: 0, away: 0 },
+      teams: { home: { id: 10, name: "Independiente" }, away: { id: 20, name: "Racing Club" } },
+      events: [
+        {
+          type: "Goal",
+          detail: "Missed Penalty",
+          team: { id: 20, name: "Racing Club" },
+          player: { name: "Adrian Martinez" },
+          time: { elapsed: 65 },
+        },
+      ],
+    });
+
+    const b = apply(a.state, missedPenalty);
+    expect(b.triggers).toHaveLength(0);
+  });
+
   it("waits to fire GOAL until scorer is present (avoids duplicates)", () => {
     const old = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 10 } } });
     const a = apply(null, old);
@@ -66,6 +118,43 @@ describe("diff-engine", () => {
 
     const d = apply(c.state, goalWithPlayer);
     expect(d.triggers).toHaveLength(0);
+  });
+
+  it("does not fire GOAL twice when the provider corrects only the minute of the same goal", () => {
+    const old = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 10 } } });
+    const a = apply(null, old);
+
+    const goal35 = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 36 } },
+      goals: { home: 1, away: 0 },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { name: "Southampton" },
+          player: { name: "R. Stewart" },
+          time: { elapsed: 35 },
+        },
+      ],
+    });
+    const b = apply(a.state, goal35);
+    expect(b.triggers.map((t) => t.type)).toEqual(["GOAL"]);
+
+    const goal36 = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 36 } },
+      goals: { home: 1, away: 0 },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { name: "Southampton" },
+          player: { name: "R. Stewart" },
+          time: { elapsed: 36 },
+        },
+      ],
+    });
+    const c = apply(b.state, goal36);
+    expect(c.triggers).toHaveLength(0);
   });
 
   it("does not fire GOAL twice when the provider only adds comments to the same goal event", () => {

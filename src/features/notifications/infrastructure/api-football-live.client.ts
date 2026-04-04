@@ -43,8 +43,8 @@ export type ApiFootballLiveFixture = {
   };
   league?: { id?: number | null; name?: string | null };
   teams?: {
-    home?: { name?: string | null };
-    away?: { name?: string | null };
+    home?: { id?: number | null; name?: string | null };
+    away?: { id?: number | null; name?: string | null };
   };
   goals?: { home?: number | null; away?: number | null };
   score?: unknown;
