@@ -260,13 +260,30 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
   }
 
   // GOAL: dedup estable (firma sin minuto) + misma clave ledger que fallback (transición de marcador).
+  // Importante: si `oldFeed` vino vacío/incompleto pero el marcador ya era correcto, un poll que
+  // rellena `events` hacía que collectNewGoalEvents devolviera *todos* los goles → se “re-notificaban”
+  // con rh/ra incrementando desde el marcador real (2-1 → 3-1 → 4-1…). Por eso anclamos a
+  // `netGoalDelta` (cambio real de goles en el snapshot) y, si el marcador no sube, solo aceptamos
+  // un único evento nuevo (gol con score stale en API).
   if (!isColdStart) {
+    const netGoalDelta =
+      newScoreHome - oldScoreHome + (newScoreAway - oldScoreAway);
+
     const oldFeed = oldState?.fixture?.events;
-    const newGoalsOrdered = collectNewGoalEvents(oldFeed, newEvents);
+    const collected = collectNewGoalEvents(oldFeed, newEvents);
+
+    let goalsToEmit: ApiFootballFixtureEvent[] = [];
+    if (netGoalDelta > 0) {
+      goalsToEmit =
+        collected.length > netGoalDelta ? collected.slice(-netGoalDelta) : collected;
+    } else if (netGoalDelta === 0 && collected.length === 1) {
+      goalsToEmit = collected;
+    }
+
     let rh = oldScoreHome;
     let ra = oldScoreAway;
 
-    for (const e of newGoalsOrdered) {
+    for (const e of goalsToEmit) {
       const playerName = scorerFromEvent(e);
       if (!playerName) continue;
       const [nh, na] = bumpScoreForGoal(e, newFixture, rh, ra);

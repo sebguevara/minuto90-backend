@@ -195,6 +195,35 @@ describe("diff-engine", () => {
     expect(c.triggers).toHaveLength(0);
   });
 
+  it("does not replay historical goals when events refill but score was already correct (empty old feed)", () => {
+    const sparse = fixtureBase({
+      fixture: { id: 1, status: { short: "2H", elapsed: 48 } },
+      goals: { home: 2, away: 1 },
+      teams: { home: { id: 1, name: "Sao Paulo" }, away: { id: 2, name: "Cruzeiro" } },
+      events: [],
+    });
+    const a = apply(null, sparse);
+    expect(a.triggers.map((t) => t.type)).toEqual([]);
+
+    const fullFeed = fixtureBase({
+      fixture: { id: 1, status: { short: "2H", elapsed: 48 } },
+      goals: { home: 2, away: 1 },
+      teams: { home: { id: 1, name: "Sao Paulo" }, away: { id: 2, name: "Cruzeiro" } },
+      events: [
+        { type: "Goal", team: { id: 1, name: "Sao Paulo" }, player: { name: "A" }, time: { elapsed: 12 } },
+        { type: "Goal", team: { id: 1, name: "Sao Paulo" }, player: { name: "B" }, time: { elapsed: 16 } },
+        {
+          type: "Goal",
+          team: { id: 2, name: "Cruzeiro" },
+          player: { name: "C" },
+          time: { elapsed: 47 },
+        },
+      ],
+    });
+    const b = apply(a.state, fullFeed);
+    expect(b.triggers).toHaveLength(0);
+  });
+
   it("fires multiple GOAL triggers when multiple new goal events appear in one poll", () => {
     const old = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 10 } } });
     const a = apply(null, old);
