@@ -1,4 +1,4 @@
-FROM oven/bun:latest
+FROM oven/bun:canary-alpine
 
 WORKDIR /app
 
