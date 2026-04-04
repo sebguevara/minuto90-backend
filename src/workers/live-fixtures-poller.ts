@@ -268,6 +268,7 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
           awayTeamId,
           homeGoals,
           awayGoals,
+          fixtureId,
         }).catch(() => {});
       }
     }
@@ -409,6 +410,7 @@ async function handleDisappearances(currentIds: number[]) {
           awayTeamId,
           homeGoals: scoreHome,
           awayGoals: scoreAway,
+          fixtureId,
         }).catch(() => {});
       }
 

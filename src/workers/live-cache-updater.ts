@@ -95,7 +95,19 @@ export async function patchStandingsWithResult(input: {
   awayTeamId: number;
   homeGoals: number;
   awayGoals: number;
+  fixtureId?: number;
 }): Promise<void> {
+  // Idempotency guard: ensure we only patch once per match, even if called from
+  // multiple paths (processOneFixture + handleDisappearances) or across poller restarts.
+  const patchGuardKey = input.fixtureId
+    ? `standings_patch_done:${input.fixtureId}`
+    : `standings_patch_done:${input.leagueId}:${input.season}:${input.homeTeamId}:${input.awayTeamId}`;
+  const acquired = await redisConnection.set(patchGuardKey, "1", "EX", 60 * 60 * 6, "NX");
+  if (!acquired) {
+    logInfo("live-cache.standings_patch_skipped_already_done", { patchGuardKey });
+    return;
+  }
+
   const key = buildFootballCacheKey("/standings", {
     league: input.leagueId,
     season: input.season,
