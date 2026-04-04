@@ -17,9 +17,17 @@ import { insightsService } from '../features/insights/application/insights.servi
 import { logInfo, logError, logWarn } from '../shared/logging/logger';
 import { updateLiveFixturesCache } from './live-cache-updater';
 import { getTeamMatchProfile } from '../features/stats/application/stats.service';
+import { refreshOddsSnapshotForDate } from '../features/sports/infrastructure/football-odds-hydration';
+import {
+  getFootballOddsHistoryFutureDays,
+  getFootballOddsHistoryPastDays,
+} from '../features/sports/infrastructure/football-cache-ttl';
+import { DEFAULT_ODDS_BET } from '../features/sports/infrastructure/football-odds-cache';
 
 const DEFAULT_TIMEZONE = 'UTC';
 const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European leagues in 2026
+const FOOTBALL_ODDS_HISTORY_PAST_DAYS = getFootballOddsHistoryPastDays();
+const FOOTBALL_ODDS_HISTORY_FUTURE_DAYS = getFootballOddsHistoryFutureDays();
 
 /**
  * Prewarm completo: fixtures (incl. home), live, odds del día, standings, insights, otros deportes, teams sync, etc.
@@ -189,6 +197,38 @@ async function prewarmFootballFixtures(): Promise<void> {
   }
 
   logInfo('prewarm.football.fixtures.done', { total });
+}
+
+async function prewarmFootballOddsSnapshots(): Promise<void> {
+  const dates = getDatesRange(FOOTBALL_ODDS_HISTORY_PAST_DAYS, FOOTBALL_ODDS_HISTORY_FUTURE_DAYS);
+  let refreshed = 0;
+  let written = 0;
+
+  logInfo('prewarm.football.odds.start', {
+    pastDays: FOOTBALL_ODDS_HISTORY_PAST_DAYS,
+    futureDays: FOOTBALL_ODDS_HISTORY_FUTURE_DAYS,
+    dates: dates.length,
+  });
+
+  for (const date of dates) {
+    try {
+      const result = await refreshOddsSnapshotForDate(date, DEFAULT_TIMEZONE, DEFAULT_ODDS_BET);
+      refreshed += result.refreshed ? 1 : 0;
+      written += result.written;
+    } catch (err) {
+      logWarn('prewarm.football.odds.date_failed', {
+        date,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  logInfo('prewarm.football.odds.done', {
+    pastDays: FOOTBALL_ODDS_HISTORY_PAST_DAYS,
+    futureDays: FOOTBALL_ODDS_HISTORY_FUTURE_DAYS,
+    refreshed,
+    written,
+  });
 }
 
 /** Calienta Redis para el listado del home por timezone (mismas keys que live/home antes del merge con live). */
@@ -681,6 +721,7 @@ async function runAllPrewarm(): Promise<void> {
     if (PREWARM_MODE === 'full') {
       await Promise.allSettled([
         prewarmFootballFixtures(),
+        prewarmFootballOddsSnapshots(),
         prewarmFootballHomeFeedByTimezone(),
         prewarmNba(),
         prewarmBasketball(),
@@ -698,6 +739,7 @@ async function runAllPrewarm(): Promise<void> {
       // Keep scheduled prewarm focused on football to reduce steady-state cost.
       await Promise.allSettled([
         prewarmFootballFixtures(),
+        prewarmFootballOddsSnapshots(),
         prewarmFootballHomeFeedByTimezone(),
       ]);
     }

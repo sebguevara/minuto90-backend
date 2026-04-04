@@ -1,6 +1,7 @@
 const SECOND = 1;
 const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
 
 function readEnvSeconds(name: string, fallback: number, minSeconds: number, maxSeconds: number) {
   const raw = Number(process.env[name]);
@@ -13,6 +14,10 @@ function readEnvSeconds(name: string, fallback: number, minSeconds: number, maxS
 
 function toUtcDateKey(date: Date) {
   return date.toISOString().slice(0, 10);
+}
+
+function toUtcMidnightMs(dateKey: string) {
+  return Date.parse(`${dateKey}T00:00:00.000Z`);
 }
 
 function normalizeDateKey(date: string) {
@@ -33,16 +38,52 @@ export function compareFootballDateToToday(date: string, now = new Date()) {
   return normalizedDate.localeCompare(today);
 }
 
-export function getFootballOddsTodayCacheTtlSeconds() {
-  return readEnvSeconds("FOOTBALL_ODDS_TTL_TODAY_SECONDS", 3 * HOUR, 5 * MINUTE, 24 * HOUR);
+export function getFootballOddsHistoryPastDays() {
+  return readEnvSeconds("FOOTBALL_ODDS_HISTORY_PAST_DAYS", 5, 0, 30);
 }
 
-export function getFootballOddsFutureCacheTtlSeconds() {
-  return readEnvSeconds("FOOTBALL_ODDS_TTL_FUTURE_SECONDS", 6 * HOUR, 5 * MINUTE, 48 * HOUR);
+export function getFootballOddsHistoryFutureDays() {
+  return readEnvSeconds("FOOTBALL_ODDS_HISTORY_FUTURE_DAYS", 10, 0, 30);
+}
+
+export function getFootballOddsNearFutureDays() {
+  return readEnvSeconds("FOOTBALL_ODDS_NEAR_FUTURE_DAYS", 3, 1, 10);
+}
+
+export function getFootballOddsDateOffsetDays(date: string, now = new Date()) {
+  const normalizedDate = normalizeDateKey(date);
+  const targetMs = toUtcMidnightMs(normalizedDate);
+  const todayMs = toUtcMidnightMs(toUtcDateKey(now));
+  if (!Number.isFinite(targetMs) || !Number.isFinite(todayMs)) {
+    return 0;
+  }
+  return Math.round((targetMs - todayMs) / (DAY * 1000));
+}
+
+export function getFootballOddsTodayCacheTtlSeconds() {
+  return readEnvSeconds("FOOTBALL_ODDS_TTL_TODAY_SECONDS", 90 * MINUTE, 5 * MINUTE, 24 * HOUR);
+}
+
+export function getFootballOddsNearFutureCacheTtlSeconds() {
+  return readEnvSeconds(
+    "FOOTBALL_ODDS_TTL_NEAR_FUTURE_SECONDS",
+    6 * HOUR,
+    5 * MINUTE,
+    48 * HOUR
+  );
+}
+
+export function getFootballOddsExtendedFutureCacheTtlSeconds() {
+  return readEnvSeconds(
+    "FOOTBALL_ODDS_TTL_EXTENDED_FUTURE_SECONDS",
+    12 * HOUR,
+    5 * MINUTE,
+    7 * DAY
+  );
 }
 
 export function getFootballOddsPastCacheTtlSeconds() {
-  return readEnvSeconds("FOOTBALL_ODDS_TTL_PAST_SECONDS", 24 * HOUR, 5 * MINUTE, 7 * 24 * HOUR);
+  return readEnvSeconds("FOOTBALL_ODDS_TTL_PAST_SECONDS", 12 * HOUR, 5 * MINUTE, 7 * DAY);
 }
 
 export function getFootballOddsLiveCacheTtlSeconds() {
@@ -50,12 +91,15 @@ export function getFootballOddsLiveCacheTtlSeconds() {
 }
 
 export function getFootballOddsSnapshotFreshTtlSeconds(date: string, now = new Date()) {
-  const relation = compareFootballDateToToday(date, now);
-  if (relation === 0) {
+  const offsetDays = getFootballOddsDateOffsetDays(date, now);
+  if (offsetDays === 0) {
     return getFootballOddsTodayCacheTtlSeconds();
   }
-  if (relation > 0) {
-    return getFootballOddsFutureCacheTtlSeconds();
+  if (offsetDays > 0 && offsetDays <= getFootballOddsNearFutureDays()) {
+    return getFootballOddsNearFutureCacheTtlSeconds();
+  }
+  if (offsetDays > getFootballOddsNearFutureDays()) {
+    return getFootballOddsExtendedFutureCacheTtlSeconds();
   }
   return getFootballOddsPastCacheTtlSeconds();
 }
@@ -65,10 +109,14 @@ export function getFootballOddsSnapshotStaleGraceSeconds() {
 }
 
 export function getFootballOddsSnapshotRedisTtlSeconds(date: string, now = new Date()) {
-  return (
+  const freshPlusGrace =
     getFootballOddsSnapshotFreshTtlSeconds(date, now) +
-    getFootballOddsSnapshotStaleGraceSeconds()
-  );
+    getFootballOddsSnapshotStaleGraceSeconds();
+  const normalizedDate = normalizeDateKey(date);
+  const retentionEndMs =
+    toUtcMidnightMs(normalizedDate) + (getFootballOddsHistoryPastDays() + 1) * DAY * 1000;
+  const retentionSeconds = Math.ceil((retentionEndMs - now.getTime()) / 1000);
+  return Math.max(freshPlusGrace, retentionSeconds, 60);
 }
 
 export function getFootballOddsDatePageConcurrency() {
@@ -80,7 +128,19 @@ export function getFootballOddsDateRefreshLockTtlSeconds() {
 }
 
 export function getFootballOddsTodayRefreshCron() {
-  return process.env.FOOTBALL_ODDS_TODAY_CRON?.trim() || "0 */3 * * *";
+  return process.env.FOOTBALL_ODDS_TODAY_CRON?.trim() || "0 0-23/3 * * *";
+}
+
+export function getFootballOddsTodayRefreshHalfStepCron() {
+  return process.env.FOOTBALL_ODDS_TODAY_HALFSTEP_CRON?.trim() || "30 1-23/3 * * *";
+}
+
+export function getFootballOddsNearFutureRefreshCron() {
+  return process.env.FOOTBALL_ODDS_NEAR_FUTURE_CRON?.trim() || "0 */6 * * *";
+}
+
+export function getFootballOddsExtendedFutureRefreshCron() {
+  return process.env.FOOTBALL_ODDS_EXTENDED_FUTURE_CRON?.trim() || "0 */12 * * *";
 }
 
 const TTL_BY_ENDPOINT: Record<string, number> = {

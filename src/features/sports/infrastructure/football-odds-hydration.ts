@@ -4,7 +4,9 @@ import type { ApiFootballOddsEnvelope, ApiFootballOddsItem } from "../domain/foo
 import { footballApiClient } from "./football-api.client";
 import {
   getFootballOddsDatePageConcurrency,
+  getFootballOddsDateOffsetDays,
   getFootballOddsDateRefreshLockTtlSeconds,
+  getFootballOddsHistoryPastDays,
 } from "./football-cache-ttl";
 import {
   buildOddsDateRefreshLockKey,
@@ -180,6 +182,12 @@ export async function ensureOddsSnapshotForDate(
   bet = DEFAULT_ODDS_BET
 ) {
   const currentMeta = await getCachedOddsDateSnapshotMeta(date);
+  const offsetDays = getFootballOddsDateOffsetDays(date);
+  if (offsetDays < 0 && Math.abs(offsetDays) <= getFootballOddsHistoryPastDays()) {
+    if (currentMeta && isFootballOddsSnapshotUsable(currentMeta)) {
+      return currentMeta;
+    }
+  }
   if (currentMeta && isFootballOddsSnapshotFresh(currentMeta)) {
     return currentMeta;
   }
@@ -288,7 +296,46 @@ export async function hydrateFixturesOddsResponse(
     });
   }
 
-  const items = await getCachedOddsItemsByFixtureIds(targetFixtureIds, true);
+  let items = await getCachedOddsItemsByFixtureIds(targetFixtureIds, true);
+
+  // If caller requested concrete fixtures and some are missing, force-refresh snapshot for
+  // this date/timezone and retry missing IDs. This prevents stale/foreign snapshot windows
+  // (e.g. UTC-prewarmed snapshot reused for America/* request) from returning empty odds.
+  if (date && targetFixtureIds.length) {
+    const cachedIds = new Set(
+      items
+        .map((item) => item.fixture?.id)
+        .filter((fixtureId): fixtureId is number => Number.isFinite(fixtureId) && fixtureId > 0)
+    );
+    const missingFixtureIds = targetFixtureIds.filter((fixtureId) => !cachedIds.has(fixtureId));
+
+    if (missingFixtureIds.length) {
+      logWarn("football.odds.snapshot.partial_cache_hit", {
+        date,
+        timezone,
+        requested: targetFixtureIds.length,
+        cached: targetFixtureIds.length - missingFixtureIds.length,
+        missing: missingFixtureIds.length,
+      });
+
+      await refreshOddsSnapshotForDate(date, timezone, bet);
+      const refreshedMissingItems = await getCachedOddsItemsByFixtureIds(missingFixtureIds, true);
+
+      if (refreshedMissingItems.length) {
+        const mergedByFixture = new Map<number, ApiFootballOddsItem>();
+        for (const item of items) {
+          const fixtureId = item.fixture?.id;
+          if (fixtureId) mergedByFixture.set(fixtureId, item);
+        }
+        for (const item of refreshedMissingItems) {
+          const fixtureId = item.fixture?.id;
+          if (fixtureId) mergedByFixture.set(fixtureId, item);
+        }
+        items = Array.from(mergedByFixture.values());
+      }
+    }
+  }
+
   return buildPublicOddsEnvelope(items, {
     fixtureIds: targetFixtureIds,
     bookmaker,
