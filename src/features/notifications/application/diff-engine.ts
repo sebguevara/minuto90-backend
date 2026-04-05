@@ -8,6 +8,8 @@ import { buildMatchUrl } from "./match-url";
 export type DiffTriggerType =
   | "KICKOFF"
   | "GOAL"
+  | "PENALTY_SHOOTOUT_START"
+  | "PENALTY_SHOOTOUT_KICK"
   | "VAR_CANCELLED"
   | "RED_CARD"
   | "HALFTIME"
@@ -35,7 +37,6 @@ export type StoredMatchState = {
 
 const terminalStatuses = new Set(["FT", "AET", "PEN"]);
 const breakStatuses = new Set(["HT", "BT", "INT"]);
-const ignoredGoalDetails = new Set(["Missed Penalty"]);
 
 function asScore(value: number | null | undefined): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
@@ -105,19 +106,43 @@ function goalSignature(e: ApiFootballFixtureEvent): string {
   return `${detail}|${team}|${player}`;
 }
 
-function countSignatureGoals(events: ApiFootballFixtureEvent[] | undefined, sig: string): number {
+/**
+ * Gol con plantilla “Gol” normal: excluye siempre `Penalty` y `Missed Penalty`.
+ * Los penaltis en juego no se notifican como gol; en tanda (`P`) van por `PENALTY_SHOOTOUT_*`.
+ */
+function isRegularPlayMatchGoalForNotification(event: ApiFootballFixtureEvent | null | undefined): boolean {
+  if (!event || event.type !== "Goal") return false;
+  const detail = (event.detail ?? "").trim();
+  if (detail === "Missed Penalty") return false;
+  if (detail === "Penalty") return false;
+  return true;
+}
+
+function countSignatureRegularMatchGoals(events: ApiFootballFixtureEvent[] | undefined, sig: string): number {
   if (!events?.length) return 0;
   let n = 0;
   for (const e of events) {
-    if (isNotifiableGoalEvent(e) && goalSignature(e) === sig) n++;
+    if (isRegularPlayMatchGoalForNotification(e) && goalSignature(e) === sig) n++;
   }
   return n;
 }
 
-function isNotifiableGoalEvent(event: ApiFootballFixtureEvent | null | undefined) {
+function isShootoutKickEvent(event: ApiFootballFixtureEvent | null | undefined): boolean {
   if (!event || event.type !== "Goal") return false;
-  const detail = event.detail ?? "";
-  return !ignoredGoalDetails.has(detail);
+  const d = (event.detail ?? "").trim();
+  return d === "Penalty" || d === "Missed Penalty";
+}
+
+function parsePenaltyShootoutScore(fixture: ApiFootballLiveFixture): { home: number; away: number } | null {
+  const score = fixture.score;
+  if (!score || typeof score !== "object" || Array.isArray(score)) return null;
+  const pen = (score as Record<string, unknown>).penalty;
+  if (!pen || typeof pen !== "object" || Array.isArray(pen)) return null;
+  const p = pen as Record<string, unknown>;
+  const h = Number(p.home);
+  const a = Number(p.away);
+  if (!Number.isFinite(h) || !Number.isFinite(a)) return null;
+  return { home: h, away: a };
 }
 
 /**
@@ -152,14 +177,31 @@ function collectNewGoalEvents(
   const ordered: ApiFootballFixtureEvent[] = [];
   const nthBySig = new Map<string, number>();
   for (const e of newEvents) {
-    if (!isNotifiableGoalEvent(e)) continue;
+    if (!isRegularPlayMatchGoalForNotification(e)) continue;
     const sig = goalSignature(e);
-    const prevCount = countSignatureGoals(oldEvents, sig);
+    const prevCount = countSignatureRegularMatchGoals(oldEvents, sig);
     const nth = (nthBySig.get(sig) ?? 0) + 1;
     nthBySig.set(sig, nth);
     if (nth > prevCount) ordered.push(e);
   }
   return ordered;
+}
+
+/** Lanzamientos de la tanda: eventos Goal con detalle Penalty / Missed Penalty solo con estado `P`. */
+function collectNewShootoutKickEvents(
+  oldEventKeySet: Set<string>,
+  newEvents: ApiFootballFixtureEvent[],
+  newStatus: string | null,
+  isColdStart: boolean
+): ApiFootballFixtureEvent[] {
+  if (isColdStart || newStatus !== "P") return [];
+  const out: ApiFootballFixtureEvent[] = [];
+  for (const e of newEvents) {
+    if (!isShootoutKickEvent(e)) continue;
+    if (isEventAlreadyKnown(oldEventKeySet, e)) continue;
+    out.push(e);
+  }
+  return out;
 }
 
 function bumpScoreForGoal(
@@ -280,6 +322,23 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     }
   }
 
+  // Tanda de penales (estado API `P`): aviso de inicio; los penales no usan plantilla de gol normal.
+  if (!isColdStart && newStatus === "P" && oldStatus !== "P") {
+    triggers.push({
+      fixtureId,
+      type: "PENALTY_SHOOTOUT_START",
+      eventKey: `status:${oldStatus ?? "null"}->${newStatus}`,
+      message: templates.penaltyShootoutStart({
+        homeTeam,
+        awayTeam,
+        leagueName,
+        matchUrl,
+        scoreHome: newScoreHome,
+        scoreAway: newScoreAway,
+      }),
+    });
+  }
+
   // GOAL: solo filas nuevas en `events` (nunca inventar gol con el “último evento” si el marcador sube solo).
   // Marcador en el mensaje = API solo cuando hay exactamente un gol nuevo y coincide el delta (+1).
   if (!isColdStart) {
@@ -331,6 +390,30 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
       });
       rh = nh;
       ra = na;
+    }
+
+    const penScore = parsePenaltyShootoutScore(newFixture);
+    const newShootoutKicks = collectNewShootoutKickEvents(oldEventKeySet, newEvents, newStatus, isColdStart);
+    for (const e of newShootoutKicks) {
+      const detail = (e.detail ?? "").trim();
+      const converted = detail !== "Missed Penalty";
+      triggers.push({
+        fixtureId,
+        type: "PENALTY_SHOOTOUT_KICK",
+        eventKey: `event:${buildEventKey(e)}`,
+        message: templates.penaltyShootoutKick({
+          homeTeam,
+          awayTeam,
+          leagueName,
+          matchUrl,
+          teamName: teamFromEvent(e, newFixture),
+          playerName: playerNameOrUnknown(e),
+          minute: minuteFromEvent(e),
+          converted,
+          shootoutHome: penScore?.home ?? null,
+          shootoutAway: penScore?.away ?? null,
+        }),
+      });
     }
   }
 

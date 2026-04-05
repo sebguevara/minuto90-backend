@@ -120,4 +120,51 @@ export const templates = {
       `_${input.leagueName}_`,
       matchLinkLine(input.matchUrl),
     ].join("\n"),
+
+  /** Inicio de la tanda (estado API `P`); el marcador es el del partido antes de los penales. */
+  penaltyShootoutStart: (input: TemplateCommon) =>
+    [
+      "🎯 *Tanda de penales*",
+      "",
+      "*Empieza la tanda de penales.*",
+      "Se define el partido desde el punto penal.",
+      "",
+      `*${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}*`,
+      "_Marcador tras tiempo reglamentario / prórroga (sin contar penales)._",
+      "",
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
+    ].join("\n"),
+
+  /**
+   * Cada lanzamiento en tanda: acierto o error explícitos.
+   * Solo se muestra la *serie* de penales (API `score.penalty`); no el marcador global del partido.
+   */
+  penaltyShootoutKick: (
+    input: TemplateBase & {
+      teamName: string;
+      playerName: string;
+      minute: number | string;
+      converted: boolean;
+      shootoutHome: number | null;
+      shootoutAway: number | null;
+    }
+  ) => {
+    const serieLine =
+      input.shootoutHome != null && input.shootoutAway != null
+        ? `*Serie de penales:* *${input.homeTeam}* ${input.shootoutHome} - ${input.shootoutAway} *${input.awayTeam}*`
+        : "_Serie de penales: aún sin dato en la API._";
+    return [
+      "🎯 *Penal (tanda)*",
+      "",
+      `*${input.teamName}*`,
+      `*${input.playerName}* · _${input.minute}′_`,
+      input.converted ? "✅ *Gol* en la serie _(no suma al marcador del partido)_." : "❌ *Penal errado* _(no suma al marcador del partido)_.",
+      "",
+      serieLine,
+      "",
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
+    ].join("\n");
+  },
 };

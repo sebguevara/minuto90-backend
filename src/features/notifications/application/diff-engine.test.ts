@@ -70,6 +70,123 @@ describe("diff-engine", () => {
     expect(b.triggers[0]?.message).not.toContain("Independiente 0 - 0 Racing Club");
   });
 
+  it("no envía GOAL por penalti en juego (detail Penalty fuera de tanda)", () => {
+    const old = fixtureBase({
+      fixture: { id: 1, status: { short: "2H", elapsed: 80 } },
+      goals: { home: 0, away: 0 },
+      teams: { home: { id: 10, name: "Independiente" }, away: { id: 20, name: "Racing Club" } },
+    });
+    const a = apply(null, old);
+
+    const penaltyGoal = fixtureBase({
+      fixture: { id: 1, status: { short: "2H", elapsed: 82 } },
+      goals: { home: 1, away: 0 },
+      teams: { home: { id: 10, name: "Independiente" }, away: { id: 20, name: "Racing Club" } },
+      events: [
+        {
+          type: "Goal",
+          detail: "Penalty",
+          team: { id: 10, name: "Independiente" },
+          player: { name: "Delantero" },
+          time: { elapsed: 82 },
+        },
+      ],
+    });
+
+    const b = apply(a.state, penaltyGoal);
+    expect(b.triggers.filter((t) => t.type === "GOAL")).toHaveLength(0);
+  });
+
+  it("dispara inicio de tanda y lanzamiento con plantilla de penales (estado P)", () => {
+    const before = fixtureBase({
+      fixture: { id: 1, status: { short: "AET", elapsed: 120 } },
+      goals: { home: 1, away: 1 },
+      teams: { home: { name: "Boca" }, away: { name: "River" } },
+      score: { penalty: { home: 0, away: 0 } },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { name: "Boca" },
+          player: { name: "A" },
+          time: { elapsed: 90 },
+        },
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { name: "River" },
+          player: { name: "B" },
+          time: { elapsed: 115 },
+        },
+      ],
+    });
+    const a = apply(null, before);
+
+    const shootout = fixtureBase({
+      fixture: { id: 1, status: { short: "P", elapsed: null } },
+      goals: { home: 1, away: 1 },
+      teams: { home: { name: "Boca" }, away: { name: "River" } },
+      score: { penalty: { home: 1, away: 0 } },
+      events: [
+        ...(before.events ?? []),
+        {
+          type: "Goal",
+          detail: "Penalty",
+          team: { name: "Boca" },
+          player: { name: "Pateador" },
+          time: { elapsed: 121 },
+        },
+      ],
+    });
+
+    const b = apply(a.state, shootout);
+    expect(b.triggers.map((t) => t.type)).toEqual(["PENALTY_SHOOTOUT_START", "PENALTY_SHOOTOUT_KICK"]);
+    expect(b.triggers[0]?.message).toContain("Empieza la tanda");
+    expect(b.triggers[1]?.message).toContain("Penal (tanda)");
+    expect(b.triggers[1]?.message).toContain("Serie de penales");
+    expect(b.triggers[1]?.message).toContain("1 - 0");
+    expect(b.triggers[1]?.message).not.toContain("Boca 1 - 1 River");
+  });
+
+  it("en tanda notifica fallo (Missed Penalty) sin usar plantilla de gol normal", () => {
+    const inShootout = fixtureBase({
+      fixture: { id: 1, status: { short: "P", elapsed: null } },
+      goals: { home: 1, away: 1 },
+      score: { penalty: { home: 0, away: 0 } },
+      events: [
+        {
+          type: "Goal",
+          detail: "Penalty",
+          team: { name: "Boca" },
+          player: { name: "Uno" },
+          time: { elapsed: 121 },
+        },
+      ],
+    });
+    const a = apply(null, inShootout);
+
+    const miss = fixtureBase({
+      fixture: { id: 1, status: { short: "P", elapsed: null } },
+      goals: { home: 1, away: 1 },
+      score: { penalty: { home: 0, away: 0 } },
+      events: [
+        ...(inShootout.events ?? []),
+        {
+          type: "Goal",
+          detail: "Missed Penalty",
+          team: { name: "River" },
+          player: { name: "Dos" },
+          time: { elapsed: 122 },
+        },
+      ],
+    });
+
+    const b = apply(a.state, miss);
+    expect(b.triggers.map((t) => t.type)).toEqual(["PENALTY_SHOOTOUT_KICK"]);
+    expect(b.triggers[0]?.message).toContain("errado");
+    expect(b.triggers.filter((t) => t.type === "GOAL")).toHaveLength(0);
+  });
+
   it("does not send GOAL notification for missed penalties", () => {
     const old = fixtureBase({
       fixture: { id: 1, status: { short: "1H", elapsed: 64 } },

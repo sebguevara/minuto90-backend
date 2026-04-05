@@ -143,6 +143,13 @@ function isBaselineTriggerAlreadyCovered(
         return baseline.eventKeys.includes(trigger.eventKey.slice("event:".length));
       }
       return baseline.redCards === newState.redCards;
+    case "PENALTY_SHOOTOUT_START":
+      return baseline.statusShort === "P";
+    case "PENALTY_SHOOTOUT_KICK":
+      if (trigger.eventKey.startsWith("event:")) {
+        return baseline.eventKeys.includes(trigger.eventKey.slice("event:".length));
+      }
+      return false;
     case "HALFTIME":
       return isHalftimeOrLater(baseline.statusShort);
     case "SECOND_HALF":

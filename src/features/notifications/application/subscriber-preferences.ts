@@ -29,6 +29,8 @@ export function isLiveTriggerEnabled(
     case "KICKOFF":
       return subscriber.notifyKickoff;
     case "GOAL":
+    case "PENALTY_SHOOTOUT_START":
+    case "PENALTY_SHOOTOUT_KICK":
       return subscriber.notifyGoals;
     case "RED_CARD":
       return subscriber.notifyRedCards;
