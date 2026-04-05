@@ -17,6 +17,7 @@ import {
   isLiveTriggerEnabled,
 } from "../features/notifications/application/subscriber-preferences";
 import { footballApiClient } from "../features/sports/infrastructure/football-api.client";
+import { pushService } from "../features/push/application/push.service";
 
 /** Por defecto 5s: notificaciones en vivo (p. ej. final) dependen del siguiente poll. Subir vía env si hay límite de API. */
 const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 5000);
@@ -166,15 +167,17 @@ async function dispatchTriggers(input: {
 
   if (!subs.length) return;
 
-  const activeSubsById = new Map<string, (typeof subs)[number]>();
+  const subsBySubscriberId = new Map<string, (typeof subs)[number]>();
   for (const sub of subs) {
-    if (!sub?.subscriber || !canReceiveWhatsappNotifications(sub.subscriber)) continue;
-    if (!activeSubsById.has(sub.subscriberId)) activeSubsById.set(sub.subscriberId, sub);
+    if (!sub?.subscriber?.isActive) continue;
+    if (!subsBySubscriberId.has(sub.subscriberId)) {
+      subsBySubscriberId.set(sub.subscriberId, sub);
+    }
   }
-  if (!activeSubsById.size) return;
+  if (!subsBySubscriberId.size) return;
 
   const baselineEntries = await Promise.all(
-    Array.from(activeSubsById.values()).map(async (sub) => [
+    Array.from(subsBySubscriberId.values()).map(async (sub) => [
       sub.subscriberId,
       await getSubscriptionBaseline(sub.subscriberId, input.fixtureId),
     ] as const)
@@ -184,7 +187,14 @@ async function dispatchTriggers(input: {
   const jobs: Parameters<typeof enqueueWhatsappNotificationsBulk>[0] = [];
   let triggersDedupSkipped = 0;
   let triggersEmitted = 0;
-  const activeSubs = activeSubsById.size;
+  let pushAttempts = 0;
+
+  const matchPageUrl = buildMatchUrl({
+    fixtureId: input.fixtureId,
+    leagueName: input.newState.fixture.league?.name ?? "Liga",
+    homeTeam: input.newState.fixture.teams?.home?.name ?? "Home",
+    awayTeam: input.newState.fixture.teams?.away?.name ?? "Away",
+  });
 
   for (const trigger of input.triggers) {
     const ok = await shouldEmitTrigger(input.fixtureId, `${trigger.type}:${trigger.eventKey}`);
@@ -194,22 +204,42 @@ async function dispatchTriggers(input: {
     }
     triggersEmitted++;
 
-    for (const sub of activeSubsById.values()) {
+    for (const sub of subsBySubscriberId.values()) {
       if (!isLiveTriggerEnabled(sub.subscriber, trigger.type)) continue;
       const baseline = baselineBySubscriberId.get(sub.subscriberId) ?? null;
       if (isBaselineTriggerAlreadyCovered(baseline, trigger, input.newState)) continue;
-      const phone = sub.subscriber.phoneNumber;
-      if (!phone) continue;
-      const msgOk = await shouldEmitMessage(sub.subscriberId, input.fixtureId, trigger.type, trigger.eventKey);
-      if (!msgOk) continue;
-      jobs.push({
-        phone,
-        message: trigger.message,
-        fixtureId: input.fixtureId,
-        triggerType: trigger.type,
-        subscriberId: sub.subscriberId,
-        eventKey: trigger.eventKey,
-      });
+
+      if (canReceiveWhatsappNotifications(sub.subscriber)) {
+        const msgOk = await shouldEmitMessage(
+          sub.subscriberId,
+          input.fixtureId,
+          trigger.type,
+          trigger.eventKey
+        );
+        if (msgOk) {
+          jobs.push({
+            phone: sub.subscriber.phoneNumber,
+            message: trigger.message,
+            fixtureId: input.fixtureId,
+            triggerType: trigger.type,
+            subscriberId: sub.subscriberId,
+            eventKey: trigger.eventKey,
+          });
+        }
+      }
+
+      if (sub.subscriber.userId) {
+        pushAttempts++;
+        await pushService.enqueueLiveMatchWebPush({
+          subscriberId: sub.subscriberId,
+          userId: sub.subscriber.userId,
+          fixtureId: input.fixtureId,
+          triggerType: trigger.type,
+          dedupeId: trigger.eventKey,
+          message: trigger.message,
+          url: matchPageUrl,
+        });
+      }
     }
   }
 
@@ -222,8 +252,9 @@ async function dispatchTriggers(input: {
       triggersEmitted,
       triggersDedupSkipped,
       subs: subs.length,
-      activeSubs,
+      activeSubscribers: subsBySubscriberId.size,
       jobs: jobs.length,
+      livePushAttempts: pushAttempts,
     });
   }
 }

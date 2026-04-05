@@ -224,6 +224,49 @@ describe("diff-engine", () => {
     expect(b.triggers).toHaveLength(0);
   });
 
+  it("muestra el marcador del snapshot de la API en un gol nuevo (evita desvíos del bump encadenado)", () => {
+    const afterFirst = fixtureBase({
+      fixture: { id: 1, status: { short: "2H", elapsed: 56 } },
+      goals: { home: 1, away: 1 },
+      teams: { home: { id: 100, name: "Valencia" }, away: { id: 200, name: "Celta Vigo" } },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { id: 200, name: "Celta Vigo" },
+          player: { name: "I. Moriba" },
+          time: { elapsed: 56 },
+        },
+      ],
+    });
+    const a = apply(null, afterFirst);
+
+    const afterSecond = fixtureBase({
+      fixture: { id: 1, status: { short: "2H", elapsed: 60 } },
+      goals: { home: 1, away: 2 },
+      teams: { home: { id: 100, name: "Valencia" }, away: { id: 200, name: "Celta Vigo" } },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { id: 200, name: "Celta Vigo" },
+          player: { name: "I. Moriba" },
+          time: { elapsed: 56 },
+        },
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { id: 200, name: "Celta Vigo" },
+          player: { name: "F. Lopez" },
+          time: { elapsed: 60 },
+        },
+      ],
+    });
+    const b = apply(a.state, afterSecond);
+    expect(b.triggers.map((t) => t.type)).toEqual(["GOAL"]);
+    expect(b.triggers[0]?.message).toContain("Valencia 1 - 2 Celta Vigo");
+  });
+
   it("fires multiple GOAL triggers when multiple new goal events appear in one poll", () => {
     const old = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 10 } } });
     const a = apply(null, old);

@@ -113,7 +113,7 @@ export const favoritesService = {
             },
           });
 
-          if (sport === "football" && (entityType === "match" || entityType === "team")) {
+          if (sport === "football" && (entityType === "match" || entityType === "team" || entityType === "league")) {
             await userNotificationSettingsService.syncFavoriteToggleByUserId({
               userId,
               favorite: {

@@ -11,6 +11,7 @@ import { enqueueWhatsappNotificationsBulk } from "../features/notifications/what
 import { redisConnection } from "../shared/redis/redis.connection";
 import { logError, logInfo, logWarn } from "../shared/logging/logger";
 import { userNotificationSettingsService } from "../features/notifications/application/user-notification-settings.service";
+import { pushService } from "../features/push/application/push.service";
 
 const PRE_MATCH_INTERVAL_MS = Number(
   process.env.PRE_MATCH_NOTIFICATIONS_INTERVAL_MS ?? 10 * 60 * 1000
@@ -39,6 +40,7 @@ async function shouldEmitPreMatch(subscriberId: string, fixtureId: number) {
 
 async function pollOnce() {
   await userNotificationSettingsService.syncAllFootballTeamFavoriteSubscriptions();
+  await userNotificationSettingsService.syncAllFootballLeagueFavoriteSubscriptions();
 
   const now = new Date();
   const until = new Date(now.getTime() + PRE_MATCH_WINDOW_MINUTES * 60 * 1000);
@@ -58,12 +60,9 @@ async function pollOnce() {
   const jobs: Parameters<typeof enqueueWhatsappNotificationsBulk>[0] = [];
 
   for (const subscription of subscriptions) {
-    if (
-      !canReceiveWhatsappNotifications(subscription.subscriber) ||
-      !isLiveTriggerEnabled(subscription.subscriber, "PRE_MATCH_30M")
-    ) {
-      continue;
-    }
+    const subscriber = subscription.subscriber;
+    if (!subscriber?.isActive) continue;
+    if (!isLiveTriggerEnabled(subscriber, "PRE_MATCH_30M")) continue;
 
     const shouldEmit = await shouldEmitPreMatch(
       subscription.subscriberId,
@@ -78,27 +77,44 @@ async function pollOnce() {
       awayTeam: subscription.awayTeam,
     });
 
-    jobs.push({
-      phone: subscription.subscriber.phoneNumber,
-      message: templates.preMatch30m({
-        homeTeam: subscription.homeTeam,
-        awayTeam: subscription.awayTeam,
-        leagueName: subscription.leagueName ?? "Liga",
-        matchUrl,
-        kickoffLabel: formatMatchKickoffForSubscriber(
-          subscription.matchDate,
-          subscription.subscriber
-        ),
-      }),
-      fixtureId: subscription.fixtureId,
-      triggerType: "PRE_MATCH_30M",
-      subscriberId: subscription.subscriberId,
-      eventKey: createHash("sha1")
-        .update(
-          `PRE_MATCH_30M:${subscription.subscriberId}:${subscription.fixtureId}:${subscription.matchDate.toISOString()}`
-        )
-        .digest("hex"),
+    const preMatchMessage = templates.preMatch30m({
+      homeTeam: subscription.homeTeam,
+      awayTeam: subscription.awayTeam,
+      leagueName: subscription.leagueName ?? "Liga",
+      matchUrl,
+      kickoffLabel: formatMatchKickoffForSubscriber(
+        subscription.matchDate,
+        subscriber
+      ),
     });
+
+    const eventKey = createHash("sha1")
+      .update(
+        `PRE_MATCH_30M:${subscription.subscriberId}:${subscription.fixtureId}:${subscription.matchDate.toISOString()}`
+      )
+      .digest("hex");
+
+    if (canReceiveWhatsappNotifications(subscriber)) {
+      jobs.push({
+        phone: subscriber.phoneNumber,
+        message: preMatchMessage,
+        fixtureId: subscription.fixtureId,
+        triggerType: "PRE_MATCH_30M",
+        subscriberId: subscription.subscriberId,
+        eventKey,
+      });
+    }
+
+    if (subscriber.userId) {
+      await pushService.enqueuePreMatch30mWebPush({
+        subscriberId: subscription.subscriberId,
+        userId: subscriber.userId,
+        fixtureId: subscription.fixtureId,
+        message: preMatchMessage,
+        url: matchUrl,
+        dedupeId: `PRE_MATCH_30M:${subscription.subscriberId}:${subscription.fixtureId}:${subscription.matchDate.toISOString()}`,
+      });
+    }
   }
 
   await enqueueWhatsappNotificationsBulk(jobs);

@@ -5,7 +5,9 @@ export type CreateNewsInput = {
   body: string;
   imageUrl?: string | null;
   authorId?: string | null;
+  authorName?: string | null;
   featured?: boolean;
+  isHidden?: boolean;
   publishFrom?: Date | null;
   publishTo?: Date | null;
   publishedAt?: Date;
@@ -19,7 +21,9 @@ export type UpdateNewsInput = {
   summary?: string | null;
   body?: string;
   imageUrl?: string | null;
+  authorName?: string | null;
   featured?: boolean;
+  isHidden?: boolean;
   publishFrom?: Date | null;
   publishTo?: Date | null;
   publishedAt?: Date;

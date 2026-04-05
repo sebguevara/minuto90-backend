@@ -139,7 +139,9 @@ model News {
   author      User?         @relation(fields: [authorId], references: [id])
   categoryId  String?
   category    NewsCategory? @relation(fields: [categoryId], references: [id])
+  authorName  String?
   featured    Boolean       @default(false)
+  isHidden    Boolean       @default(false)
   viewCount   Int           @default(0)
   clickCount  Int           @default(0)
   publishFrom DateTime?
@@ -153,6 +155,7 @@ model News {
   @@index([publishedAt])
   @@index([pushSentAt])
   @@index([isDeleted, publishedAt])
+  @@index([isHidden, publishedAt])
   @@index([featured, isDeleted])
   @@index([categoryId])
   @@index([viewCount])

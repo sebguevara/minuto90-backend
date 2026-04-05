@@ -265,6 +265,8 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
   // con rh/ra incrementando desde el marcador real (2-1 → 3-1 → 4-1…). Por eso anclamos a
   // `netGoalDelta` (cambio real de goles en el snapshot) y, si el marcador no sube, solo aceptamos
   // un único evento nuevo (gol con score stale en API).
+  // Texto del WhatsApp: cuando el delta del snapshot coincide con los goles emitidos, el marcador
+  // mostrado usa `goals.home/away` de la API (no solo el bump encadenado), para no desviarse del proveedor.
   if (!isColdStart) {
     const netGoalDelta =
       newScoreHome - oldScoreHome + (newScoreAway - oldScoreAway);
@@ -283,10 +285,18 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     let rh = oldScoreHome;
     let ra = oldScoreAway;
 
-    for (const e of goalsToEmit) {
+    for (let i = 0; i < goalsToEmit.length; i++) {
+      const e = goalsToEmit[i]!;
       const playerName = scorerFromEvent(e);
       if (!playerName) continue;
-      const [nh, na] = bumpScoreForGoal(e, newFixture, rh, ra);
+      const [bumpedH, bumpedA] = bumpScoreForGoal(e, newFixture, rh, ra);
+      const isLastInBatch = i === goalsToEmit.length - 1;
+      const anchorToApiSnapshot =
+        netGoalDelta > 0 &&
+        isLastInBatch &&
+        (goalsToEmit.length === 1 || netGoalDelta === goalsToEmit.length);
+      const nh = anchorToApiSnapshot ? newScoreHome : bumpedH;
+      const na = anchorToApiSnapshot ? newScoreAway : bumpedA;
       triggers.push({
         fixtureId,
         type: "GOAL",

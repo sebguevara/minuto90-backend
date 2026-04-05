@@ -7,6 +7,7 @@ const db = minutoPrismaClient;
 export function buildPublicNewsWhere(now = new Date()): Prisma.NewsWhereInput {
   return {
     isDeleted: false,
+    isHidden: false,
     publishedAt: { lte: now },
     OR: [
       { publishFrom: null, publishTo: null },
@@ -20,6 +21,7 @@ export function buildPublicNewsWhere(now = new Date()): Prisma.NewsWhereInput {
 export function isNewsPubliclyVisible(
   news: {
     isDeleted: boolean;
+    isHidden: boolean;
     publishedAt: Date;
     publishFrom: Date | null;
     publishTo: Date | null;
@@ -27,6 +29,7 @@ export function isNewsPubliclyVisible(
   now = new Date()
 ) {
   if (news.isDeleted) return false;
+  if (news.isHidden) return false;
   if (news.publishedAt.getTime() > now.getTime()) return false;
   if (news.publishFrom && news.publishFrom.getTime() > now.getTime()) return false;
   if (news.publishTo && news.publishTo.getTime() < now.getTime()) return false;
@@ -103,7 +106,9 @@ export const newsService = {
         body: input.body,
         imageUrl: input.imageUrl ?? null,
         authorId: input.authorId ?? null,
+        authorName: input.authorName ?? null,
         featured: input.featured ?? false,
+        isHidden: input.isHidden ?? false,
         publishFrom: input.publishFrom ?? null,
         publishTo: input.publishTo ?? null,
         publishedAt: input.publishedAt ?? new Date(),
@@ -129,7 +134,9 @@ export const newsService = {
         ...(input.summary !== undefined && { summary: input.summary }),
         ...(input.body !== undefined && { body: input.body }),
         ...(input.imageUrl !== undefined && { imageUrl: input.imageUrl }),
+        ...(input.authorName !== undefined && { authorName: input.authorName }),
         ...(input.featured !== undefined && { featured: input.featured }),
+        ...(input.isHidden !== undefined && { isHidden: input.isHidden }),
         ...(input.publishFrom !== undefined && { publishFrom: input.publishFrom }),
         ...(input.publishTo !== undefined && { publishTo: input.publishTo }),
         ...(input.publishedAt !== undefined && { publishedAt: input.publishedAt }),

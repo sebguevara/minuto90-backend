@@ -14,6 +14,9 @@ const FOOTBALL_TIMEZONE = "UTC";
 const TEAM_FAVORITE_LOOKAHEAD = Number(
   process.env.NOTIFICATIONS_TEAM_FAVORITE_LOOKAHEAD ?? 20
 );
+const LEAGUE_FAVORITE_LOOKAHEAD = Number(
+  process.env.NOTIFICATIONS_LEAGUE_FAVORITE_LOOKAHEAD ?? 30
+);
 
 type NotificationSettingsPatch = {
   name?: string | null;
@@ -32,7 +35,7 @@ type NotificationSettingsPatch = {
 };
 
 type NotificationSource = {
-  sourceType: "match_favorite" | "team_favorite";
+  sourceType: "match_favorite" | "team_favorite" | "league_favorite";
   sourceEntityId: number;
 };
 
@@ -43,6 +46,8 @@ type SubscriptionFixtureData = {
   homeTeam: string;
   awayTeam: string;
   leagueName: string | null;
+  /** API-Football league id; necesario para favoritos de liga y prioridad de fuente. */
+  leagueId: number | null;
   matchDate: Date;
 };
 
@@ -199,6 +204,7 @@ function fixtureDataFromApiFixture(fixture: ApiFootballFixtureItem): Subscriptio
     homeTeam: fixture.teams.home.name,
     awayTeam: fixture.teams.away.name,
     leagueName: fixture.league.name ?? null,
+    leagueId: typeof fixture.league?.id === "number" ? fixture.league.id : null,
     matchDate: new Date(fixture.fixture.date),
   };
 }
@@ -212,6 +218,7 @@ function tryParseFixtureDataFromFavoriteMetadata(
   const homeTeam = asObject(teams.home ?? root.homeTeam);
   const awayTeam = asObject(teams.away ?? root.awayTeam);
   const league = asObject(root.league);
+  const leagueId = asPositiveInteger(league.id);
   const matchDate =
     parseDateOrNull(root.date) ??
     parseDateOrNull(asObject(root.fixture).date) ??
@@ -230,6 +237,7 @@ function tryParseFixtureDataFromFavoriteMetadata(
     homeTeam: homeTeamName,
     awayTeam: awayTeamName,
     leagueName: trimOrNull(String(league.name ?? "")),
+    leagueId,
     matchDate,
   };
 }
@@ -274,9 +282,43 @@ async function getRequiredUserByClerkId(clerkId: string) {
   return userService.findOrCreateByClerkId(clerkId);
 }
 
+function sourcePriority(sourceType: string | null | undefined): number {
+  if (sourceType === "match_favorite") return 3;
+  if (sourceType === "team_favorite") return 2;
+  if (sourceType === "league_favorite") return 1;
+  return 0;
+}
+
+function pickStrongerNotificationSource(
+  existing: { sourceType: string | null; sourceEntityId: number | null } | undefined,
+  incoming: NotificationSource
+): NotificationSource {
+  if (!existing?.sourceType || existing.sourceEntityId == null) {
+    return incoming;
+  }
+  const pe = sourcePriority(existing.sourceType);
+  const pi = sourcePriority(incoming.sourceType);
+  if (pe > pi) {
+    return {
+      sourceType: existing.sourceType as NotificationSource["sourceType"],
+      sourceEntityId: existing.sourceEntityId,
+    };
+  }
+  return incoming;
+}
+
+function resolveLeagueSeason(metadata?: Record<string, unknown>): number {
+  if (metadata && typeof metadata === "object") {
+    const raw = (metadata as Record<string, unknown>).season;
+    const s = typeof raw === "number" ? raw : Number(raw);
+    if (Number.isInteger(s) && s >= 1990 && s <= 2100) return s;
+  }
+  return new Date().getFullYear() - 1;
+}
+
 async function getCurrentFavoriteSourceForFixture(
   userId: string,
-  fixture: Pick<SubscriptionFixtureData, "fixtureId" | "homeTeamId" | "awayTeamId">
+  fixture: Pick<SubscriptionFixtureData, "fixtureId" | "homeTeamId" | "awayTeamId" | "leagueId">
 ): Promise<NotificationSource | null> {
   const favoriteMatch = await minutoPrismaClient.favorite.findUnique({
     where: {
@@ -295,24 +337,44 @@ async function getCurrentFavoriteSourceForFixture(
   const teamIds = [fixture.homeTeamId, fixture.awayTeamId].filter(
     (teamId): teamId is number => typeof teamId === "number" && Number.isFinite(teamId)
   );
-  if (!teamIds.length) return null;
 
-  const favoriteTeam = await minutoPrismaClient.favorite.findFirst({
-    where: {
-      userId,
-      sport: "football",
-      entityType: "team",
-      entityId: { in: teamIds },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  if (teamIds.length) {
+    const favoriteTeam = await minutoPrismaClient.favorite.findFirst({
+      where: {
+        userId,
+        sport: "football",
+        entityType: "team",
+        entityId: { in: teamIds },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-  if (!favoriteTeam) return null;
+    if (favoriteTeam) {
+      return {
+        sourceType: "team_favorite",
+        sourceEntityId: favoriteTeam.entityId,
+      };
+    }
+  }
 
-  return {
-    sourceType: "team_favorite",
-    sourceEntityId: favoriteTeam.entityId,
-  };
+  if (typeof fixture.leagueId === "number") {
+    const favoriteLeague = await minutoPrismaClient.favorite.findUnique({
+      where: {
+        userId_sport_entityType_entityId: {
+          userId,
+          sport: "football",
+          entityType: "league",
+          entityId: fixture.leagueId,
+        },
+      },
+    });
+
+    if (favoriteLeague) {
+      return { sourceType: "league_favorite", sourceEntityId: fixture.leagueId };
+    }
+  }
+
+  return null;
 }
 
 async function upsertMatchSubscription(
@@ -332,13 +394,12 @@ async function upsertMatchSubscription(
     },
   });
 
-  const nextSource =
-    existing?.sourceType === "match_favorite" && existing.sourceEntityId
-      ? {
-          sourceType: "match_favorite",
-          sourceEntityId: existing.sourceEntityId,
-        }
-      : input.source;
+  const nextSource = pickStrongerNotificationSource(
+    existing
+      ? { sourceType: existing.sourceType, sourceEntityId: existing.sourceEntityId }
+      : undefined,
+    input.source
+  );
 
   const data = {
     homeTeamId: input.fixture.homeTeamId ?? undefined,
@@ -489,18 +550,61 @@ async function removeTeamFavoriteSubscriptions(input: {
   });
 
   for (const subscription of subscriptions) {
-    const fixture: SubscriptionFixtureData =
-      subscription.homeTeamId && subscription.awayTeamId
-        ? {
-            fixtureId: subscription.fixtureId,
-            homeTeamId: subscription.homeTeamId,
-            awayTeamId: subscription.awayTeamId,
-            homeTeam: subscription.homeTeam,
-            awayTeam: subscription.awayTeam,
-            leagueName: subscription.leagueName ?? null,
-            matchDate: subscription.matchDate,
-          }
-        : await getFixtureDataFromFootballApi(subscription.fixtureId);
+    const fixture = await getFixtureDataFromFootballApi(subscription.fixtureId);
+
+    await removeSubscriptionIfUncovered({
+      subscriberId: input.subscriberId,
+      userId: input.userId,
+      fixture,
+    });
+  }
+}
+
+async function fetchUpcomingLeagueFixtures(leagueId: number, season: number) {
+  const envelope = await footballService.getFixtures({
+    league: leagueId,
+    season,
+    next: LEAGUE_FAVORITE_LOOKAHEAD,
+    timezone: FOOTBALL_TIMEZONE,
+  });
+
+  return (envelope.response ?? []).map(fixtureDataFromApiFixture);
+}
+
+async function syncLeagueFavoriteSubscriptions(input: {
+  userId: string;
+  subscriberId: string;
+  leagueId: number;
+  metadata?: Record<string, unknown>;
+}) {
+  const season = resolveLeagueSeason(input.metadata);
+  const fixtures = await fetchUpcomingLeagueFixtures(input.leagueId, season);
+
+  for (const fixture of fixtures) {
+    await upsertMatchSubscription({
+      subscriberId: input.subscriberId,
+      userId: input.userId,
+      fixture,
+      source: { sourceType: "league_favorite", sourceEntityId: input.leagueId },
+    });
+  }
+}
+
+async function removeLeagueFavoriteSubscriptions(input: {
+  userId: string;
+  subscriberId: string;
+  leagueId: number;
+}) {
+  const subscriptions = await minutoPrismaClient.matchSubscription.findMany({
+    where: {
+      subscriberId: input.subscriberId,
+      sourceType: "league_favorite",
+      sourceEntityId: input.leagueId,
+    },
+  });
+
+  for (const subscription of subscriptions) {
+    const fixture = await getFixtureDataFromFootballApi(subscription.fixtureId);
 
     await removeSubscriptionIfUncovered({
       subscriberId: input.subscriberId,
@@ -636,6 +740,25 @@ export const userNotificationSettingsService = {
         subscriberId: subscriber.id,
         teamId: input.favorite.entityId,
       });
+      return;
+    }
+
+    if (input.favorite.entityType === "league") {
+      if (input.action === "added") {
+        await syncLeagueFavoriteSubscriptions({
+          userId: input.userId,
+          subscriberId: subscriber.id,
+          leagueId: input.favorite.entityId,
+          metadata: input.favorite.metadata,
+        });
+        return;
+      }
+
+      await removeLeagueFavoriteSubscriptions({
+        userId: input.userId,
+        subscriberId: subscriber.id,
+        leagueId: input.favorite.entityId,
+      });
     }
   },
 
@@ -666,6 +789,45 @@ export const userNotificationSettingsService = {
         logWarn("notifications.team_favorite_sync.failed", {
           userId: favorite.userId,
           teamId: favorite.entityId,
+          err: error?.message ?? String(error),
+        });
+      }
+    }
+  },
+
+  async syncAllFootballLeagueFavoriteSubscriptions() {
+    const favorites = await minutoPrismaClient.favorite.findMany({
+      where: {
+        sport: "football",
+        entityType: "league",
+      },
+      include: {
+        user: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    for (const favorite of favorites) {
+      try {
+        const subscriber = await getOrCreateSubscriberByUserId(favorite.userId, {
+          name: favorite.user?.name ?? null,
+        });
+
+        const meta =
+          favorite.metadata && typeof favorite.metadata === "object" && !Array.isArray(favorite.metadata)
+            ? (favorite.metadata as Record<string, unknown>)
+            : undefined;
+
+        await syncLeagueFavoriteSubscriptions({
+          userId: favorite.userId,
+          subscriberId: subscriber.id,
+          leagueId: favorite.entityId,
+          metadata: meta,
+        });
+      } catch (error: any) {
+        logWarn("notifications.league_favorite_sync.failed", {
+          userId: favorite.userId,
+          leagueId: favorite.entityId,
           err: error?.message ?? String(error),
         });
       }
