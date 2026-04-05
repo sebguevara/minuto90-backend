@@ -48,14 +48,6 @@ function getTeamNames(fixture: ApiFootballLiveFixture) {
   return { homeTeam, awayTeam, leagueName };
 }
 
-function lastEvent(events: ApiFootballFixtureEvent[] | undefined, predicate: (e: ApiFootballFixtureEvent) => boolean) {
-  if (!events?.length) return null;
-  for (let i = events.length - 1; i >= 0; i--) {
-    if (predicate(events[i])) return events[i];
-  }
-  return null;
-}
-
 /**
  * Identidad del evento para diff/dedup: sin `comments` (API-Football suele agregarlo después
  * y eso cambiaba la clave → mismo gol/tarjeta/etc. disparaba notificaciones duplicadas).
@@ -126,6 +118,30 @@ function isNotifiableGoalEvent(event: ApiFootballFixtureEvent | null | undefined
   if (!event || event.type !== "Goal") return false;
   const detail = event.detail ?? "";
   return !ignoredGoalDetails.has(detail);
+}
+
+/**
+ * Solo disparar "gol anulado (VAR)" si la API añade un evento explícito (no por una bajada
+ * puntual del marcador, que suele ser corrección de datos y no VAR).
+ */
+function isVarGoalCancellationLikeEvent(event: ApiFootballFixtureEvent | null | undefined): boolean {
+  if (!event) return false;
+  const type = (event.type ?? "").trim().toLowerCase();
+  const detail = (event.detail ?? "").trim().toLowerCase();
+  const isVarType = type === "var" || type.includes("video assistant");
+  if (
+    detail.includes("disallowed") ||
+    detail.includes("disallow") ||
+    detail.includes("goal cancelled") ||
+    detail.includes("goal disallowed") ||
+    detail.includes("no goal")
+  ) {
+    return isVarType || type === "goal";
+  }
+  if (isVarType && detail.includes("goal") && /cancel|disallow|overturn|revok|annul/i.test(detail)) {
+    return true;
+  }
+  return false;
 }
 
 /** Goles nuevos en `newEvents` respetando orden (misma firma: enésima ocurrencia > la que había en old). */
@@ -242,31 +258,30 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     });
   }
 
-  // VAR_CANCELLED
-  if (!isColdStart && (newScoreHome < oldScoreHome || newScoreAway < oldScoreAway)) {
-    triggers.push({
-      fixtureId,
-      type: "VAR_CANCELLED",
-      eventKey: `score:${oldScoreHome}-${oldScoreAway}->${newScoreHome}-${newScoreAway}`,
-      message: templates.varCancelled({
-        homeTeam,
-        awayTeam,
-        leagueName,
-        matchUrl,
-        scoreHome: newScoreHome,
-        scoreAway: newScoreAway,
-      }),
-    });
+  // VAR_CANCELLED: únicamente con fila nueva en `events` que indique anulación (verdad de la API).
+  if (!isColdStart) {
+    for (const e of newEvents) {
+      if (!isVarGoalCancellationLikeEvent(e)) continue;
+      if (isEventAlreadyKnown(oldEventKeySet, e)) continue;
+      const k = buildEventKey(e);
+      triggers.push({
+        fixtureId,
+        type: "VAR_CANCELLED",
+        eventKey: `event:${k}`,
+        message: templates.varCancelled({
+          homeTeam,
+          awayTeam,
+          leagueName,
+          matchUrl,
+          scoreHome: newScoreHome,
+          scoreAway: newScoreAway,
+        }),
+      });
+    }
   }
 
-  // GOAL: dedup estable (firma sin minuto) + misma clave ledger que fallback (transición de marcador).
-  // Importante: si `oldFeed` vino vacío/incompleto pero el marcador ya era correcto, un poll que
-  // rellena `events` hacía que collectNewGoalEvents devolviera *todos* los goles → se “re-notificaban”
-  // con rh/ra incrementando desde el marcador real (2-1 → 3-1 → 4-1…). Por eso anclamos a
-  // `netGoalDelta` (cambio real de goles en el snapshot) y, si el marcador no sube, solo aceptamos
-  // un único evento nuevo (gol con score stale en API).
-  // Texto del WhatsApp: cuando el delta del snapshot coincide con los goles emitidos, el marcador
-  // mostrado usa `goals.home/away` de la API (no solo el bump encadenado), para no desviarse del proveedor.
+  // GOAL: solo filas nuevas en `events` (nunca inventar gol con el “último evento” si el marcador sube solo).
+  // Marcador en el mensaje = API solo cuando hay exactamente un gol nuevo y coincide el delta (+1).
   if (!isColdStart) {
     const netGoalDelta =
       newScoreHome - oldScoreHome + (newScoreAway - oldScoreAway);
@@ -276,8 +291,12 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
 
     let goalsToEmit: ApiFootballFixtureEvent[] = [];
     if (netGoalDelta > 0) {
-      goalsToEmit =
-        collected.length > netGoalDelta ? collected.slice(-netGoalDelta) : collected;
+      if (collected.length === 0) {
+        goalsToEmit = [];
+      } else {
+        const take = Math.min(netGoalDelta, collected.length);
+        goalsToEmit = collected.slice(-take);
+      }
     } else if (netGoalDelta === 0 && collected.length === 1) {
       goalsToEmit = collected;
     }
@@ -290,11 +309,7 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
       const playerName = scorerFromEvent(e);
       if (!playerName) continue;
       const [bumpedH, bumpedA] = bumpScoreForGoal(e, newFixture, rh, ra);
-      const isLastInBatch = i === goalsToEmit.length - 1;
-      const anchorToApiSnapshot =
-        netGoalDelta > 0 &&
-        isLastInBatch &&
-        (goalsToEmit.length === 1 || netGoalDelta === goalsToEmit.length);
+      const anchorToApiSnapshot = goalsToEmit.length === 1 && netGoalDelta === 1;
       const nh = anchorToApiSnapshot ? newScoreHome : bumpedH;
       const na = anchorToApiSnapshot ? newScoreAway : bumpedA;
       triggers.push({
@@ -316,34 +331,6 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
       });
       rh = nh;
       ra = na;
-    }
-
-    // Fallback: sube el marcador pero no hay fila de gol “nueva” (API sin events o scorer tarde).
-    if (
-      (newScoreHome > oldScoreHome || newScoreAway > oldScoreAway) &&
-      !triggers.some((t) => t.type === "GOAL")
-    ) {
-      const goalEvent = lastEvent(newFixture.events, (ev) => isNotifiableGoalEvent(ev));
-      const playerName = scorerFromEvent(goalEvent);
-      if (playerName) {
-        triggers.push({
-          fixtureId,
-          type: "GOAL",
-          eventKey: goalTransitionEventKey(oldScoreHome, oldScoreAway, newScoreHome, newScoreAway),
-          message: templates.goal({
-            homeTeam,
-            awayTeam,
-            leagueName,
-            matchUrl,
-            scoreHome: newScoreHome,
-            scoreAway: newScoreAway,
-            teamName: teamFromEvent(goalEvent, newFixture),
-            playerName,
-            assistName: assistFromEvent(goalEvent),
-            minute: minuteFromEvent(goalEvent),
-          }),
-        });
-      }
     }
   }
 

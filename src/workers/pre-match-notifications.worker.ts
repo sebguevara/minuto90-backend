@@ -11,7 +11,6 @@ import { enqueueWhatsappNotificationsBulk } from "../features/notifications/what
 import { redisConnection } from "../shared/redis/redis.connection";
 import { logError, logInfo, logWarn } from "../shared/logging/logger";
 import { userNotificationSettingsService } from "../features/notifications/application/user-notification-settings.service";
-import { pushService } from "../features/push/application/push.service";
 
 const PRE_MATCH_INTERVAL_MS = Number(
   process.env.PRE_MATCH_NOTIFICATIONS_INTERVAL_MS ?? 10 * 60 * 1000
@@ -102,17 +101,6 @@ async function pollOnce() {
         triggerType: "PRE_MATCH_30M",
         subscriberId: subscription.subscriberId,
         eventKey,
-      });
-    }
-
-    if (subscriber.userId) {
-      await pushService.enqueuePreMatch30mWebPush({
-        subscriberId: subscription.subscriberId,
-        userId: subscriber.userId,
-        fixtureId: subscription.fixtureId,
-        message: preMatchMessage,
-        url: matchUrl,
-        dedupeId: `PRE_MATCH_30M:${subscription.subscriberId}:${subscription.fixtureId}:${subscription.matchDate.toISOString()}`,
       });
     }
   }

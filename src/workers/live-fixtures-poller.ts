@@ -17,7 +17,6 @@ import {
   isLiveTriggerEnabled,
 } from "../features/notifications/application/subscriber-preferences";
 import { footballApiClient } from "../features/sports/infrastructure/football-api.client";
-import { pushService } from "../features/push/application/push.service";
 
 /** Por defecto 5s: notificaciones en vivo (p. ej. final) dependen del siguiente poll. Subir vía env si hay límite de API. */
 const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 5000);
@@ -135,6 +134,9 @@ function isBaselineTriggerAlreadyCovered(
       }
       return baseline.goalsHome === newState.goalsHome && baseline.goalsAway === newState.goalsAway;
     case "VAR_CANCELLED":
+      if (trigger.eventKey.startsWith("event:")) {
+        return baseline.eventKeys.includes(trigger.eventKey.slice("event:".length));
+      }
       return baseline.goalsHome === newState.goalsHome && baseline.goalsAway === newState.goalsAway;
     case "RED_CARD":
       if (trigger.eventKey.startsWith("event:")) {
@@ -187,15 +189,6 @@ async function dispatchTriggers(input: {
   const jobs: Parameters<typeof enqueueWhatsappNotificationsBulk>[0] = [];
   let triggersDedupSkipped = 0;
   let triggersEmitted = 0;
-  let pushAttempts = 0;
-
-  const matchPageUrl = buildMatchUrl({
-    fixtureId: input.fixtureId,
-    leagueName: input.newState.fixture.league?.name ?? "Liga",
-    homeTeam: input.newState.fixture.teams?.home?.name ?? "Home",
-    awayTeam: input.newState.fixture.teams?.away?.name ?? "Away",
-  });
-
   for (const trigger of input.triggers) {
     const ok = await shouldEmitTrigger(input.fixtureId, `${trigger.type}:${trigger.eventKey}`);
     if (!ok) {
@@ -227,19 +220,6 @@ async function dispatchTriggers(input: {
           });
         }
       }
-
-      if (sub.subscriber.userId) {
-        pushAttempts++;
-        await pushService.enqueueLiveMatchWebPush({
-          subscriberId: sub.subscriberId,
-          userId: sub.subscriber.userId,
-          fixtureId: input.fixtureId,
-          triggerType: trigger.type,
-          dedupeId: trigger.eventKey,
-          message: trigger.message,
-          url: matchPageUrl,
-        });
-      }
     }
   }
 
@@ -254,7 +234,6 @@ async function dispatchTriggers(input: {
       subs: subs.length,
       activeSubscribers: subsBySubscriberId.size,
       jobs: jobs.length,
-      livePushAttempts: pushAttempts,
     });
   }
 }

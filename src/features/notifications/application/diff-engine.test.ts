@@ -286,7 +286,7 @@ describe("diff-engine", () => {
     expect(c.triggers).toHaveLength(0);
   });
 
-  it("fires VAR_CANCELLED when score decreases", () => {
+  it("no dispara VAR_CANCELLED si solo baja el marcador sin evento VAR en la API", () => {
     const was = fixtureBase({
       fixture: { id: 1, status: { short: "1H", elapsed: 30 } },
       goals: { home: 1, away: 0 },
@@ -296,6 +296,33 @@ describe("diff-engine", () => {
     const now = fixtureBase({
       fixture: { id: 1, status: { short: "1H", elapsed: 32 } },
       goals: { home: 0, away: 0 },
+    });
+    const b = apply(a.state, now);
+    expect(b.triggers).toHaveLength(0);
+  });
+
+  it("dispara VAR_CANCELLED cuando la API añade evento de anulación (VAR)", () => {
+    const was = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 30 } },
+      goals: { home: 1, away: 0 },
+      events: [
+        { type: "Goal", team: { name: "Boca" }, player: { name: "X" }, time: { elapsed: 28 } },
+      ],
+    });
+    const a = apply(null, was);
+
+    const now = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 33 } },
+      goals: { home: 0, away: 0 },
+      events: [
+        { type: "Goal", team: { name: "Boca" }, player: { name: "X" }, time: { elapsed: 28 } },
+        {
+          type: "Var",
+          detail: "Goal cancelled",
+          team: { name: "Boca" },
+          time: { elapsed: 32 },
+        },
+      ],
     });
     const b = apply(a.state, now);
     expect(b.triggers.map((t) => t.type)).toEqual(["VAR_CANCELLED"]);
