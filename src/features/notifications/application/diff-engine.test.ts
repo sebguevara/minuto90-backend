@@ -403,7 +403,7 @@ describe("diff-engine", () => {
     expect(c.triggers).toHaveLength(0);
   });
 
-  it("no dispara VAR_CANCELLED si solo baja el marcador sin evento VAR en la API", () => {
+  it("dispara VAR_CANCELLED cuando el marcador baja exactamente 1 gol sin evento VAR explícito (heurística)", () => {
     const was = fixtureBase({
       fixture: { id: 1, status: { short: "1H", elapsed: 30 } },
       goals: { home: 1, away: 0 },
@@ -415,7 +415,8 @@ describe("diff-engine", () => {
       goals: { home: 0, away: 0 },
     });
     const b = apply(a.state, now);
-    expect(b.triggers).toHaveLength(0);
+    expect(b.triggers.map((t) => t.type)).toEqual(["VAR_CANCELLED"]);
+    expect(b.triggers[0]?.message).toContain("Boca 0 - 0 River");
   });
 
   it("dispara VAR_CANCELLED cuando la API añade evento de anulación (VAR)", () => {
@@ -443,6 +444,100 @@ describe("diff-engine", () => {
     });
     const b = apply(a.state, now);
     expect(b.triggers.map((t) => t.type)).toEqual(["VAR_CANCELLED"]);
+  });
+
+  it("dispara el segundo GOAL cuando el mismo jugador anota de nuevo tras un VAR (misma transición de marcador)", () => {
+    const old = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 10 } } });
+    const a = apply(null, old);
+
+    // Primera vez: Cavani anota → 1-0
+    const firstGoal = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 30 } },
+      goals: { home: 1, away: 0 },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { name: "Boca" },
+          player: { name: "Cavani" },
+          time: { elapsed: 30 },
+        },
+      ],
+    });
+    const b = apply(a.state, firstGoal);
+    expect(b.triggers.map((t) => t.type)).toEqual(["GOAL"]);
+    const firstKey = b.triggers[0]?.eventKey;
+
+    // VAR anula el gol → marcador vuelve a 0-0
+    const afterVar = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 35 } },
+      goals: { home: 0, away: 0 },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { name: "Boca" },
+          player: { name: "Cavani" },
+          time: { elapsed: 30 },
+        },
+        { type: "Var", detail: "Goal cancelled", team: { name: "Boca" }, time: { elapsed: 34 } },
+      ],
+    });
+    const c = apply(b.state, afterVar);
+    expect(c.triggers.map((t) => t.type)).toEqual(["VAR_CANCELLED"]);
+
+    // Cavani anota de nuevo → 1-0 otra vez (misma transición 0-0→1-0)
+    const secondGoal = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 42 } },
+      goals: { home: 1, away: 0 },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { name: "Boca" },
+          player: { name: "Cavani" },
+          time: { elapsed: 30 },
+        },
+        { type: "Var", detail: "Goal cancelled", team: { name: "Boca" }, time: { elapsed: 34 } },
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { name: "Boca" },
+          player: { name: "Cavani" },
+          time: { elapsed: 42 },
+        },
+      ],
+    });
+    const d = apply(c.state, secondGoal);
+    expect(d.triggers.map((t) => t.type)).toEqual(["GOAL"]);
+    // La clave del segundo gol debe ser distinta a la del primero (nth:2 vs nth:1)
+    expect(d.triggers[0]?.eventKey).not.toBe(firstKey);
+    expect(d.triggers[0]?.eventKey).toContain("goal:");
+    expect(d.triggers[0]?.message).toContain("Boca 1 - 0 River");
+  });
+
+  it("no dispara VAR doble cuando ya hay evento VAR explícito en la API (score drop + evento)", () => {
+    const was = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 30 } },
+      goals: { home: 1, away: 0 },
+      events: [
+        { type: "Goal", team: { name: "Boca" }, player: { name: "X" }, time: { elapsed: 28 } },
+      ],
+    });
+    const a = apply(null, was);
+
+    // La API baja el marcador Y añade evento VAR al mismo tiempo
+    const now = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 33 } },
+      goals: { home: 0, away: 0 },
+      events: [
+        { type: "Goal", team: { name: "Boca" }, player: { name: "X" }, time: { elapsed: 28 } },
+        { type: "Var", detail: "Goal cancelled", team: { name: "Boca" }, time: { elapsed: 32 } },
+      ],
+    });
+    const b = apply(a.state, now);
+    // Solo debe haber UN trigger VAR (el explícito, no el de score drop)
+    expect(b.triggers.filter((t) => t.type === "VAR_CANCELLED")).toHaveLength(1);
   });
 
   it("does not fire RED_CARD twice when the provider only adds comments to the same card event", () => {

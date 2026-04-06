@@ -10,6 +10,10 @@ export type WhatsappNotificationJob = {
   triggerType: string;
   subscriberId: string;
   eventKey: string;
+  /** Score at the time the goal notification was generated. Used by the worker to
+   *  skip stale GOAL messages if the score was corrected downward (e.g. VAR) before delivery. */
+  scoreHome?: number;
+  scoreAway?: number;
 };
 
 export const notificationQueue = new Queue<WhatsappNotificationJob>("whatsapp-notifications", {

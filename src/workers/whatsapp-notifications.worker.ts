@@ -55,10 +55,30 @@ async function getInstancesCached(): Promise<EvolutionInstanceConfig[]> {
   return list;
 }
 
+/** Returns true when a GOAL notification should be skipped because the score it
+ *  reports has already been corrected downward (e.g. via VAR) before delivery. */
+async function isGoalScoreStale(
+  fixtureId: number,
+  scoreHome: number | undefined,
+  scoreAway: number | undefined
+): Promise<boolean> {
+  if (scoreHome === undefined || scoreAway === undefined) return false;
+  try {
+    const raw = await redisConnection.get(`match_state:${fixtureId}`);
+    if (!raw) return false;
+    const state = JSON.parse(raw) as { goalsHome?: number; goalsAway?: number };
+    const currentHome = typeof state.goalsHome === "number" ? state.goalsHome : scoreHome;
+    const currentAway = typeof state.goalsAway === "number" ? state.goalsAway : scoreAway;
+    return currentHome < scoreHome || currentAway < scoreAway;
+  } catch {
+    return false;
+  }
+}
+
 const worker = new Worker<WhatsappNotificationJob>(
   "whatsapp-notifications",
   async (job) => {
-    const { phone, message, fixtureId, triggerType, subscriberId, eventKey } = job.data;
+    const { phone, message, fixtureId, triggerType, subscriberId, eventKey, scoreHome, scoreAway } = job.data;
     if (process.env.NOTIFICATIONS_DEBUG === "true") {
       logInfo("whatsapp.send.due", {
         jobId: job.id,
@@ -71,6 +91,24 @@ const worker = new Worker<WhatsappNotificationJob>(
         messageSha1: createHash("sha1").update(message).digest("hex"),
         attemptsMade: job.attemptsMade,
       });
+    }
+
+    // Skip stale GOAL notifications when the score was corrected downward before delivery (e.g. VAR).
+    if (triggerType === "GOAL") {
+      const stale = await isGoalScoreStale(fixtureId, scoreHome, scoreAway);
+      if (stale) {
+        if (process.env.NOTIFICATIONS_DEBUG === "true") {
+          logInfo("whatsapp.send.skipped_stale_goal", {
+            jobId: job.id,
+            fixtureId,
+            triggerType,
+            subscriberId,
+            scoreHome,
+            scoreAway,
+          });
+        }
+        return;
+      }
     }
 
     const claimed = await tryClaimWhatsappSend(phone, fixtureId, triggerType, eventKey);

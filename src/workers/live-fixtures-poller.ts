@@ -224,6 +224,8 @@ async function dispatchTriggers(input: {
             triggerType: trigger.type,
             subscriberId: sub.subscriberId,
             eventKey: trigger.eventKey,
+            scoreHome: trigger.scoreHome,
+            scoreAway: trigger.scoreAway,
           });
         }
       }

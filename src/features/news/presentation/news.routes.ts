@@ -343,6 +343,89 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
     }
   )
 
+  // AI tag suggestions (admin only) — prefers recycling names from existingTags
+  .post(
+    "/ai-tags",
+    async ({ body, request, set }) => {
+      try {
+        const clerkId = request.headers.get("x-clerk-user-id");
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
+        const names = body.existingTags.map((t) => t.name).filter(Boolean);
+        const listPreview = names.slice(0, 200).join(", ");
+        const bodySample = body.body.length > 12000 ? `${body.body.slice(0, 12000)}…` : body.body;
+
+        const completion = await openai.responses.create({
+          model: "gpt-5-mini",
+          instructions: `Sos editor de un medio deportivo. Tenés que proponer exactamente 5 etiquetas (tags) en español para clasificar la noticia.
+
+Reglas:
+- Devolvé exactamente 5 strings en el array "tags".
+- Cada etiqueta: corta (ideal 1-3 palabras), sin #, sin comillas, sin duplicados.
+- Priorizá reusar literalmente nombres del listado de tags existentes cuando encajen (misma capitalización que en el listado si es posible).
+- Si el listado no alcanza para cubrir el tema, inventá etiquetas nuevas breves y relevantes.
+- Respondé únicamente JSON válido, con esta forma exacta: {"tags":["...","...","...","...","..."]}
+
+Tags existentes en la base (elegí de acá cuando sirva): ${listPreview || "(ninguno aún)"}`,
+          input: `Título: ${body.title}\n\nCuerpo:\n${bodySample}`,
+        });
+
+        const raw = completion.output_text?.trim() ?? "";
+        const parseTagArray = (text: string): string[] => {
+          const tryObj = (s: string) => {
+            try {
+              const parsed = JSON.parse(s) as { tags?: unknown };
+              if (!Array.isArray(parsed.tags)) return null;
+              return parsed.tags
+                .filter((x): x is string => typeof x === "string")
+                .map((x) => x.trim())
+                .filter(Boolean);
+            } catch {
+              return null;
+            }
+          };
+          const direct = tryObj(text);
+          if (direct?.length) return direct;
+          const block = text.match(/\{[\s\S]*\}/);
+          if (block) {
+            const nested = tryObj(block[0]);
+            if (nested?.length) return nested;
+          }
+          return [];
+        };
+
+        const tags = parseTagArray(raw).slice(0, 5);
+        if (tags.length !== 5) {
+          set.status = 422;
+          return { error: "La IA no devolvió 5 etiquetas válidas. Probá de nuevo." };
+        }
+        return { data: tags };
+      } catch (err: any) {
+        logError("news.aiTags.failed", { err: err?.message ?? String(err) });
+        set.status = 500;
+        return { error: "No se pudieron generar las etiquetas" };
+      }
+    },
+    {
+      body: t.Object({
+        title: t.String({ minLength: 1 }),
+        body: t.String({ minLength: 1 }),
+        existingTags: t.Array(
+          t.Object({
+            id: t.String(),
+            name: t.String(),
+            slug: t.String(),
+          })
+        ),
+      }),
+      detail: { tags: ["News"], summary: "Generate AI tag suggestions for a news article (admin only)" },
+    }
+  )
+
   // Track view or click (public, no auth)
   .post(
     "/:id/track",

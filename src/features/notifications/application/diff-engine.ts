@@ -22,6 +22,11 @@ export type DiffTrigger = {
   type: DiffTriggerType;
   message: string;
   eventKey: string;
+  /** Only set for GOAL triggers: score at the moment the goal was detected.
+   *  The WhatsApp worker uses this to skip messages when the score was corrected
+   *  downward (e.g. by VAR) before the message was delivered. */
+  scoreHome?: number;
+  scoreAway?: number;
 };
 
 export type StoredMatchState = {
@@ -173,8 +178,8 @@ function isVarGoalCancellationLikeEvent(event: ApiFootballFixtureEvent | null | 
 function collectNewGoalEvents(
   oldEvents: ApiFootballFixtureEvent[] | undefined,
   newEvents: ApiFootballFixtureEvent[]
-): ApiFootballFixtureEvent[] {
-  const ordered: ApiFootballFixtureEvent[] = [];
+): Array<{ event: ApiFootballFixtureEvent; nth: number }> {
+  const ordered: Array<{ event: ApiFootballFixtureEvent; nth: number }> = [];
   const nthBySig = new Map<string, number>();
   for (const e of newEvents) {
     if (!isRegularPlayMatchGoalForNotification(e)) continue;
@@ -182,7 +187,7 @@ function collectNewGoalEvents(
     const prevCount = countSignatureRegularMatchGoals(oldEvents, sig);
     const nth = (nthBySig.get(sig) ?? 0) + 1;
     nthBySig.set(sig, nth);
-    if (nth > prevCount) ordered.push(e);
+    if (nth > prevCount) ordered.push({ event: e, nth });
   }
   return ordered;
 }
@@ -224,10 +229,6 @@ function bumpScoreForGoal(
   if (t && h && t === h) return [rh + 1, ra];
   if (t && a && t === a) return [rh, ra + 1];
   return [rh, ra + 1];
-}
-
-function goalTransitionEventKey(rh: number, ra: number, nh: number, na: number) {
-  return `transition:${rh}-${ra}-${nh}-${na}`;
 }
 
 function scorerFromEvent(e: ApiFootballFixtureEvent | null): string | null {
@@ -300,7 +301,7 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     });
   }
 
-  // VAR_CANCELLED: únicamente con fila nueva en `events` que indique anulación (verdad de la API).
+  // VAR_CANCELLED: (1) fila nueva en `events` que indique anulación explícita de la API.
   if (!isColdStart) {
     for (const e of newEvents) {
       if (!isVarGoalCancellationLikeEvent(e)) continue;
@@ -310,6 +311,31 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
         fixtureId,
         type: "VAR_CANCELLED",
         eventKey: `event:${k}`,
+        message: templates.varCancelled({
+          homeTeam,
+          awayTeam,
+          leagueName,
+          matchUrl,
+          scoreHome: newScoreHome,
+          scoreAway: newScoreAway,
+        }),
+      });
+    }
+  }
+
+  // VAR_CANCELLED: (2) bajada exacta de 1 gol en el marcador como heurística cuando la API
+  // tarda en publicar el evento VAR explícito. Solo se dispara si no hay ya un trigger VAR
+  // (para evitar duplicados) y si no es un cold start. Puede generar falsos positivos en
+  // correcciones de datos de la API, pero permite notificaciones más rápidas.
+  if (!isColdStart) {
+    const homeDroppedOne = oldScoreHome - newScoreHome === 1 && newScoreAway === oldScoreAway;
+    const awayDroppedOne = oldScoreAway - newScoreAway === 1 && newScoreHome === oldScoreHome;
+    const hasVarTriggerAlready = triggers.some((t) => t.type === "VAR_CANCELLED");
+    if ((homeDroppedOne || awayDroppedOne) && !hasVarTriggerAlready) {
+      triggers.push({
+        fixtureId,
+        type: "VAR_CANCELLED",
+        eventKey: `score_drop:${oldScoreHome}-${oldScoreAway}->${newScoreHome}-${newScoreAway}`,
         message: templates.varCancelled({
           homeTeam,
           awayTeam,
@@ -348,7 +374,7 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     const oldFeed = oldState?.fixture?.events;
     const collected = collectNewGoalEvents(oldFeed, newEvents);
 
-    let goalsToEmit: ApiFootballFixtureEvent[] = [];
+    let goalsToEmit: Array<{ event: ApiFootballFixtureEvent; nth: number }> = [];
     if (netGoalDelta > 0) {
       if (collected.length === 0) {
         goalsToEmit = [];
@@ -364,7 +390,7 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     let ra = oldScoreAway;
 
     for (let i = 0; i < goalsToEmit.length; i++) {
-      const e = goalsToEmit[i]!;
+      const { event: e, nth } = goalsToEmit[i]!;
       const playerName = scorerFromEvent(e);
       if (!playerName) continue;
       const [bumpedH, bumpedA] = bumpScoreForGoal(e, newFixture, rh, ra);
@@ -374,7 +400,9 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
       triggers.push({
         fixtureId,
         type: "GOAL",
-        eventKey: goalTransitionEventKey(rh, ra, nh, na),
+        eventKey: `goal:${goalSignature(e)}:${nth}`,
+        scoreHome: nh,
+        scoreAway: na,
         message: templates.goal({
           homeTeam,
           awayTeam,
