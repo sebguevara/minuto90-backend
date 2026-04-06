@@ -9,6 +9,7 @@ import {
 } from "../features/notifications/application/subscriber-preferences";
 import { enqueueWhatsappNotificationsBulk } from "../features/notifications/whatsapp/notification.queue";
 import { redisConnection } from "../shared/redis/redis.connection";
+import { areNotificationsEnabled } from "../shared/config/notifications";
 import { logError, logInfo, logWarn } from "../shared/logging/logger";
 import { userNotificationSettingsService } from "../features/notifications/application/user-notification-settings.service";
 
@@ -38,6 +39,8 @@ async function shouldEmitPreMatch(subscriberId: string, fixtureId: number) {
 }
 
 async function pollOnce() {
+  if (!areNotificationsEnabled()) return;
+
   await userNotificationSettingsService.syncAllFootballTeamFavoriteSubscriptions();
   await userNotificationSettingsService.syncAllFootballLeagueFavoriteSubscriptions();
 

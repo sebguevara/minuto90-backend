@@ -1,5 +1,7 @@
 import { Elysia, t } from "elysia";
 import { logError } from "../../../shared/logging/logger";
+import { requireAdmin } from "../../../shared/middleware/admin-guard";
+import { areNotificationsEnabled } from "../../../shared/config/notifications";
 import { pushService } from "../application/push.service";
 
 export const pushRoutes = new Elysia({ prefix: "/api/push" })
@@ -7,6 +9,9 @@ export const pushRoutes = new Elysia({ prefix: "/api/push" })
     "/status",
     async ({ set }) => {
       try {
+        if (!areNotificationsEnabled()) {
+          return { data: { enabled: false, vapidPublicKey: null } };
+        }
         return pushService.getStatus();
       } catch (err: any) {
         logError("push.status.failed", { err: err?.message ?? String(err) });
@@ -22,6 +27,10 @@ export const pushRoutes = new Elysia({ prefix: "/api/push" })
     "/subscriptions",
     async ({ body, request, set }) => {
       try {
+        if (!areNotificationsEnabled()) {
+          set.status = 503;
+          return { error: "Notifications are disabled" };
+        }
         const clerkId = request.headers.get("x-clerk-user-id");
         const data = await pushService.upsertSubscription({
           endpoint: body.endpoint,
@@ -57,6 +66,10 @@ export const pushRoutes = new Elysia({ prefix: "/api/push" })
     "/subscriptions",
     async ({ body, set }) => {
       try {
+        if (!areNotificationsEnabled()) {
+          set.status = 503;
+          return { error: "Notifications are disabled" };
+        }
         const data = await pushService.deleteSubscriptionByEndpoint(body.endpoint);
         return { data };
       } catch (err: any) {
@@ -70,5 +83,49 @@ export const pushRoutes = new Elysia({ prefix: "/api/push" })
         endpoint: t.String({ minLength: 1 }),
       }),
       detail: { tags: ["Push"], summary: "Delete a web push subscription by endpoint" },
+    }
+  )
+  .post(
+    "/admin/custom",
+    async ({ body, request, set }) => {
+      try {
+        if (!areNotificationsEnabled()) {
+          set.status = 503;
+          return { error: "Notifications are disabled" };
+        }
+        const clerkId = request.headers.get("x-clerk-user-id");
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
+        const data = await pushService.sendCustomPushNotification({
+          title: body.title,
+          body: body.body,
+          imageUrl: body.imageUrl,
+          url: body.url,
+        });
+
+        return { data };
+      } catch (err: any) {
+        logError("push.admin.custom.failed", { err: err?.message ?? String(err) });
+        set.status = err?.message === "Web push is not configured" ? 503 : 500;
+        return {
+          error:
+            err?.message === "Web push is not configured"
+              ? "Web push is not configured"
+              : "Internal server error",
+        };
+      }
+    },
+    {
+      body: t.Object({
+        title: t.String({ minLength: 1 }),
+        body: t.String({ minLength: 1 }),
+        imageUrl: t.Optional(t.Nullable(t.String())),
+        url: t.Optional(t.Nullable(t.String())),
+      }),
+      detail: { tags: ["Push"], summary: "Send a custom push notification (admin only)" },
     }
   );

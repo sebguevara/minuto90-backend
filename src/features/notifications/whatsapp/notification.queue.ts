@@ -2,6 +2,7 @@ import { Queue } from "bullmq";
 import { redisConnection } from "../../../shared/redis/redis.connection";
 import { createHash } from "crypto";
 import { logInfo } from "../../../shared/logging/logger";
+import { areNotificationsEnabled } from "../../../shared/config/notifications";
 
 export type WhatsappNotificationJob = {
   phone: string;
@@ -30,6 +31,7 @@ function buildJobId(job: WhatsappNotificationJob) {
 }
 
 export async function enqueueWhatsappNotification(job: WhatsappNotificationJob) {
+  if (!areNotificationsEnabled()) return;
   const jobId = buildJobId(job);
   await notificationQueue.add("send", job, {
     jobId,
@@ -51,6 +53,7 @@ export async function enqueueWhatsappNotification(job: WhatsappNotificationJob) 
 }
 
 export async function enqueueWhatsappNotificationsBulk(jobs: WhatsappNotificationJob[]) {
+  if (!areNotificationsEnabled()) return;
   if (!jobs.length) return;
   const byJobId = new Map<string, WhatsappNotificationJob>();
   for (const job of jobs) {

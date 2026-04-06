@@ -8,6 +8,7 @@ import {
 } from "../features/notifications/infrastructure/evolution-api.client";
 import { selectEvolutionInstance } from "../features/notifications/infrastructure/evolution-instance.selector";
 import type { WhatsappNotificationJob } from "../features/notifications/whatsapp/notification.queue";
+import { areNotificationsEnabled } from "../shared/config/notifications";
 import { logError, logInfo } from "../shared/logging/logger";
 
 const WHATSAPP_SEND_DEDUPE_TTL_SECONDS = Number(
@@ -78,6 +79,8 @@ async function isGoalScoreStale(
 const worker = new Worker<WhatsappNotificationJob>(
   "whatsapp-notifications",
   async (job) => {
+    if (!areNotificationsEnabled()) return;
+
     const { phone, message, fixtureId, triggerType, subscriberId, eventKey, scoreHome, scoreAway } = job.data;
     if (process.env.NOTIFICATIONS_DEBUG === "true") {
       logInfo("whatsapp.send.due", {

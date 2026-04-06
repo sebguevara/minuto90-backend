@@ -12,6 +12,7 @@ import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
 import { getSubscriptionBaseline, type SubscriptionBaseline } from "../features/notifications/application/subscription-baseline";
 import { updateLiveFixturesCache, patchStandingsWithResult, saveFixtureEvents } from "./live-cache-updater";
+import { areNotificationsEnabled } from "../shared/config/notifications";
 import {
   canReceiveWhatsappNotifications,
   isLiveTriggerEnabled,
@@ -167,6 +168,7 @@ async function dispatchTriggers(input: {
   triggers: ReturnType<typeof computeDiffTriggers>["triggers"];
   newState: StoredMatchState;
 }) {
+  if (!areNotificationsEnabled()) return;
   if (!input.triggers.length) return;
 
   const subs = await minutoPrismaClient.matchSubscription.findMany({

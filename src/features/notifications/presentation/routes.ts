@@ -9,6 +9,7 @@ import { selectEvolutionInstance } from "../infrastructure/evolution-instance.se
 import { enqueueWhatsappNotification } from "../whatsapp/notification.queue";
 import { createHash } from "crypto";
 import { logError } from "../../../shared/logging/logger";
+import { areNotificationsEnabled } from "../../../shared/config/notifications";
 
 function prismaErrorToHttp(err: any): { status: number; message: string } {
   const code = err?.code;
@@ -538,6 +539,11 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
   .post(
     "/debug/whatsapp/send",
     async ({ body, request, set }) => {
+      if (!areNotificationsEnabled()) {
+        set.status = 503;
+        return { error: "Notifications are disabled" };
+      }
+
       const allowed = assertDebugAllowed(request);
       if (!allowed.ok) {
         set.status = allowed.status;
@@ -579,6 +585,11 @@ export const notificationsRoutes = new Elysia({ prefix: "/notifications" })
   .post(
     "/debug/whatsapp/enqueue",
     async ({ body, request, set }) => {
+      if (!areNotificationsEnabled()) {
+        set.status = 503;
+        return { error: "Notifications are disabled" };
+      }
+
       const allowed = assertDebugAllowed(request);
       if (!allowed.ok) {
         set.status = allowed.status;

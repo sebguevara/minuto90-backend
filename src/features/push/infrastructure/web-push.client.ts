@@ -1,8 +1,18 @@
 import webpush from "web-push";
+import { areNotificationsEnabled } from "../../../shared/config/notifications";
 
 let configured = false;
 
 function getConfig() {
+  if (!areNotificationsEnabled()) {
+    return {
+      enabled: false,
+      publicKey: null,
+      privateKey: null,
+      subject: null,
+    };
+  }
+
   const publicKey =
     process.env.VAPID_PUBLIC_KEY?.trim() ??
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() ??
@@ -31,6 +41,13 @@ function ensureConfigured() {
 }
 
 export function getWebPushStatus() {
+  if (!areNotificationsEnabled()) {
+    return {
+      enabled: false,
+      vapidPublicKey: null,
+    };
+  }
+
   const config = getConfig();
   return {
     enabled: config.enabled,

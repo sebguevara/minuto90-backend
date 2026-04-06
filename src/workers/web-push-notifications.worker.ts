@@ -1,13 +1,16 @@
 import { Worker } from "bullmq";
 import { minutoPrismaClient } from "../lib/minuto-client";
 import { sendWebPushNotification } from "../features/push/infrastructure/web-push.client";
-import type { WebPushMatchJob, WebPushNewsJob } from "../features/push/push.queue";
+import type { WebPushMatchJob, WebPushNewsJob, WebPushCustomJob } from "../features/push/push.queue";
 import { redisConnection } from "../shared/redis/redis.connection";
+import { areNotificationsEnabled } from "../shared/config/notifications";
 import { logError, logInfo } from "../shared/logging/logger";
 
 const CONCURRENCY = Number(process.env.WEB_PUSH_WORKER_CONCURRENCY ?? 20);
 
 async function sendPushToSubscription(subscriptionId: string, payload: string) {
+  if (!areNotificationsEnabled()) return;
+
   const subscription = await minutoPrismaClient.pushSubscription.findUnique({
     where: { id: subscriptionId },
   });
@@ -86,6 +89,33 @@ matchWorker.on("completed", (job) => {
     logInfo("push.match.job.completed", {
       jobId: job.id,
       fixtureId: job.data.fixtureId,
+      subscriptionId: job.data.subscriptionId,
+    });
+  }
+});
+
+// ─── Custom push worker ───────────────────────────────────────────────────────
+
+const customWorker = new Worker<WebPushCustomJob>(
+  "web-push-custom",
+  async (job) => sendPushToSubscription(job.data.subscriptionId, job.data.payload),
+  { connection: redisConnection, concurrency: CONCURRENCY }
+);
+
+customWorker.on("failed", (job, err) => {
+  logError("push.custom.send.failed", {
+    jobId: job?.id,
+    customId: job?.data?.customId,
+    subscriptionId: job?.data?.subscriptionId,
+    err: err?.message ?? String(err),
+  });
+});
+
+customWorker.on("completed", (job) => {
+  if (process.env.NOTIFICATIONS_DEBUG === "true") {
+    logInfo("push.custom.job.completed", {
+      jobId: job.id,
+      customId: job.data.customId,
       subscriptionId: job.data.subscriptionId,
     });
   }

@@ -2,10 +2,11 @@ import type { Prisma } from "../../../../prisma-minuto/minuto-client-types/clien
 import { minutoPrismaClient } from "../../../lib/minuto-client";
 import { logInfo } from "../../../shared/logging/logger";
 import { redisConnection } from "../../../shared/redis/redis.connection";
+import { areNotificationsEnabled } from "../../../shared/config/notifications";
 import { buildPublicNewsWhere, isNewsPubliclyVisible } from "../../news/application/news.service";
 import { userService } from "../../users/application/user.service";
 import { getWebPushStatus } from "../infrastructure/web-push.client";
-import { enqueueWebPushNewsJobs } from "../push.queue";
+import { enqueueWebPushNewsJobs, enqueueWebPushCustomJobs } from "../push.queue";
 
 const NEWS_PUSH_BATCH_SIZE = Number(process.env.NEWS_PUSH_BATCH_SIZE ?? 25);
 
@@ -78,6 +79,10 @@ export const pushService = {
     userAgent?: string | null;
     clerkId?: string | null;
   }) {
+    if (!areNotificationsEnabled()) {
+      throw new Error("Notifications are disabled");
+    }
+
     const status = getWebPushStatus();
     if (!status.enabled) {
       throw new Error("Web push is not configured");
@@ -115,6 +120,10 @@ export const pushService = {
   },
 
   async enqueueNewsPublicationPush(newsId: string) {
+    if (!areNotificationsEnabled()) {
+      return { status: "disabled" as const, jobs: 0 };
+    }
+
     const news = await minutoPrismaClient.news.findUnique({
       where: { id: newsId },
       select: newsPushSelect,
@@ -169,6 +178,13 @@ export const pushService = {
   },
 
   async enqueuePendingPublishedNews(limit = NEWS_PUSH_BATCH_SIZE) {
+    if (!areNotificationsEnabled()) {
+      return {
+        scanned: 0,
+        enqueued: 0,
+      };
+    }
+
     const pendingWhere: Prisma.NewsWhereInput = {
       ...buildPublicNewsWhere(new Date()),
       pushSentAt: null,
@@ -194,5 +210,56 @@ export const pushService = {
       scanned: pending.length,
       enqueued,
     };
+  },
+
+  async sendCustomPushNotification(input: {
+    title: string;
+    body: string;
+    imageUrl?: string | null;
+    url?: string | null;
+  }) {
+    if (!areNotificationsEnabled()) {
+      throw new Error("Notifications are disabled");
+    }
+
+    const status = getWebPushStatus();
+    if (!status.enabled) {
+      throw new Error("Web push is not configured");
+    }
+
+    const subscriptions = await minutoPrismaClient.pushSubscription.findMany({
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (!subscriptions.length) {
+      return { status: "no-subscriptions" as const, jobs: 0 };
+    }
+
+    const payloadObj = {
+      title: trimToLength(compactText(input.title), 80),
+      body: trimToLength(compactText(input.body), 160),
+      url: input.url ?? "/",
+      imageUrl: input.imageUrl ?? null,
+      tag: `custom:${Date.now()}`,
+    };
+
+    const payloadStr = JSON.stringify(payloadObj);
+    const customId = `cm-${Date.now()}`;
+
+    const jobs = subscriptions.map((sub) => ({
+      customId,
+      subscriptionId: sub.id,
+      payload: payloadStr,
+    }));
+
+    await enqueueWebPushCustomJobs(jobs);
+
+    logInfo("push.custom.enqueued", {
+      customId,
+      jobs: jobs.length,
+    });
+
+    return { status: "enqueued" as const, jobs: jobs.length };
   },
 };
