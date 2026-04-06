@@ -70,7 +70,7 @@ describe("diff-engine", () => {
     expect(b.triggers[0]?.message).not.toContain("Independiente 0 - 0 Racing Club");
   });
 
-  it("no envía GOAL por penalti en juego (detail Penalty fuera de tanda)", () => {
+  it("sí envía GOAL por penalti convertido en juego normal (detail Penalty, status 2H)", () => {
     const old = fixtureBase({
       fixture: { id: 1, status: { short: "2H", elapsed: 80 } },
       goals: { home: 0, away: 0 },
@@ -94,6 +94,36 @@ describe("diff-engine", () => {
     });
 
     const b = apply(a.state, penaltyGoal);
+    // Un penal convertido durante el juego normal debe notificarse como GOAL
+    expect(b.triggers.filter((t) => t.type === "GOAL")).toHaveLength(1);
+    expect(b.triggers[0]?.message).toContain("Delantero");
+    expect(b.triggers[0]?.message).toContain("Independiente 1 - 0 Racing Club");
+  });
+
+  it("NO envía GOAL por Missed Penalty (en cualquier estado)", () => {
+    const old = fixtureBase({
+      fixture: { id: 1, status: { short: "2H", elapsed: 80 } },
+      goals: { home: 0, away: 0 },
+      teams: { home: { id: 10, name: "Independiente" }, away: { id: 20, name: "Racing Club" } },
+    });
+    const a = apply(null, old);
+
+    const missedPenalty = fixtureBase({
+      fixture: { id: 1, status: { short: "2H", elapsed: 82 } },
+      goals: { home: 0, away: 0 },
+      teams: { home: { id: 10, name: "Independiente" }, away: { id: 20, name: "Racing Club" } },
+      events: [
+        {
+          type: "Goal",
+          detail: "Missed Penalty",
+          team: { id: 10, name: "Independiente" },
+          player: { name: "Delantero" },
+          time: { elapsed: 82 },
+        },
+      ],
+    });
+
+    const b = apply(a.state, missedPenalty);
     expect(b.triggers.filter((t) => t.type === "GOAL")).toHaveLength(0);
   });
 
@@ -616,5 +646,37 @@ describe("diff-engine", () => {
     const ftGlitch = fixtureBase({ fixture: { id: 1, status: { short: "FT", elapsed: 45 } } });
     const b = apply(a.state, ftGlitch);
     expect(b.triggers.map((t) => t.type)).toEqual([]);
+  });
+
+  it("fires FULL_TIME when old status is BT (extra time break) → AET", () => {
+    const bt = fixtureBase({
+      fixture: { id: 1, status: { short: "BT", elapsed: 105 } },
+      goals: { home: 1, away: 1 },
+    });
+    const a = apply(null, bt);
+
+    const aet = fixtureBase({
+      fixture: { id: 1, status: { short: "AET", elapsed: 120 } },
+      goals: { home: 1, away: 2 },
+    });
+    const b = apply(a.state, aet);
+    expect(b.triggers.map((t) => t.type)).toContain("FULL_TIME");
+  });
+
+  it("fires SECOND_HALF when old status is BT → 2H (extra time second period)", () => {
+    const bt = fixtureBase({
+      fixture: { id: 1, status: { short: "BT", elapsed: 105 } },
+      goals: { home: 1, away: 1 },
+    });
+    const a = apply(null, bt);
+
+    const h2 = fixtureBase({
+      fixture: { id: 1, status: { short: "2H", elapsed: 106 } },
+      goals: { home: 1, away: 1 },
+    });
+    const b = apply(a.state, h2);
+    // BT -> 2H no es la transición HT->2H que dispara SECOND_HALF (solo HT->2H lo dispara)
+    // pero tampoco debe bloquear FULL_TIME en el poll siguiente
+    expect(b.triggers.filter((t) => t.type === "FULL_TIME")).toHaveLength(0);
   });
 });

@@ -112,22 +112,32 @@ function goalSignature(e: ApiFootballFixtureEvent): string {
 }
 
 /**
- * Gol con plantilla “Gol” normal: excluye siempre `Penalty` y `Missed Penalty`.
- * Los penaltis en juego no se notifican como gol; en tanda (`P`) van por `PENALTY_SHOOTOUT_*`.
+ * Gol con plantilla "Gol" normal: excluye `Missed Penalty` siempre.
+ * Los penales convertidos *durante el juego normal* (detail=`Penalty`, status≠`P`) sí se
+ * notifican como gol; solo se excluyen durante la tanda (`P`), donde van por PENALTY_SHOOTOUT_KICK.
+ * `inShootout` true = estamos en estado `P`, por lo que penales van por otra rama.
  */
-function isRegularPlayMatchGoalForNotification(event: ApiFootballFixtureEvent | null | undefined): boolean {
+function isRegularPlayMatchGoalForNotification(
+  event: ApiFootballFixtureEvent | null | undefined,
+  inShootout: boolean = false
+): boolean {
   if (!event || event.type !== "Goal") return false;
   const detail = (event.detail ?? "").trim();
   if (detail === "Missed Penalty") return false;
-  if (detail === "Penalty") return false;
+  // Durante tanda (status P): los penales van por PENALTY_SHOOTOUT_KICK, no por GOAL.
+  if (detail === "Penalty" && inShootout) return false;
   return true;
 }
 
-function countSignatureRegularMatchGoals(events: ApiFootballFixtureEvent[] | undefined, sig: string): number {
+function countSignatureRegularMatchGoals(
+  events: ApiFootballFixtureEvent[] | undefined,
+  sig: string,
+  inShootout: boolean = false
+): number {
   if (!events?.length) return 0;
   let n = 0;
   for (const e of events) {
-    if (isRegularPlayMatchGoalForNotification(e) && goalSignature(e) === sig) n++;
+    if (isRegularPlayMatchGoalForNotification(e, inShootout) && goalSignature(e) === sig) n++;
   }
   return n;
 }
@@ -177,14 +187,15 @@ function isVarGoalCancellationLikeEvent(event: ApiFootballFixtureEvent | null | 
 /** Goles nuevos en `newEvents` respetando orden (misma firma: enésima ocurrencia > la que había en old). */
 function collectNewGoalEvents(
   oldEvents: ApiFootballFixtureEvent[] | undefined,
-  newEvents: ApiFootballFixtureEvent[]
+  newEvents: ApiFootballFixtureEvent[],
+  inShootout: boolean = false
 ): Array<{ event: ApiFootballFixtureEvent; nth: number }> {
   const ordered: Array<{ event: ApiFootballFixtureEvent; nth: number }> = [];
   const nthBySig = new Map<string, number>();
   for (const e of newEvents) {
-    if (!isRegularPlayMatchGoalForNotification(e)) continue;
+    if (!isRegularPlayMatchGoalForNotification(e, inShootout)) continue;
     const sig = goalSignature(e);
-    const prevCount = countSignatureRegularMatchGoals(oldEvents, sig);
+    const prevCount = countSignatureRegularMatchGoals(oldEvents, sig, inShootout);
     const nth = (nthBySig.get(sig) ?? 0) + 1;
     nthBySig.set(sig, nth);
     if (nth > prevCount) ordered.push({ event: e, nth });
@@ -367,12 +378,14 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
 
   // GOAL: solo filas nuevas en `events` (nunca inventar gol con el “último evento” si el marcador sube solo).
   // Marcador en el mensaje = API solo cuando hay exactamente un gol nuevo y coincide el delta (+1).
+  // Nota: penales durante el juego normal (detail=Penalty, status≠P) sí se notifican como gol.
   if (!isColdStart) {
     const netGoalDelta =
       newScoreHome - oldScoreHome + (newScoreAway - oldScoreAway);
 
     const oldFeed = oldState?.fixture?.events;
-    const collected = collectNewGoalEvents(oldFeed, newEvents);
+    const inShootout = newStatus === "P";
+    const collected = collectNewGoalEvents(oldFeed, newEvents, inShootout);
 
     let goalsToEmit: Array<{ event: ApiFootballFixtureEvent; nth: number }> = [];
     if (netGoalDelta > 0) {
@@ -505,9 +518,13 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
   }
 
   // FULL_TIME
+  // isLikelyBreak: evita disparar FULL_TIME si venimos de HT/INT (descanso de mitad o prórroga).
+  // ⚠️  BT (Break Time durante prórroga) NO se incluye aquí porque es un paso intermedio válido
+  //     hacia AET/PEN. Solo HT e INT son descansos que no preceden directamente al final.
   const elapsedForStatus = newFixture.fixture.status?.elapsed ?? null;
   const isLikelyBreak =
-    breakStatuses.has(oldStatus ?? "") ||
+    oldStatus === "HT" ||
+    oldStatus === "INT" ||
     (oldStatus === "1H" && typeof elapsedForStatus === "number" && elapsedForStatus >= 40 && elapsedForStatus <= 55);
   if (
     !isColdStart &&
