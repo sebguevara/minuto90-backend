@@ -8,6 +8,7 @@ export type CreateNewsInput = {
   authorName?: string | null;
   featured?: boolean;
   isHidden?: boolean;
+  isMundial?: boolean;
   publishFrom?: Date | null;
   publishTo?: Date | null;
   publishedAt?: Date;
@@ -24,6 +25,7 @@ export type UpdateNewsInput = {
   authorName?: string | null;
   featured?: boolean;
   isHidden?: boolean;
+  isMundial?: boolean;
   publishFrom?: Date | null;
   publishTo?: Date | null;
   publishedAt?: Date;

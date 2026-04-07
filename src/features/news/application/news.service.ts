@@ -37,13 +37,17 @@ export function isNewsPubliclyVisible(
 }
 
 export const newsService = {
-  async list(page = 1, limit = 20) {
+  async list(page = 1, limit = 20, isMundial?: boolean) {
     const now = new Date();
     const skip = (page - 1) * limit;
     const publicWhere = buildPublicNewsWhere(now);
+    const where: typeof publicWhere = {
+      ...publicWhere,
+      ...(isMundial !== undefined && { isMundial }),
+    };
     const [items, total] = await Promise.all([
       db.news.findMany({
-        where: publicWhere,
+        where,
         orderBy: { publishedAt: "desc" },
         skip,
         take: limit,
@@ -52,7 +56,7 @@ export const newsService = {
           category: { select: { id: true, name: true, slug: true, color: true } },
         },
       }),
-      db.news.count({ where: publicWhere }),
+      db.news.count({ where }),
     ]);
     return { items, total, page, limit };
   },
@@ -109,6 +113,7 @@ export const newsService = {
         authorName: input.authorName ?? null,
         featured: input.featured ?? false,
         isHidden: input.isHidden ?? false,
+        isMundial: input.isMundial ?? false,
         publishFrom: input.publishFrom ?? null,
         publishTo: input.publishTo ?? null,
         publishedAt: input.publishedAt ?? new Date(),
@@ -137,6 +142,7 @@ export const newsService = {
         ...(input.authorName !== undefined && { authorName: input.authorName }),
         ...(input.featured !== undefined && { featured: input.featured }),
         ...(input.isHidden !== undefined && { isHidden: input.isHidden }),
+        ...(input.isMundial !== undefined && { isMundial: input.isMundial }),
         ...(input.publishFrom !== undefined && { publishFrom: input.publishFrom }),
         ...(input.publishTo !== undefined && { publishTo: input.publishTo }),
         ...(input.publishedAt !== undefined && { publishedAt: input.publishedAt }),

@@ -34,11 +34,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  subscribers NotificationSubscriber[]
-  news        News[]
-  posts       Post[]
-  favorites   Favorite[]
-  pushSubscriptions PushSubscription[]
+  subscribers         NotificationSubscriber[]
+  news                News[]
+  posts               Post[]
+  favorites           Favorite[]
+  pushSubscriptions   PushSubscription[]
+  mundialPronostico   MundialPronostico?
 }
 
 // ─── Favorites ──────────────────────────────────────────────────────────────
@@ -142,6 +143,7 @@ model News {
   authorName  String?
   featured    Boolean       @default(false)
   isHidden    Boolean       @default(false)
+  isMundial   Boolean       @default(false)
   viewCount   Int           @default(0)
   clickCount  Int           @default(0)
   publishFrom DateTime?
@@ -159,6 +161,7 @@ model News {
   @@index([featured, isDeleted])
   @@index([categoryId])
   @@index([viewCount])
+  @@index([isMundial, publishedAt])
 
   tags NewsTag[]
 }
@@ -183,9 +186,27 @@ model Post {
   imageUrl  String?
   authorId  String?
   author    User?    @relation(fields: [authorId], references: [id])
+  context   String?
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([isDeleted, createdAt])
+  @@index([context, createdAt])
+}
+
+// ─── Mundial 2026 ────────────────────────────────────────────────────────────
+
+model MundialPronostico {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  bracket   Json
+  score     Int       @default(0)
+  isLocked  Boolean   @default(false)
+  lockedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([score])
 }

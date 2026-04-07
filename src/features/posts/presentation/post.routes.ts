@@ -10,7 +10,8 @@ export const postRoutes = new Elysia({ prefix: "/api/posts" })
       try {
         const page = Math.max(1, Number(query.page) || 1);
         const limit = Math.min(50, Math.max(1, Number(query.limit) || 20));
-        const result = await postService.list(page, limit);
+        const context = query.context ?? undefined;
+        const result = await postService.list(page, limit, context);
         return { data: result };
       } catch (err: any) {
         logError("posts.list.failed", { err: err?.message ?? String(err) });
@@ -22,6 +23,7 @@ export const postRoutes = new Elysia({ prefix: "/api/posts" })
       query: t.Object({
         page: t.Optional(t.String()),
         limit: t.Optional(t.String()),
+        context: t.Optional(t.String()),
       }),
       detail: { tags: ["Posts"], summary: "List posts" },
     }
@@ -69,6 +71,7 @@ export const postRoutes = new Elysia({ prefix: "/api/posts" })
         content: t.String({ minLength: 1 }),
         imageUrl: t.Optional(t.Nullable(t.String())),
         authorId: t.Optional(t.Nullable(t.String())),
+        context: t.Optional(t.Nullable(t.String())),
       }),
       detail: { tags: ["Posts"], summary: "Create a post" },
     }
@@ -97,6 +100,7 @@ export const postRoutes = new Elysia({ prefix: "/api/posts" })
       body: t.Object({
         content: t.Optional(t.String({ minLength: 1 })),
         imageUrl: t.Optional(t.Nullable(t.String())),
+        context: t.Optional(t.Nullable(t.String())),
       }),
       detail: { tags: ["Posts"], summary: "Update a post" },
     }

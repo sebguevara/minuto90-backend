@@ -89,3 +89,8 @@ export type NewsTag = Prisma.NewsTagModel
  * 
  */
 export type Post = Prisma.PostModel
+/**
+ * Model MundialPronostico
+ * 
+ */
+export type MundialPronostico = Prisma.MundialPronosticoModel

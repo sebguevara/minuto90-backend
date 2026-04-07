@@ -4,17 +4,21 @@ import type { CreatePostInput, UpdatePostInput } from "../domain/post.types";
 const db = minutoPrismaClient;
 
 export const postService = {
-  async list(page = 1, limit = 20) {
+  async list(page = 1, limit = 20, context?: string) {
     const skip = (page - 1) * limit;
+    const where = {
+      isDeleted: false,
+      ...(context !== undefined && { context }),
+    };
     const [items, total] = await Promise.all([
       db.post.findMany({
-        where: { isDeleted: false },
+        where,
         orderBy: { createdAt: "desc" },
         skip,
         take: limit,
         include: { author: { select: { id: true, name: true, imageUrl: true } } },
       }),
-      db.post.count({ where: { isDeleted: false } }),
+      db.post.count({ where }),
     ]);
     return { items, total, page, limit };
   },
@@ -32,6 +36,7 @@ export const postService = {
         content: input.content,
         imageUrl: input.imageUrl ?? null,
         authorId: input.authorId ?? null,
+        context: input.context ?? null,
       },
     });
   },
@@ -42,6 +47,7 @@ export const postService = {
       data: {
         ...(input.content !== undefined && { content: input.content }),
         ...(input.imageUrl !== undefined && { imageUrl: input.imageUrl }),
+        ...(input.context !== undefined && { context: input.context }),
       },
     });
   },

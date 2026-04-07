@@ -50,7 +50,8 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
           return { data: result };
         }
 
-        const result = await newsService.list(page, limit);
+        const isMundial = query.isMundial === "true" ? true : query.isMundial === "false" ? false : undefined;
+        const result = await newsService.list(page, limit, isMundial);
         return { data: result };
       } catch (err: any) {
         logError("news.list.failed", { err: err?.message ?? String(err) });
@@ -63,6 +64,7 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         page: t.Optional(t.String()),
         limit: t.Optional(t.String()),
         admin: t.Optional(t.String()),
+        isMundial: t.Optional(t.String()),
       }),
       detail: { tags: ["News"], summary: "List news articles" },
     }
@@ -135,6 +137,7 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
           authorName: body.authorName ?? null,
           featured: body.featured ?? false,
           isHidden: body.isHidden ?? false,
+          isMundial: body.isMundial ?? false,
           publishFrom: body.publishFrom ? new Date(body.publishFrom) : null,
           publishTo: body.publishTo ? new Date(body.publishTo) : null,
           publishedAt: body.publishedAt ? new Date(body.publishedAt) : undefined,
@@ -172,6 +175,7 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         authorName: t.Optional(t.Nullable(t.String())),
         featured: t.Optional(t.Boolean()),
         isHidden: t.Optional(t.Boolean()),
+        isMundial: t.Optional(t.Boolean()),
         publishFrom: t.Optional(t.Nullable(t.String())),
         publishTo: t.Optional(t.Nullable(t.String())),
         publishedAt: t.Optional(t.Nullable(t.String())),
@@ -217,6 +221,7 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
           ...(body.authorName !== undefined && { authorName: body.authorName }),
           ...(body.featured !== undefined && { featured: body.featured }),
           ...(body.isHidden !== undefined && { isHidden: body.isHidden }),
+          ...(body.isMundial !== undefined && { isMundial: body.isMundial }),
           publishFrom:
             body.publishFrom !== undefined
               ? body.publishFrom
@@ -266,6 +271,7 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         authorName: t.Optional(t.Nullable(t.String())),
         featured: t.Optional(t.Boolean()),
         isHidden: t.Optional(t.Boolean()),
+        isMundial: t.Optional(t.Boolean()),
         publishFrom: t.Optional(t.Nullable(t.String())),
         publishTo: t.Optional(t.Nullable(t.String())),
         publishedAt: t.Optional(t.Nullable(t.String())),

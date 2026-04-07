@@ -60,7 +60,8 @@ export const ModelName = {
   NewsCategory: 'NewsCategory',
   News: 'News',
   NewsTag: 'NewsTag',
-  Post: 'Post'
+  Post: 'Post',
+  MundialPronostico: 'MundialPronostico'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -202,6 +203,7 @@ export const NewsScalarFieldEnum = {
   authorName: 'authorName',
   featured: 'featured',
   isHidden: 'isHidden',
+  isMundial: 'isMundial',
   viewCount: 'viewCount',
   clickCount: 'clickCount',
   publishFrom: 'publishFrom',
@@ -232,12 +234,27 @@ export const PostScalarFieldEnum = {
   content: 'content',
   imageUrl: 'imageUrl',
   authorId: 'authorId',
+  context: 'context',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type PostScalarFieldEnum = (typeof PostScalarFieldEnum)[keyof typeof PostScalarFieldEnum]
+
+
+export const MundialPronosticoScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  bracket: 'bracket',
+  score: 'score',
+  isLocked: 'isLocked',
+  lockedAt: 'lockedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MundialPronosticoScalarFieldEnum = (typeof MundialPronosticoScalarFieldEnum)[keyof typeof MundialPronosticoScalarFieldEnum]
 
 
 export const SortOrder = {

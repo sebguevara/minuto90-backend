@@ -26,6 +26,7 @@ import { comparatorRoutes } from "./features/comparator/presentation/comparator.
 import { favoritesRoutes } from "./features/favorites/presentation/favorites.routes";
 import { uploadRoutes } from "./features/uploads/presentation/upload.routes";
 import { teamColorRoutes } from "./shared/colors/team-color.routes";
+import { mundialRoutes } from "./features/mundial/presentation/mundial.routes";
 
 const SITEMAP_REQUEST_PURPOSE = "sitemap";
 
@@ -175,6 +176,7 @@ const swaggerTags = [
   { name: "Favorites", description: "Favoritos del usuario" },
   { name: "Uploads", description: "Uploads administrativos" },
   { name: "Team Colors", description: "Colores y branding de equipos" },
+  { name: "Mundial", description: "Sección Mundial 2026 — pronósticos y ranking" },
 ];
 
 const swaggerTagGroups = [
@@ -277,6 +279,7 @@ const app = new Elysia()
   .use(favoritesRoutes)
   .use(uploadRoutes)
   .use(teamColorRoutes)
+  .use(mundialRoutes)
   .listen(
     process.env.NODE_ENV !== "development"
       ? Number(process.env.PORT ?? 4500)

@@ -130,6 +130,13 @@ Por ahora el sistema asume que existen filas en DB:
 - `NotificationSubscriber` (teléfono en formato internacional, solo dígitos recomendado)
 - `MatchSubscription` (con `fixtureId`)
 
+Además del alta directa por `fixtureId`, el backend ya puede derivar suscripciones de WhatsApp
+desde favoritos de fútbol:
+
+- `match`: suscribe ese partido exacto
+- `league`: suscribe los próximos partidos de esa liga
+- `team`: suscribe los próximos partidos del equipo guardado
+
 Siguiente paso recomendado: endpoints/admin para alta/baja y gestión de suscripciones.
 
 ## Next steps (recomendados)
@@ -163,4 +170,3 @@ Siguiente paso recomendado: endpoints/admin para alta/baja y gestión de suscrip
 - “Missing API-Football key”: setear `FOOTBALL_API_KEY` (o `API_KEY`).
 - “No active EvolutionInstance found”: setear `EVOLUTION_INSTANCE_NAME` + `EVOLUTION_API_KEY` o crear un `EvolutionInstance` activo en DB.
 - Redis: confirmar `REDIS_URL` (en Docker: `redis://redis:6379/0`).
-

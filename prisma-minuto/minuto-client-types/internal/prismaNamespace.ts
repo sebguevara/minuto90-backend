@@ -393,7 +393,8 @@ export const ModelName = {
   NewsCategory: 'NewsCategory',
   News: 'News',
   NewsTag: 'NewsTag',
-  Post: 'Post'
+  Post: 'Post',
+  MundialPronostico: 'MundialPronostico'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -409,7 +410,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "pushSubscription" | "user" | "favorite" | "notificationSubscriber" | "matchSubscription" | "evolutionInstance" | "newsCategory" | "news" | "newsTag" | "post"
+    modelProps: "pushSubscription" | "user" | "favorite" | "notificationSubscriber" | "matchSubscription" | "evolutionInstance" | "newsCategory" | "news" | "newsTag" | "post" | "mundialPronostico"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1153,6 +1154,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    MundialPronostico: {
+      payload: Prisma.$MundialPronosticoPayload<ExtArgs>
+      fields: Prisma.MundialPronosticoFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MundialPronosticoFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MundialPronosticoFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload>
+        }
+        findFirst: {
+          args: Prisma.MundialPronosticoFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MundialPronosticoFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload>
+        }
+        findMany: {
+          args: Prisma.MundialPronosticoFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload>[]
+        }
+        create: {
+          args: Prisma.MundialPronosticoCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload>
+        }
+        createMany: {
+          args: Prisma.MundialPronosticoCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MundialPronosticoCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload>[]
+        }
+        delete: {
+          args: Prisma.MundialPronosticoDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload>
+        }
+        update: {
+          args: Prisma.MundialPronosticoUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload>
+        }
+        deleteMany: {
+          args: Prisma.MundialPronosticoDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MundialPronosticoUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MundialPronosticoUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload>[]
+        }
+        upsert: {
+          args: Prisma.MundialPronosticoUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MundialPronosticoPayload>
+        }
+        aggregate: {
+          args: Prisma.MundialPronosticoAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMundialPronostico>
+        }
+        groupBy: {
+          args: Prisma.MundialPronosticoGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MundialPronosticoGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MundialPronosticoCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MundialPronosticoCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1315,6 +1390,7 @@ export const NewsScalarFieldEnum = {
   authorName: 'authorName',
   featured: 'featured',
   isHidden: 'isHidden',
+  isMundial: 'isMundial',
   viewCount: 'viewCount',
   clickCount: 'clickCount',
   publishFrom: 'publishFrom',
@@ -1345,12 +1421,27 @@ export const PostScalarFieldEnum = {
   content: 'content',
   imageUrl: 'imageUrl',
   authorId: 'authorId',
+  context: 'context',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type PostScalarFieldEnum = (typeof PostScalarFieldEnum)[keyof typeof PostScalarFieldEnum]
+
+
+export const MundialPronosticoScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  bracket: 'bracket',
+  score: 'score',
+  isLocked: 'isLocked',
+  lockedAt: 'lockedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MundialPronosticoScalarFieldEnum = (typeof MundialPronosticoScalarFieldEnum)[keyof typeof MundialPronosticoScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1580,6 +1671,7 @@ export type GlobalOmitConfig = {
   news?: Prisma.NewsOmit
   newsTag?: Prisma.NewsTagOmit
   post?: Prisma.PostOmit
+  mundialPronostico?: Prisma.MundialPronosticoOmit
 }
 
 /* Types for Logging */
