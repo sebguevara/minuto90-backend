@@ -27,6 +27,8 @@ model User {
   id        String   @id @default(uuid())
   clerkId   String   @unique
   email     String?
+  firstName String?
+  lastName  String?
   name      String?
   imageUrl  String?
   role      String   @default("user")
@@ -187,12 +189,20 @@ model Post {
   authorId  String?
   author    User?    @relation(fields: [authorId], references: [id])
   context   String?
+  type      String?  @default("general")
+  category  String?
+  countryCode String?
+  gallery   Json?
+  displayOrder Int   @default(0)
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([isDeleted, createdAt])
   @@index([context, createdAt])
+  @@index([context, type, category, createdAt])
+  @@index([countryCode, createdAt])
+  @@index([displayOrder, createdAt])
 }
 
 // ─── Mundial 2026 ────────────────────────────────────────────────────────────

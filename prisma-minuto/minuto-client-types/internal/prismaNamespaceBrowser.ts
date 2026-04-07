@@ -99,6 +99,8 @@ export const UserScalarFieldEnum = {
   id: 'id',
   clerkId: 'clerkId',
   email: 'email',
+  firstName: 'firstName',
+  lastName: 'lastName',
   name: 'name',
   imageUrl: 'imageUrl',
   role: 'role',
@@ -235,6 +237,11 @@ export const PostScalarFieldEnum = {
   imageUrl: 'imageUrl',
   authorId: 'authorId',
   context: 'context',
+  type: 'type',
+  category: 'category',
+  countryCode: 'countryCode',
+  gallery: 'gallery',
+  displayOrder: 'displayOrder',
   isDeleted: 'isDeleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -270,6 +277,14 @@ export const JsonNullValueInput = {
 } as const
 
 export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {

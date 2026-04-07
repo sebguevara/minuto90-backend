@@ -5,14 +5,68 @@ import { minutoPrismaClient } from "../../../lib/minuto-client";
 import { logError, logInfo, logWarn } from "../../../shared/logging/logger";
 import { userNotificationSettingsService } from "../../notifications/application/user-notification-settings.service";
 
+function normalizeNullableString(value: unknown) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function splitDisplayName(displayName: string | null) {
+  if (!displayName) return { firstName: null, lastName: null };
+
+  const parts = displayName
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length === 0) return { firstName: null, lastName: null };
+  if (parts.length === 1) return { firstName: parts[0]!, lastName: null };
+
+  return {
+    firstName: parts[0]!,
+    lastName: parts.slice(1).join(" "),
+  };
+}
+
+function getExternalAccountDisplayName(data: any) {
+  const accountWithName = data.external_accounts?.find?.(
+    (account: any) => account?.first_name || account?.last_name
+  );
+
+  if (!accountWithName) return null;
+
+  return normalizeNullableString(
+    `${accountWithName.first_name ?? ""} ${accountWithName.last_name ?? ""}`
+  );
+}
+
 function extractClerkUserData(data: any) {
   const clerkId = data.id as string;
-  const email = data.email_addresses?.[0]?.email_address ?? null;
-  const firstName = data.first_name ?? "";
-  const lastName = data.last_name ?? "";
-  const name = [firstName, lastName].filter(Boolean).join(" ") || null;
-  const imageUrl = data.image_url ?? null;
-  return { clerkId, email, name, imageUrl };
+  const email = normalizeNullableString(data.email_addresses?.[0]?.email_address);
+  const imageUrl =
+    normalizeNullableString(data.image_url) ??
+    normalizeNullableString(data.profile_image_url) ??
+    null;
+
+  const directFirstName = normalizeNullableString(data.first_name);
+  const directLastName = normalizeNullableString(data.last_name);
+
+  const fallbackDisplayName =
+    normalizeNullableString(data.full_name) ??
+    normalizeNullableString(data.username) ??
+    getExternalAccountDisplayName(data) ??
+    (email ? email.split("@")[0] : null);
+
+  const splitFallback = splitDisplayName(fallbackDisplayName);
+
+  const firstName = directFirstName ?? splitFallback.firstName;
+  const lastName = directLastName ?? splitFallback.lastName;
+  const name =
+    [firstName, lastName].filter(Boolean).join(" ").trim() ||
+    fallbackDisplayName ||
+    null;
+
+  return { clerkId, email, firstName, lastName, name, imageUrl };
 }
 
 export const userRoutes = new Elysia()
@@ -41,14 +95,14 @@ export const userRoutes = new Elysia()
 
         switch (eventType) {
           case "user.created": {
-            const { clerkId, email, name, imageUrl } = extractClerkUserData(data);
-            await userService.createFromClerk({ clerkId, email, name, imageUrl });
+            const { clerkId, email, firstName, lastName, name, imageUrl } = extractClerkUserData(data);
+            await userService.createFromClerk({ clerkId, email, firstName, lastName, name, imageUrl });
             logInfo("clerk.webhook.user_created", { clerkId });
             break;
           }
           case "user.updated": {
-            const { clerkId, email, name, imageUrl } = extractClerkUserData(data);
-            await userService.updateFromClerk(clerkId, { email, name, imageUrl });
+            const { clerkId, email, firstName, lastName, name, imageUrl } = extractClerkUserData(data);
+            await userService.updateFromClerk(clerkId, { email, firstName, lastName, name, imageUrl });
             logInfo("clerk.webhook.user_updated", { clerkId });
             break;
           }
@@ -86,6 +140,8 @@ export const userRoutes = new Elysia()
           data: {
             id: user.id,
             clerkId: user.clerkId,
+            firstName: (user as any).firstName ?? null,
+            lastName: (user as any).lastName ?? null,
             name: user.name,
             email: user.email,
             imageUrl: user.imageUrl,

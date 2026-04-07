@@ -8,12 +8,16 @@ export const userService = {
       create: {
         clerkId: input.clerkId,
         email: input.email ?? undefined,
+        firstName: input.firstName ?? undefined,
+        lastName: input.lastName ?? undefined,
         name: input.name ?? undefined,
         imageUrl: input.imageUrl ?? undefined,
         isActive: true,
       },
       update: {
         email: input.email ?? undefined,
+        firstName: input.firstName ?? undefined,
+        lastName: input.lastName ?? undefined,
         name: input.name ?? undefined,
         imageUrl: input.imageUrl ?? undefined,
         isActive: true,
@@ -27,12 +31,16 @@ export const userService = {
       create: {
         clerkId,
         email: input.email ?? undefined,
+        firstName: input.firstName ?? undefined,
+        lastName: input.lastName ?? undefined,
         name: input.name ?? undefined,
         imageUrl: input.imageUrl ?? undefined,
         isActive: true,
       },
       update: {
         email: input.email ?? undefined,
+        firstName: input.firstName ?? undefined,
+        lastName: input.lastName ?? undefined,
         name: input.name ?? undefined,
         imageUrl: input.imageUrl ?? undefined,
         isActive: true,

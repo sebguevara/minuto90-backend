@@ -1,17 +1,39 @@
 import { Elysia, t } from "elysia";
 import { postService } from "../application/post.service";
 import { logError } from "../../../shared/logging/logger";
+import { requireAdmin } from "../../../shared/middleware/admin-guard";
+
+const galleryItemSchema = t.Object({
+  url: t.String({ minLength: 1 }),
+  alt: t.Optional(t.Nullable(t.String())),
+});
 
 export const postRoutes = new Elysia({ prefix: "/api/posts" })
   // List posts (paginated)
   .get(
     "/",
-    async ({ query, set }) => {
+    async ({ query, headers, set }) => {
       try {
         const page = Math.max(1, Number(query.page) || 1);
         const limit = Math.min(50, Math.max(1, Number(query.limit) || 20));
-        const context = query.context ?? undefined;
-        const result = await postService.list(page, limit, context);
+        const isAdmin = query.admin === "true";
+
+        if (isAdmin) {
+          const clerkId = headers["x-clerk-user-id"];
+          const guard = await requireAdmin(clerkId);
+          if (!guard.ok) {
+            set.status = guard.status;
+            return { error: guard.error };
+          }
+        }
+
+        const result = await postService.list(page, limit, {
+          context: query.context ?? undefined,
+          type: query.type ?? undefined,
+          category: query.category ?? undefined,
+          countryCode: query.countryCode?.toUpperCase() ?? undefined,
+          includeDeleted: false,
+        });
         return { data: result };
       } catch (err: any) {
         logError("posts.list.failed", { err: err?.message ?? String(err) });
@@ -24,6 +46,10 @@ export const postRoutes = new Elysia({ prefix: "/api/posts" })
         page: t.Optional(t.String()),
         limit: t.Optional(t.String()),
         context: t.Optional(t.String()),
+        type: t.Optional(t.String()),
+        category: t.Optional(t.String()),
+        countryCode: t.Optional(t.String()),
+        admin: t.Optional(t.String()),
       }),
       detail: { tags: ["Posts"], summary: "List posts" },
     }
@@ -55,9 +81,19 @@ export const postRoutes = new Elysia({ prefix: "/api/posts" })
   // Create
   .post(
     "/",
-    async ({ body, set }) => {
+    async ({ body, headers, set }) => {
       try {
-        const post = await postService.create(body);
+        const clerkId = headers["x-clerk-user-id"];
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
+        const post = await postService.create({
+          ...body,
+          authorId: guard.userId,
+        });
         set.status = 201;
         return { data: post };
       } catch (err: any) {
@@ -72,6 +108,11 @@ export const postRoutes = new Elysia({ prefix: "/api/posts" })
         imageUrl: t.Optional(t.Nullable(t.String())),
         authorId: t.Optional(t.Nullable(t.String())),
         context: t.Optional(t.Nullable(t.String())),
+        type: t.Optional(t.Nullable(t.String())),
+        category: t.Optional(t.Nullable(t.String())),
+        countryCode: t.Optional(t.Nullable(t.String())),
+        gallery: t.Optional(t.Nullable(t.Array(galleryItemSchema))),
+        displayOrder: t.Optional(t.Nullable(t.Number())),
       }),
       detail: { tags: ["Posts"], summary: "Create a post" },
     }
@@ -80,8 +121,15 @@ export const postRoutes = new Elysia({ prefix: "/api/posts" })
   // Update
   .patch(
     "/:id",
-    async ({ params, body, set }) => {
+    async ({ params, body, headers, set }) => {
       try {
+        const clerkId = headers["x-clerk-user-id"];
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
         const existing = await postService.getById(params.id);
         if (!existing) {
           set.status = 404;
@@ -101,6 +149,11 @@ export const postRoutes = new Elysia({ prefix: "/api/posts" })
         content: t.Optional(t.String({ minLength: 1 })),
         imageUrl: t.Optional(t.Nullable(t.String())),
         context: t.Optional(t.Nullable(t.String())),
+        type: t.Optional(t.Nullable(t.String())),
+        category: t.Optional(t.Nullable(t.String())),
+        countryCode: t.Optional(t.Nullable(t.String())),
+        gallery: t.Optional(t.Nullable(t.Array(galleryItemSchema))),
+        displayOrder: t.Optional(t.Nullable(t.Number())),
       }),
       detail: { tags: ["Posts"], summary: "Update a post" },
     }
@@ -109,8 +162,15 @@ export const postRoutes = new Elysia({ prefix: "/api/posts" })
   // Soft delete
   .delete(
     "/:id",
-    async ({ params, set }) => {
+    async ({ params, headers, set }) => {
       try {
+        const clerkId = headers["x-clerk-user-id"];
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
         const existing = await postService.getById(params.id);
         if (!existing) {
           set.status = 404;
