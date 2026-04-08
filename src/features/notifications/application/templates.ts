@@ -18,7 +18,7 @@ export const templates = {
   goal: (
     input: TemplateCommon & {
       teamName: string;
-      playerName: string;
+      playerName?: string | null;
       assistName?: string | null;
       minute: number | string;
     }
@@ -27,7 +27,7 @@ export const templates = {
       "⚽ *Gol*",
       "",
       `*${input.teamName}*`,
-      `*${input.playerName}* · _${input.minute}′_`,
+      ...(input.playerName ? [`*${input.playerName}* · _${input.minute}′_`] : [`_${input.minute}′_`]),
       ...(input.assistName ? [`_Asistencia: ${input.assistName}_`] : []),
       "",
       `*${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}*`,
@@ -159,7 +159,7 @@ export const templates = {
       "",
       `*${input.teamName}*`,
       `*${input.playerName}* · _${input.minute}′_`,
-      input.converted ? "✅ *Gol* en la serie _(no suma al marcador del partido)_." : "❌ *Penal errado* _(no suma al marcador del partido)_.",
+      input.converted ? "✅ *Gol* en la serie." : "❌ *Penal errado*.",
       "",
       serieLine,
       "",

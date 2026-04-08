@@ -106,9 +106,8 @@ function minuteFromEvent(e: ApiFootballFixtureEvent | null): number | string {
 /** Firma estable del gol (sin minuto/extra): API-Football a veces corrige 35′→36′ y cambiaba la clave → doble WhatsApp. */
 function goalSignature(e: ApiFootballFixtureEvent): string {
   const team = e?.team?.id ?? e?.team?.name ?? "";
-  const player = e?.player?.id ?? e?.player?.name ?? "";
   const detail = e?.detail ?? "";
-  return `${detail}|${team}|${player}`;
+  return `${detail}|${team}`;
 }
 
 /**
@@ -258,6 +257,56 @@ function teamFromEvent(e: ApiFootballFixtureEvent | null, fixture: ApiFootballLi
   return e?.team?.name ?? fixture.teams?.home?.name ?? fixture.teams?.away?.name ?? "Equipo";
 }
 
+function resolveEventTeamSide(
+  event: ApiFootballFixtureEvent | null | undefined,
+  fixture: ApiFootballLiveFixture
+): "home" | "away" | null {
+  if (!event) return null;
+
+  const teamId = event.team?.id;
+  const homeId = fixture.teams?.home?.id;
+  const awayId = fixture.teams?.away?.id;
+
+  if (typeof teamId === "number" && typeof homeId === "number" && teamId === homeId) return "home";
+  if (typeof teamId === "number" && typeof awayId === "number" && teamId === awayId) return "away";
+
+  const teamName = (event.team?.name ?? "").trim().toLowerCase();
+  const homeName = (fixture.teams?.home?.name ?? "").trim().toLowerCase();
+  const awayName = (fixture.teams?.away?.name ?? "").trim().toLowerCase();
+
+  if (teamName && homeName && teamName === homeName) return "home";
+  if (teamName && awayName && teamName === awayName) return "away";
+
+  return null;
+}
+
+function buildVarCancellationEventKey(input: {
+  oldScoreHome: number;
+  oldScoreAway: number;
+  newScoreHome: number;
+  newScoreAway: number;
+  fixture: ApiFootballLiveFixture;
+  event?: ApiFootballFixtureEvent | null;
+}): string {
+  const sideFromDrop =
+    input.oldScoreHome - input.newScoreHome === 1 && input.oldScoreAway === input.newScoreAway
+      ? "home"
+      : input.oldScoreAway - input.newScoreAway === 1 && input.oldScoreHome === input.newScoreHome
+        ? "away"
+        : null;
+  const side = sideFromDrop ?? resolveEventTeamSide(input.event, input.fixture);
+
+  if (side === "home") {
+    return `var_cancelled:home:${input.newScoreHome + 1}-${input.newScoreAway}->${input.newScoreHome}-${input.newScoreAway}`;
+  }
+
+  if (side === "away") {
+    return `var_cancelled:away:${input.newScoreHome}-${input.newScoreAway + 1}->${input.newScoreHome}-${input.newScoreAway}`;
+  }
+
+  return `var_cancelled:unknown:${input.oldScoreHome}-${input.oldScoreAway}->${input.newScoreHome}-${input.newScoreAway}`;
+}
+
 export function buildStoredState(newFixture: ApiFootballLiveFixture): StoredMatchState {
   const fixtureId = newFixture.fixture.id;
   const statusShort = newFixture.fixture.status?.short ?? null;
@@ -317,11 +366,18 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     for (const e of newEvents) {
       if (!isVarGoalCancellationLikeEvent(e)) continue;
       if (isEventAlreadyKnown(oldEventKeySet, e)) continue;
-      const k = buildEventKey(e);
+      const k = buildVarCancellationEventKey({
+        oldScoreHome,
+        oldScoreAway,
+        newScoreHome,
+        newScoreAway,
+        fixture: newFixture,
+        event: e,
+      });
       triggers.push({
         fixtureId,
         type: "VAR_CANCELLED",
-        eventKey: `event:${k}`,
+        eventKey: k,
         message: templates.varCancelled({
           homeTeam,
           awayTeam,
@@ -346,7 +402,13 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
       triggers.push({
         fixtureId,
         type: "VAR_CANCELLED",
-        eventKey: `score_drop:${oldScoreHome}-${oldScoreAway}->${newScoreHome}-${newScoreAway}`,
+        eventKey: buildVarCancellationEventKey({
+          oldScoreHome,
+          oldScoreAway,
+          newScoreHome,
+          newScoreAway,
+          fixture: newFixture,
+        }),
         message: templates.varCancelled({
           homeTeam,
           awayTeam,
@@ -405,7 +467,6 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     for (let i = 0; i < goalsToEmit.length; i++) {
       const { event: e, nth } = goalsToEmit[i]!;
       const playerName = scorerFromEvent(e);
-      if (!playerName) continue;
       const [bumpedH, bumpedA] = bumpScoreForGoal(e, newFixture, rh, ra);
       const anchorToApiSnapshot = goalsToEmit.length === 1 && netGoalDelta === 1;
       const nh = anchorToApiSnapshot ? newScoreHome : bumpedH;
