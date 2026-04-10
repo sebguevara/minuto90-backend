@@ -146,6 +146,31 @@ function shouldApplyLiveOverlay(
   return true;
 }
 
+function fixtureBelongsToRequestedDate(
+  fixture: Record<string, any> | null | undefined,
+  requestedDate: string
+): boolean {
+  const kickoff = fixture?.fixture?.date;
+  if (typeof kickoff !== "string" || kickoff.length < 10) {
+    return false;
+  }
+
+  return kickoff.slice(0, 10) === requestedDate;
+}
+
+function filterFixturesByRequestedDate<TFixture extends Record<string, any>>(
+  fixtures: TFixture[],
+  requestedDate: string | undefined
+): TFixture[] {
+  if (!requestedDate) {
+    return fixtures;
+  }
+
+  return fixtures.filter((fixture) =>
+    fixtureBelongsToRequestedDate(fixture, requestedDate)
+  );
+}
+
 function mergeLiveIntoFixture<TFixture extends Record<string, any>>(
   baseFixture: TFixture,
   liveFixture: FootballLiveHomeFixture
@@ -699,7 +724,10 @@ export function createFootballRoutes(service: FootballServiceContract = football
         ]);
 
         const liveFixtures = Array.isArray(snapshot?.response) ? snapshot.response : [];
-        const baseResponse = Array.isArray(baseEnvelope.response) ? baseEnvelope.response : [];
+        const baseResponse = filterFixturesByRequestedDate(
+          Array.isArray(baseEnvelope.response) ? baseEnvelope.response : [],
+          date
+        );
         const mergedMap = new Map<number, Record<string, any>>(
           baseResponse
             .filter((fixture) => Boolean(fixture?.fixture?.id))
@@ -735,12 +763,16 @@ export function createFootballRoutes(service: FootballServiceContract = football
             ids: missingLiveIds.join("-"),
             timezone,
           });
-          const missingResponse = Array.isArray(missingEnvelope.response)
-            ? missingEnvelope.response
-            : [];
+          const missingResponse = filterFixturesByRequestedDate(
+            Array.isArray(missingEnvelope.response) ? missingEnvelope.response : [],
+            date
+          );
 
           for (const fixture of missingResponse) {
-            if (fixture?.fixture?.id) {
+            if (
+              fixture?.fixture?.id &&
+              fixtureBelongsToRequestedDate(fixture as Record<string, any>, date)
+            ) {
               mergedMap.set(fixture.fixture.id, fixture as Record<string, any>);
             }
           }
@@ -1006,6 +1038,10 @@ export function createFootballRoutes(service: FootballServiceContract = football
           const isSingleLookup = parsedQuery.id != null || parsedQuery.ids != null;
           let fixtures = envelope.response as ApiFootballFixtureItem[];
 
+          if (parsedQuery.date) {
+            fixtures = filterFixturesByRequestedDate(fixtures, parsedQuery.date);
+          }
+
           if (isSingleLookup) {
             const snapshot = await getFootballLiveSnapshot();
             if (snapshot?.response?.length) {
@@ -1025,7 +1061,7 @@ export function createFootballRoutes(service: FootballServiceContract = football
           if (isSingleLookup) {
             // Live match view — never cache, always return fresh elapsed/clock data.
             set.headers["Cache-Control"] = "no-store";
-          } else if (response === fixtures) {
+          } else if (response === fixtures && fixtures.length === envelope.response.length) {
             return envelope;
           }
 
