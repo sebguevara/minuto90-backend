@@ -11,6 +11,8 @@ services:
       - .env
     environment:
       - NODE_ENV=production
+    mem_limit: 1500m
+    mem_reservation: 512m
     networks:
       - minuto90-network
 
@@ -25,6 +27,8 @@ services:
       - .env
     environment:
       - NODE_ENV=production
+    mem_limit: 800m
+    mem_reservation: 256m
     depends_on:
       pg-minuto90:
         condition: service_healthy
@@ -45,9 +49,15 @@ services:
         "yes",
         "--requirepass",
         "minuto90_redis_password_secure",
+        "--maxmemory",
+        "400mb",
+        "--maxmemory-policy",
+        "allkeys-lru",
       ]
     volumes:
       - minuto90-redis-data:/data
+    mem_limit: 512m
+    mem_reservation: 128m
     networks:
       - minuto90-network
 
