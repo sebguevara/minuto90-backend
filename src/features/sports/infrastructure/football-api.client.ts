@@ -791,6 +791,8 @@ export class FootballApiClient implements FootballApiClientContract {
         });
       }
 
+      json = await this.hydrateAdditionalPages(context, json);
+
       if (ttlSeconds > 0) {
         await this.cache.set(context.cacheKey, json, ttlSeconds);
       }
@@ -877,6 +879,84 @@ export class FootballApiClient implements FootballApiClientContract {
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  private async hydrateAdditionalPages(
+    context: FixtureRequestContext,
+    firstPage: unknown
+  ): Promise<unknown> {
+    const envelope = firstPage as {
+      paging?: { current?: number; total?: number };
+      response?: unknown;
+    };
+    const total = Number(envelope?.paging?.total ?? 1);
+    const current = Number(envelope?.paging?.current ?? 1);
+
+    if (!Number.isFinite(total) || total <= 1 || !Number.isFinite(current)) {
+      return firstPage;
+    }
+    if (!Array.isArray(envelope.response)) {
+      return firstPage;
+    }
+
+    const MAX_PAGES = 10;
+    const cappedTotal = Math.min(total, MAX_PAGES);
+    const merged = envelope.response.slice();
+
+    for (let page = current + 1; page <= cappedTotal; page += 1) {
+      const separator = context.url.includes("?") ? "&" : "?";
+      const pageUrl = `${context.url}${separator}page=${page}`;
+      const controller = new AbortController();
+      const pageTimeout = setTimeout(
+        () => controller.abort("timeout"),
+        FOOTBALL_UPSTREAM_TIMEOUT_MS
+      );
+
+      try {
+        const response = await this.fetchFn(pageUrl, {
+          method: "GET",
+          headers: {
+            "x-rapidapi-key": this.apiKey,
+            "x-rapidapi-host": new URL(this.baseUrl).host,
+          },
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          logError("football.pagination.page_failed", {
+            endpoint: context.endpoint,
+            page,
+            status: response.status,
+          });
+          break;
+        }
+
+        const body = await response.text();
+        const pageJson = body ? (JSON.parse(body) as unknown) : null;
+        if (!isApiFootballEnvelope(pageJson)) break;
+
+        const pageResponse = (pageJson as { response?: unknown }).response;
+        if (Array.isArray(pageResponse)) {
+          merged.push(...pageResponse);
+        }
+      } catch (error) {
+        logError("football.pagination.page_error", {
+          endpoint: context.endpoint,
+          page,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        break;
+      } finally {
+        clearTimeout(pageTimeout);
+      }
+    }
+
+    return {
+      ...(firstPage as Record<string, unknown>),
+      paging: { current: 1, total: 1 },
+      results: merged.length,
+      response: merged,
+    };
   }
 
   private logFixtureRequest<TEnvelope extends ApiFootballEnvelope<unknown>>(
