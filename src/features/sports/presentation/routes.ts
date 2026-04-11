@@ -168,6 +168,15 @@ function fixtureBelongsToRequestedDate(
   const timestamp = fixture?.fixture?.timestamp;
   const kickoff = fixture?.fixture?.date;
 
+  // 1) ISO slice (the ISO comes from api-sports already converted to the
+  //    requested timezone, so this is usually the source of truth).
+  if (typeof kickoff === "string" && kickoff.length >= 10) {
+    if (kickoff.slice(0, 10) === requestedDate) {
+      return true;
+    }
+  }
+
+  // 2) Fallback: convert timestamp → requested timezone day string.
   const ms =
     typeof timestamp === "number" && Number.isFinite(timestamp)
       ? timestamp * 1000
@@ -176,12 +185,8 @@ function fixtureBelongsToRequestedDate(
         : NaN;
 
   const dayInTz = formatDateInTimeZone(ms, requestedTimezone);
-  if (dayInTz) {
-    return dayInTz === requestedDate;
-  }
-
-  if (typeof kickoff === "string" && kickoff.length >= 10) {
-    return kickoff.slice(0, 10) === requestedDate;
+  if (dayInTz && dayInTz === requestedDate) {
+    return true;
   }
 
   return false;
