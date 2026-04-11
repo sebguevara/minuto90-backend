@@ -487,6 +487,7 @@ function toFixturesQuery(query: Record<string, unknown>): GetFixturesQuery {
     round: typeof query.round === "string" ? query.round : undefined,
     status: typeof query.status === "string" ? query.status : undefined,
     venue: parseOptionalInteger(query.venue, "venue"),
+    timezone: typeof query.timezone === "string" ? query.timezone : undefined,
   };
 }
 
