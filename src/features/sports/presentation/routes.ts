@@ -146,28 +146,58 @@ function shouldApplyLiveOverlay(
   return true;
 }
 
+function formatDateInTimeZone(ms: number, timeZone: string): string | null {
+  if (!Number.isFinite(ms)) return null;
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(ms));
+  } catch {
+    return null;
+  }
+}
+
 function fixtureBelongsToRequestedDate(
   fixture: Record<string, any> | null | undefined,
-  requestedDate: string
+  requestedDate: string,
+  requestedTimezone: string
 ): boolean {
+  const timestamp = fixture?.fixture?.timestamp;
   const kickoff = fixture?.fixture?.date;
-  if (typeof kickoff !== "string" || kickoff.length < 10) {
-    return false;
+
+  const ms =
+    typeof timestamp === "number" && Number.isFinite(timestamp)
+      ? timestamp * 1000
+      : typeof kickoff === "string"
+        ? Date.parse(kickoff)
+        : NaN;
+
+  const dayInTz = formatDateInTimeZone(ms, requestedTimezone);
+  if (dayInTz) {
+    return dayInTz === requestedDate;
   }
 
-  return kickoff.slice(0, 10) === requestedDate;
+  if (typeof kickoff === "string" && kickoff.length >= 10) {
+    return kickoff.slice(0, 10) === requestedDate;
+  }
+
+  return false;
 }
 
 function filterFixturesByRequestedDate<TFixture extends Record<string, any>>(
   fixtures: TFixture[],
-  requestedDate: string | undefined
+  requestedDate: string | undefined,
+  requestedTimezone: string
 ): TFixture[] {
   if (!requestedDate) {
     return fixtures;
   }
 
   return fixtures.filter((fixture) =>
-    fixtureBelongsToRequestedDate(fixture, requestedDate)
+    fixtureBelongsToRequestedDate(fixture, requestedDate, requestedTimezone)
   );
 }
 
@@ -179,7 +209,6 @@ function mergeLiveIntoFixture<TFixture extends Record<string, any>>(
     ...baseFixture,
     fixture: {
       ...baseFixture.fixture,
-      ...(liveFixture.fixture.date ? { date: liveFixture.fixture.date } : {}),
       status: {
         ...baseFixture.fixture?.status,
         ...(liveFixture.fixture.status?.short
@@ -726,7 +755,8 @@ export function createFootballRoutes(service: FootballServiceContract = football
         const liveFixtures = Array.isArray(snapshot?.response) ? snapshot.response : [];
         const baseResponse = filterFixturesByRequestedDate(
           Array.isArray(baseEnvelope.response) ? baseEnvelope.response : [],
-          date
+          date,
+          timezone
         );
         const mergedMap = new Map<number, Record<string, any>>(
           baseResponse
@@ -765,13 +795,14 @@ export function createFootballRoutes(service: FootballServiceContract = football
           });
           const missingResponse = filterFixturesByRequestedDate(
             Array.isArray(missingEnvelope.response) ? missingEnvelope.response : [],
-            date
+            date,
+            timezone
           );
 
           for (const fixture of missingResponse) {
             if (
               fixture?.fixture?.id &&
-              fixtureBelongsToRequestedDate(fixture as Record<string, any>, date)
+              fixtureBelongsToRequestedDate(fixture as Record<string, any>, date, timezone)
             ) {
               mergedMap.set(fixture.fixture.id, fixture as Record<string, any>);
             }
@@ -1039,7 +1070,11 @@ export function createFootballRoutes(service: FootballServiceContract = football
           let fixtures = envelope.response as ApiFootballFixtureItem[];
 
           if (parsedQuery.date) {
-            fixtures = filterFixturesByRequestedDate(fixtures, parsedQuery.date);
+            const requestedTz =
+              typeof parsedQuery.timezone === "string" && parsedQuery.timezone.trim().length > 0
+                ? parsedQuery.timezone
+                : "America/Argentina/Buenos_Aires";
+            fixtures = filterFixturesByRequestedDate(fixtures, parsedQuery.date, requestedTz);
           }
 
           if (isSingleLookup) {
