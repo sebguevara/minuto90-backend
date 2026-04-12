@@ -82,6 +82,16 @@ async function waitForDateSnapshotMeta(date: string) {
   return null;
 }
 
+async function waitForDateRefreshLockRelease(date: string) {
+  const key = buildOddsDateRefreshLockKey(date);
+  for (let attempt = 0; attempt < LOCK_WAIT_ATTEMPTS; attempt++) {
+    const lockValue = await redisConnection.get(key);
+    if (!lockValue) return true;
+    await delay(LOCK_WAIT_MS);
+  }
+  return false;
+}
+
 async function fetchDateOddsPages(
   date: string,
   timezone: string,
@@ -320,7 +330,7 @@ export async function hydrateFixturesOddsResponse(
 
       const refreshResult = await refreshOddsSnapshotForDate(date, timezone, bet);
       if (refreshResult.skipped === "locked") {
-        await waitForDateSnapshotMeta(date);
+        await waitForDateRefreshLockRelease(date);
       }
       const refreshedMissingItems = await getCachedOddsItemsByFixtureIds(missingFixtureIds, true);
 
