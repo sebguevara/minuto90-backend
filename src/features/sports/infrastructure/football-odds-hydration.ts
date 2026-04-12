@@ -318,7 +318,10 @@ export async function hydrateFixturesOddsResponse(
         missing: missingFixtureIds.length,
       });
 
-      await refreshOddsSnapshotForDate(date, timezone, bet);
+      const refreshResult = await refreshOddsSnapshotForDate(date, timezone, bet);
+      if (refreshResult.skipped === "locked") {
+        await waitForDateSnapshotMeta(date);
+      }
       const refreshedMissingItems = await getCachedOddsItemsByFixtureIds(missingFixtureIds, true);
 
       if (refreshedMissingItems.length) {
