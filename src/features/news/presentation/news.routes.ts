@@ -51,7 +51,8 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         }
 
         const isMundial = query.isMundial === "true" ? true : query.isMundial === "false" ? false : undefined;
-        const result = await newsService.list(page, limit, isMundial);
+        const featured = query.featured === "true" ? true : query.featured === "false" ? false : undefined;
+        const result = await newsService.list(page, limit, isMundial, featured);
         return { data: result };
       } catch (err: any) {
         logError("news.list.failed", { err: err?.message ?? String(err) });
@@ -65,6 +66,7 @@ export const newsRoutes = new Elysia({ prefix: "/api/news" })
         limit: t.Optional(t.String()),
         admin: t.Optional(t.String()),
         isMundial: t.Optional(t.String()),
+        featured: t.Optional(t.String()),
       }),
       detail: { tags: ["News"], summary: "List news articles" },
     }

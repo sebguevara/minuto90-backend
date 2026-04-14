@@ -357,8 +357,12 @@ async function handleDisappearances(currentIds: number[]) {
   const baselineIds = lastIds.length ? lastIds : await listRecentlyTrackedFixtureIds();
 
   const missing = baselineIds.filter((id) => !current.has(id));
-  await setLastLiveSet(currentIds);
-  if (!missing.length) return;
+  if (!missing.length) {
+    await setLastLiveSet(currentIds);
+    return;
+  }
+
+  const stillPending: number[] = [];
 
   for (const fixtureId of missing) {
     try {
@@ -377,7 +381,10 @@ async function handleDisappearances(currentIds: number[]) {
       const fixture = oldState.fixture;
       const elapsed = fixture.fixture.status?.elapsed ?? null;
       const threshold = missingPollThresholdFor(s, elapsed);
-      if (missingCount < threshold) continue;
+      if (missingCount < threshold) {
+        stillPending.push(fixtureId);
+        continue;
+      }
 
       if (isLikelyHalftime(s, elapsed)) continue;
 
@@ -453,6 +460,10 @@ async function handleDisappearances(currentIds: number[]) {
       logWarn("live.disappeared.full_time.failed", { fixtureId, err: err?.message ?? String(err) });
     }
   }
+
+  // Persist current IDs + still-pending disappeared fixtures so they remain
+  // in the baseline for future polls until their missing counter reaches threshold.
+  await setLastLiveSet([...currentIds, ...stillPending]);
 }
 
 const CURRENT_SEASON = new Date().getFullYear() - 1;

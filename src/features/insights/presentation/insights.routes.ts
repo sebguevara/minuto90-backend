@@ -1,5 +1,7 @@
 import { Elysia, t } from "elysia";
 import { insightsService } from "../application/insights.service";
+import { generateMomentumNarrative } from "../application/momentum.service";
+import type { MomentumSignal } from "../application/momentum.types";
 
 export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
   .get(
@@ -100,6 +102,43 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
         summary: "Obtener partidos destacados del día",
         description:
           "Devuelve los partidos más relevantes de una fecha, ordenados por score de relevancia automático (liga, posición en tabla, ronda, rivalidad).",
+      },
+    }
+  )
+  .post(
+    "/match/:fixtureId/momentum",
+    async ({ params, body, set }) => {
+      try {
+        const signal: MomentumSignal = {
+          ...body,
+          fixtureId: params.fixtureId,
+        };
+        const narrative = await generateMomentumNarrative(signal);
+        return { success: true, data: narrative };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, error: error.message ?? "Error al generar insight de momentum" };
+      }
+    },
+    {
+      params: t.Object({
+        fixtureId: t.Numeric({ description: "Fixture ID for the match" }),
+      }),
+      body: t.Object({
+        minute: t.Number(),
+        homeTeam: t.String(),
+        awayTeam: t.String(),
+        signalType: t.String(),
+        team: t.Union([t.Literal("home"), t.Literal("away")]),
+        stats: t.Record(t.String(), t.Union([t.Number(), t.String()])),
+        delta: t.Record(t.String(), t.Number()),
+        probability: t.Optional(t.Number()),
+      }),
+      detail: {
+        tags: ["Insights"],
+        summary: "Generar insight de momentum en vivo",
+        description:
+          "Recibe una señal de momentum detectada en el frontend y genera un texto narrativo con OpenAI.",
       },
     }
   );

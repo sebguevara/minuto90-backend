@@ -332,7 +332,34 @@ export async function hydrateFixturesOddsResponse(
       if (refreshResult.skipped === "locked") {
         await waitForDateRefreshLockRelease(date);
       }
-      const refreshedMissingItems = await getCachedOddsItemsByFixtureIds(missingFixtureIds, true);
+      let refreshedMissingItems = await getCachedOddsItemsByFixtureIds(missingFixtureIds, true);
+
+      // After a lock-wait the holder may have refreshed with a different timezone,
+      // leaving some fixtures still uncached. Retry once now that the lock is free.
+      if (refreshResult.skipped === "locked" && refreshedMissingItems.length < missingFixtureIds.length) {
+        const foundIds = new Set(
+          refreshedMissingItems
+            .map((item) => item.fixture?.id)
+            .filter((id): id is number => Number.isFinite(id) && id > 0)
+        );
+        const stillMissingIds = missingFixtureIds.filter((id) => !foundIds.has(id));
+
+        if (stillMissingIds.length) {
+          logInfo("football.odds.snapshot.retry_after_lock_wait", {
+            date,
+            timezone,
+            stillMissing: stillMissingIds.length,
+          });
+          const retryResult = await refreshOddsSnapshotForDate(date, timezone, bet);
+          if (retryResult.skipped === "locked") {
+            await waitForDateRefreshLockRelease(date);
+          }
+          const retryItems = await getCachedOddsItemsByFixtureIds(stillMissingIds, true);
+          if (retryItems.length) {
+            refreshedMissingItems = [...refreshedMissingItems, ...retryItems];
+          }
+        }
+      }
 
       if (refreshedMissingItems.length) {
         const mergedByFixture = new Map<number, ApiFootballOddsItem>();

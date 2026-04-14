@@ -3,13 +3,13 @@ import { findTeamByMinId } from "../../stats/infrastructure/stats.repo/findTeamB
 import { fetchMatchProfile } from "../../stats/infrastructure/stats.repo/matchProfile";
 import { redisConnection } from "../../../shared/redis/redis.connection";
 import { logWarn } from "../../../shared/logging/logger";
-import type { TeamComparisonProfile } from "../domain/comparator.types";
+import type { TeamComparisonProfile, HomeAwayRecord } from "../domain/comparator.types";
 
 const CACHE_TTL_SECONDS = 60 * 60 * 6; // 6 hours
 
 function buildCacheKey(teamApiId: number): string {
   const env = process.env.NODE_ENV ?? "development";
-  return `minuto90:${env}:comparator:team:${teamApiId}:v1`;
+  return `minuto90:${env}:comparator:team:${teamApiId}:v2`;
 }
 
 function safeNumber(value: string | number | null | undefined): number | null {
@@ -94,12 +94,65 @@ export async function getTeamProfile(teamApiId: number): Promise<TeamComparisonP
   const penaltyPctStr = stats?.penalty?.scored?.percentage;
   const penaltyScoredPct = penaltyPctStr ? parseFloat(penaltyPctStr.replace("%", "")) : null;
 
+  const totalGoalsFor = stats?.goals?.for?.total?.total ?? 0;
+  const totalGoalsAgainst = stats?.goals?.against?.total?.total ?? 0;
+
   const yellowCardsTotal = sumCardMinutes(stats?.cards?.yellow as any);
   const redCardsTotal = sumCardMinutes(stats?.cards?.red as any);
   const yellowCardsPerGame = matchesPlayed > 0 ? yellowCardsTotal / matchesPlayed : null;
   const redCardsPerGame = matchesPlayed > 0 ? redCardsTotal / matchesPlayed : null;
 
-  // 3. Fetch WhoScored data (best-effort, team.minId = API-Football team ID)
+  // 3. Fetch standings (best-effort) for position, points, goal diff, form, home/away splits
+  let leagueRank: number | null = null;
+  let points: number | null = null;
+  let goalDiff: number | null = null;
+  let formStr: string | null = stats?.form ?? null;
+  let homeRecord: HomeAwayRecord | null = null;
+  let awayRecord: HomeAwayRecord | null = null;
+
+  try {
+    const standingsEnvelope = await footballService.getStandings({
+      league: leagueId,
+      season: currentSeason,
+    });
+    const allGroups = standingsEnvelope.response?.[0]?.league?.standings ?? [];
+    for (const group of allGroups) {
+      const row = group.find((r: any) => r.team.id === teamApiId);
+      if (row) {
+        leagueRank = row.rank;
+        points = row.points;
+        goalDiff = row.goalsDiff;
+        if (row.form) formStr = row.form;
+        if (row.home) {
+          homeRecord = {
+            w: row.home.win ?? 0,
+            d: row.home.draw ?? 0,
+            l: row.home.lose ?? 0,
+            gf: row.home.goals.for ?? 0,
+            ga: row.home.goals.against ?? 0,
+          };
+        }
+        if (row.away) {
+          awayRecord = {
+            w: row.away.win ?? 0,
+            d: row.away.draw ?? 0,
+            l: row.away.lose ?? 0,
+            gf: row.away.goals.for ?? 0,
+            ga: row.away.goals.against ?? 0,
+          };
+        }
+        break;
+      }
+    }
+  } catch (err) {
+    logWarn("comparator.standings.fetch_failed", {
+      teamApiId,
+      leagueId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  // 4. Fetch WhoScored data (best-effort, team.minId = API-Football team ID)
   let shotsPg: number | null = null;
   let shotsOnTargetPg: number | null = null;
   let possessionAvg: number | null = null;
@@ -173,7 +226,19 @@ export async function getTeamProfile(teamApiId: number): Promise<TeamComparisonP
     leagueId,
     leagueLogo: mainLeagueItem.league.logo ?? null,
     season: currentSeason,
+    leagueType: mainLeagueItem.league.type,
+    leagueRank,
+    points,
+    goalDiff,
+    form: formStr,
     matchesPlayed,
+    totalGoalsFor,
+    totalGoalsAgainst,
+    wins,
+    draws,
+    losses,
+    homeRecord,
+    awayRecord,
     goalsPerGame,
     concededPerGame,
     winsPerGame,

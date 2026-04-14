@@ -17,6 +17,7 @@ import { formula1Routes } from "./features/sports/presentation/formula1.routes";
 import { statsRoutes } from "./features/stats/presentation/routes";
 import { notificationsRoutes } from "./features/notifications/presentation/routes";
 import { insightsRoutes } from "./features/insights/presentation/insights.routes";
+import { analystChatRoutes } from "./features/analyst-chat/presentation/analyst-chat.routes";
 import { userRoutes } from "./features/users/presentation/user.routes";
 import { newsRoutes } from "./features/news/presentation/news.routes";
 import { categoryRoutes } from "./features/news/presentation/category.routes";
@@ -168,6 +169,7 @@ const swaggerTags = [
   },
   { name: "Evolution API", description: "Instancias y operaciones de Evolution API" },
   { name: "Insights", description: "Generacion de resumenes de partido e insights con IA" },
+  { name: "Chat", description: "Preguntale al Analista — Chat conversacional con IA" },
   { name: "Users", description: "Gestion de usuarios y webhooks de Clerk" },
   { name: "News", description: "Noticias y categorias" },
   { name: "Posts", description: "Posts y publicaciones" },
@@ -200,7 +202,7 @@ const swaggerTagGroups = [
     ],
   },
   { name: "Frontend", tags: ["Users", "Push", "Favorites", "Team Colors"] },
-  { name: "AI", tags: ["Insights"] },
+  { name: "AI", tags: ["Insights", "Chat"] },
   { name: "Evolution API", tags: ["Evolution API"] },
   { name: "Content", tags: ["News", "Posts", "Uploads"] },
   { name: "Notifications", tags: ["Notifications"] },
@@ -270,6 +272,7 @@ const app = new Elysia()
   .use(statsRoutes)
   .use(notificationsRoutes)
   .use(insightsRoutes)
+  .use(analystChatRoutes)
   .use(userRoutes)
   .use(newsRoutes)
   .use(categoryRoutes)

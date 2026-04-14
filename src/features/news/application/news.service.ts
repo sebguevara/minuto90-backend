@@ -37,13 +37,14 @@ export function isNewsPubliclyVisible(
 }
 
 export const newsService = {
-  async list(page = 1, limit = 20, isMundial?: boolean) {
+  async list(page = 1, limit = 20, isMundial?: boolean, featured?: boolean) {
     const now = new Date();
     const skip = (page - 1) * limit;
     const publicWhere = buildPublicNewsWhere(now);
     const where: typeof publicWhere = {
       ...publicWhere,
       ...(isMundial !== undefined && { isMundial }),
+      ...(featured !== undefined && { featured }),
     };
     const [items, total] = await Promise.all([
       db.news.findMany({
