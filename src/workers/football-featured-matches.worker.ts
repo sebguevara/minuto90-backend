@@ -55,7 +55,12 @@ async function refreshFeaturedRange(label: string, dates: string[]) {
 }
 
 async function refreshTodayFeaturedMatches() {
-  return refreshFeaturedRange("today", [formatUtcDateKey(0)]);
+  // Pre-warm yesterday, today, and tomorrow (UTC) to cover all user timezones
+  return refreshFeaturedRange("today", [
+    formatUtcDateKey(-1),
+    formatUtcDateKey(0),
+    formatUtcDateKey(1),
+  ]);
 }
 
 async function refreshNearFutureFeaturedMatches() {

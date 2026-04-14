@@ -12,6 +12,7 @@ import {
   buildInsightsLockKey,
   buildMatchInsightsCacheKey,
   buildMatchSummaryStateCacheKey,
+  type MatchSummaryStateSlot,
 } from "../infrastructure/insights-cache-key";
 import {
   getDailyInsightsTtlSeconds,
@@ -509,7 +510,10 @@ export class InsightsService {
   /**
    * Generates a narrator-style summary for a given fixture ID.
    */
-  async generateMatchSummary(fixtureId: number): Promise<string> {
+  async generateMatchSummary(
+    fixtureId: number,
+    requestedState?: MatchSummaryStateSlot,
+  ): Promise<{ text: string; stateSlot: MatchSummaryStateSlot }> {
     const fixtureData = await this.getFixtureById(fixtureId);
     if (!fixtureData) {
       throw new Error("Partido no encontrado");
@@ -519,22 +523,33 @@ export class InsightsService {
     const isFinished = COMPLETED_MATCH_STATUS.has(statusShort);
     const isLive = LIVE_MATCH_STATUS.has(statusShort);
 
+    const autoSlot: MatchSummaryStateSlot = isFinished ? "finished" : isLive ? "live" : "prematch";
+
+    // Validate: only allow requesting a state the match has already reached
+    const STATE_ORDER: Record<MatchSummaryStateSlot, number> = { prematch: 0, live: 1, finished: 2 };
+    const effectiveSlot: MatchSummaryStateSlot =
+      requestedState && STATE_ORDER[requestedState] <= STATE_ORDER[autoSlot]
+        ? requestedState
+        : autoSlot;
+
     const state = resolveMatchState({
       statusShort: fixtureData.fixture.status.short,
       kickoffAt: getFixtureKickoffDate(fixtureData),
     });
-    const ttlSeconds = getMatchSummaryTtlSeconds(state);
-    const stateSlot = isFinished ? "finished" : isLive ? "live" : "prematch";
-    const cacheKey = buildMatchSummaryStateCacheKey(fixtureId, stateSlot);
+    // Historical states get a long TTL since the content won't change
+    const ttlSeconds = effectiveSlot === autoSlot
+      ? getMatchSummaryTtlSeconds(state)
+      : 60 * 60 * 6; // 6 hours for historical state re-generation
+    const cacheKey = buildMatchSummaryStateCacheKey(fixtureId, effectiveSlot);
 
     const result = await this.getOrComputeCachedValue<string>({
       cacheKey,
       ttlSeconds,
       compute: async () => {
-        if (isFinished) {
+        if (effectiveSlot === "finished") {
           return this.computePostMatchSummary(fixtureId, fixtureData);
         }
-        if (isLive) {
+        if (effectiveSlot === "live") {
           return this.computeLiveMatchAnalysis(fixtureId, fixtureData);
         }
         return this.computePreMatchAnalysis(fixtureId, fixtureData);
@@ -546,10 +561,11 @@ export class InsightsService {
         fixtureId,
         cacheKey,
         ttlSeconds,
+        effectiveSlot,
       });
     }
 
-    return result.value;
+    return { text: result.value, stateSlot: effectiveSlot };
   }
 
   private async computePostMatchSummary(
@@ -1072,7 +1088,8 @@ Formato:
   async getFeaturedMatches(
     date: string,
     limit = 10,
-    userCountry?: string | null
+    userCountry?: string | null,
+    timezone?: string | null
   ): Promise<FeaturedMatch[]> {
     const cacheKey = buildFeaturedMatchesCacheKey(date, userCountry);
 
@@ -1086,7 +1103,7 @@ Formato:
     const lockAcquired = await redisInsightsCacheStore.setNx(lockKey, "1", LOCK_TTL_SECONDS);
 
     const computeAndCache = async (): Promise<FeaturedMatch[]> => {
-      const data = await this.computeFeaturedMatches(date, limit, userCountry);
+      const data = await this.computeFeaturedMatches(date, limit, userCountry, timezone);
       const hasLive = data.some((m) =>
         LIVE_MATCH_STATUS.has((m.status ?? "").toUpperCase())
       );
@@ -1116,9 +1133,13 @@ Formato:
   private async computeFeaturedMatches(
     date: string,
     limit: number,
-    userCountry?: string | null
+    userCountry?: string | null,
+    timezone?: string | null
   ): Promise<FeaturedMatch[]> {
-    const fixturesRes = await footballService.getFixtures({ date });
+    const fixturesRes = await footballService.getFixtures({
+      date,
+      ...(timezone ? { timezone } : {}),
+    });
 
     // During the World Cup window, featured matches are ONLY World Cup fixtures
     const WC_LEAGUE_ID = 1;

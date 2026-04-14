@@ -33,9 +33,9 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
   )
   .get(
     "/match/:fixtureId/summary",
-    async ({ params, set }) => {
+    async ({ params, query, set }) => {
       try {
-        const summary = await insightsService.generateMatchSummary(params.fixtureId);
+        const summary = await insightsService.generateMatchSummary(params.fixtureId, query.state);
         return { success: true, data: summary };
       } catch (error: any) {
         set.status = 500;
@@ -45,6 +45,13 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
     {
       params: t.Object({
         fixtureId: t.Numeric({ description: "Fixture ID for the match" }),
+      }),
+      query: t.Object({
+        state: t.Optional(
+          t.Union([t.Literal("prematch"), t.Literal("live"), t.Literal("finished")], {
+            description: "Request a specific match state analysis. Omit for auto-detect.",
+          })
+        ),
       }),
       detail: {
         tags: ["Insights"],
@@ -83,7 +90,8 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
         const featured = await insightsService.getFeaturedMatches(
           query.date,
           limit,
-          query.userCountry ?? null
+          query.userCountry ?? null,
+          query.timezone ?? null
         );
         return { success: true, data: featured };
       } catch (error: any) {
@@ -96,6 +104,7 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
         date: t.String({ description: "Date in YYYY-MM-DD format", examples: ["2025-03-26"] }),
         limit: t.Optional(t.String({ description: "Max results (default 10, max 30)" })),
         userCountry: t.Optional(t.String({ description: "User country for localized ranking" })),
+        timezone: t.Optional(t.String({ description: "IANA timezone (e.g. America/Buenos_Aires)" })),
       }),
       detail: {
         tags: ["Insights"],

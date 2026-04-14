@@ -28,6 +28,18 @@ function currentSeason(): number {
   return now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
 }
 
+/** Resolve the team's primary league from their most recent fixture. */
+async function resolveTeamLeague(
+  teamId: number
+): Promise<{ leagueId: number; season: number } | null> {
+  const res = await safe(() =>
+    footballService.getFixtures({ team: teamId, last: 1 })
+  );
+  const fixture = res?.response?.[0];
+  if (!fixture?.league?.id) return null;
+  return { leagueId: fixture.league.id, season: fixture.league.season };
+}
+
 // ── Per-intent assemblers ────────────────────────────────────────────────────
 
 async function assembleMatchPreview(entities: ResolvedEntities): Promise<string> {
@@ -244,11 +256,52 @@ async function assembleTeamForm(entities: ResolvedEntities): Promise<string> {
   const teamId = entities.teamIds?.[0];
   if (!teamId) return "No se pudo identificar el equipo.";
 
-  const res = await safe(() =>
-    footballService.getFixtures({ team: teamId, last: 10 })
-  );
-  const fixtures = res?.response ?? [];
+  let leagueId = entities.leagueId;
+  let season = entities.season ?? currentSeason();
+
+  if (!leagueId) {
+    const resolved = await resolveTeamLeague(teamId);
+    if (resolved) {
+      leagueId = resolved.leagueId;
+      season = resolved.season;
+    }
+  }
+
+  const [fixturesRes, statsRes] = await Promise.all([
+    safe(() => footballService.getFixtures({ team: teamId, last: 10 })),
+    leagueId
+      ? safe(() =>
+          footballService.getTeamStatistics({ team: teamId, league: leagueId, season })
+        )
+      : null,
+  ]);
+
+  const fixtures = fixturesRes?.response ?? [];
   if (!fixtures.length) return "No hay partidos recientes disponibles.";
+
+  const sections: string[] = [];
+
+  const stats = (statsRes as any)?.response ?? null;
+  if (stats) {
+    sections.push(
+      buildPlainContext({
+        equipo: stats.team?.name ?? "?",
+        liga: stats.league?.name ?? "?",
+        temporada: season,
+        forma: stats.form ?? "",
+        partidos: {
+          jugados: stats.fixtures?.played?.total ?? 0,
+          ganados: stats.fixtures?.wins?.total ?? 0,
+          empatados: stats.fixtures?.draws?.total ?? 0,
+          perdidos: stats.fixtures?.loses?.total ?? 0,
+        },
+        goles: {
+          a_favor: stats.goals?.for?.total?.total ?? 0,
+          en_contra: stats.goals?.against?.total?.total ?? 0,
+        },
+      })
+    );
+  }
 
   const slim = fixtures.map((f: any) => ({
     fecha: new Date(f.fixture.date).toISOString().slice(0, 10),
@@ -272,15 +325,25 @@ async function assembleTeamForm(entities: ResolvedEntities): Promise<string> {
             : "E",
   }));
 
-  return encode({ ultimos_partidos: slim });
+  sections.push(encode({ ultimos_partidos: slim }));
+
+  return sections.join("\n\n");
 }
 
 async function assembleTeamStats(entities: ResolvedEntities): Promise<string> {
   const teamId = entities.teamIds?.[0];
   if (!teamId) return "No se pudo identificar el equipo.";
 
-  const leagueId = entities.leagueId;
-  const season = entities.season ?? currentSeason();
+  let leagueId = entities.leagueId;
+  let season = entities.season ?? currentSeason();
+
+  if (!leagueId) {
+    const resolved = await resolveTeamLeague(teamId);
+    if (resolved) {
+      leagueId = resolved.leagueId;
+      season = resolved.season;
+    }
+  }
 
   const [statsRes, profileRes] = await Promise.all([
     leagueId

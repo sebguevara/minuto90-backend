@@ -1,5 +1,5 @@
 type MatchInsightsCacheTarget = "match_summary" | "match_streaks";
-type MatchSummaryStateSlot = "prematch" | "live" | "finished";
+export type MatchSummaryStateSlot = "prematch" | "live" | "finished";
 
 const ENV = process.env.NODE_ENV ?? "dev";
 
