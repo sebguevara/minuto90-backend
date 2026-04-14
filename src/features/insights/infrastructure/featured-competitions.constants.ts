@@ -100,6 +100,35 @@ export const HOME_FEATURED_COMPETITIONS: Array<{
   { id: 1180, name: "Copa LDF", type: "Cup" },
 ];
 
+/**
+ * IDs de competiciones internacionales — definidos explícitamente.
+ * Solo estos IDs se clasifican como grupo "international" en destacados.
+ * Deben coincidir con la sección "COMPETICIONES INTERNACIONALES" de HOME_FEATURED_COMPETITIONS.
+ */
+export const INTERNATIONAL_COMPETITION_IDS = new Set([
+  1,    // World Cup
+  8,    // World Cup - Women
+  2,    // UEFA Champions League
+  3,    // UEFA Europa League
+  848,  // UEFA Conference League
+  4,    // Euro Championship
+  5,    // UEFA Nations League
+  9,    // Copa America
+  13,   // CONMEBOL Libertadores
+  11,   // CONMEBOL Sudamericana
+  16,   // CONCACAF Champions League
+  6,    // Africa Cup of Nations
+  12,   // CAF Champions League
+  17,   // CAF Confederation Cup
+  7,    // Asian Cup
+  15,   // FIFA Club World Cup
+  10,   // Friendlies
+  32,   // World Cup - Qualification Europe
+  34,   // World Cup - Qualification South America
+  31,   // World Cup - Qualification CONCACAF
+  37,   // World Cup - Qualification Intercontinental Play-offs
+]);
+
 export const leaguePriority: Record<number, number> = {
   1: 1,
   8: 2,

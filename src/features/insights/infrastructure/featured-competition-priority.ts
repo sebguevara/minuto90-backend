@@ -1,5 +1,6 @@
 import {
   HOME_FEATURED_COMPETITIONS,
+  INTERNATIONAL_COMPETITION_IDS,
   leaguePriority,
 } from "./featured-competitions.constants";
 
@@ -140,24 +141,23 @@ export function getFeaturedCompetitionGroup(input: {
   leagueCountry: string | null | undefined;
   userCountry?: string | null;
 }): FeaturedCompetitionGroup {
+  // International competitions by explicit ID set (Champions, Libertadores, etc.)
+  // This MUST be checked FIRST — these competitions are always "international"
+  // regardless of user country or API-Football country field.
+  if (INTERNATIONAL_COMPETITION_IDS.has(input.leagueId)) {
+    return "international";
+  }
+
+  // User's home country for domestic competitions
   if (countryMatches(input.leagueCountry, input.userCountry)) {
     return "user_country";
   }
 
+  // Priority-based grouping for domestic competitions
   const priority = getFeaturedLeaguePriority(input.leagueId);
   const groupedByPriority = getGroupByPriority(priority);
   if (groupedByPriority) {
     return groupedByPriority;
-  }
-
-  if (FEATURED_COMPETITION_IDS.has(input.leagueId)) {
-    if (INTERNATIONAL_COUNTRIES.has(input.leagueCountry ?? "")) {
-      return "international";
-    }
-  }
-
-  if (INTERNATIONAL_COUNTRIES.has(input.leagueCountry ?? "")) {
-    return "international";
   }
 
   if (EUROPE_COUNTRIES.has(input.leagueCountry ?? "")) {

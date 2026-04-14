@@ -1119,9 +1119,19 @@ Formato:
     userCountry?: string | null
   ): Promise<FeaturedMatch[]> {
     const fixturesRes = await footballService.getFixtures({ date });
-    const fixtures = (fixturesRes.response ?? []).filter((fixture) =>
+
+    // During the World Cup window, featured matches are ONLY World Cup fixtures
+    const WC_LEAGUE_ID = 1;
+    const WC_START = "2026-06-11";
+    const WC_END = "2026-07-19";
+    const isWorldCupWindow = date >= WC_START && date <= WC_END;
+
+    const allFeatured = (fixturesRes.response ?? []).filter((fixture) =>
       isFeaturedCompetitionId(fixture.league.id)
     );
+    const fixtures = isWorldCupWindow
+      ? allFeatured.filter((f) => f.league.id === WC_LEAGUE_ID)
+      : allFeatured;
 
     if (fixtures.length === 0) return [];
 
@@ -1218,41 +1228,36 @@ Formato:
     });
 
     const competitionGroupOrder: Record<FeaturedCompetitionGroup, number> = {
-      user_country: 0,
-      international: 1,
+      international: 0,
+      user_country: 1,
       europe: 2,
       latin_america: 3,
       other: 4,
     };
 
-    const prioritizeUserCountry = Boolean(userCountry?.trim());
-
     const compareFeaturedItems = (
       a: (typeof scored)[number],
       b: (typeof scored)[number]
     ) => {
-      // Con país del usuario: competiciones locales primero aunque no estén en vivo
-      if (prioritizeUserCountry) {
-        const groupA = competitionGroupOrder[a._meta.competitionGroup] ?? Number.MAX_SAFE_INTEGER;
-        const groupB = competitionGroupOrder[b._meta.competitionGroup] ?? Number.MAX_SAFE_INTEGER;
-        if (groupA !== groupB) return groupA - groupB;
-      }
-
+      // 1. Live matches always first
       const liveA = LIVE_MATCH_STATUS.has((a.status ?? "").toUpperCase()) ? 0 : 1;
       const liveB = LIVE_MATCH_STATUS.has((b.status ?? "").toUpperCase()) ? 0 : 1;
       if (liveA !== liveB) return liveA - liveB;
 
+      // 2. Tier is the primary importance signal (Champions > Peru's league)
+      if (a.tier !== b.tier) return a.tier - b.tier;
+
+      // 3. Competition group: international > user_country > europe > latam > other
+      const groupA = competitionGroupOrder[a._meta.competitionGroup] ?? Number.MAX_SAFE_INTEGER;
+      const groupB = competitionGroupOrder[b._meta.competitionGroup] ?? Number.MAX_SAFE_INTEGER;
+      if (groupA !== groupB) return groupA - groupB;
+
+      // 4. League priority within same tier/group
       const priorityA = a._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER;
       const priorityB = b._meta.leaguePriority ?? Number.MAX_SAFE_INTEGER;
       if (priorityA !== priorityB) return priorityA - priorityB;
 
-      if (!prioritizeUserCountry) {
-        const groupA = competitionGroupOrder[a._meta.competitionGroup] ?? Number.MAX_SAFE_INTEGER;
-        const groupB = competitionGroupOrder[b._meta.competitionGroup] ?? Number.MAX_SAFE_INTEGER;
-        if (groupA !== groupB) return groupA - groupB;
-      }
-
-      if (a.tier !== b.tier) return a.tier - b.tier;
+      // 5. Relevance score (match-level importance)
       if (a.relevanceScore !== b.relevanceScore) return b.relevanceScore - a.relevanceScore;
 
       const kickoffA = new Date(a.date).getTime();
@@ -1297,12 +1302,15 @@ Formato:
         continue;
       }
 
-      const count = perCountryCount.get(item._meta.countryKey) ?? 0;
-      if (count >= 2) {
-        continue;
+      // International competitions (Champions, Libertadores, etc.) skip the per-country limit
+      const isInternational = item._meta.competitionGroup === "international";
+      if (!isInternational) {
+        const count = perCountryCount.get(item._meta.countryKey) ?? 0;
+        if (count >= 2) {
+          continue;
+        }
+        perCountryCount.set(item._meta.countryKey, count + 1);
       }
-
-      perCountryCount.set(item._meta.countryKey, count + 1);
       selected.push({
         fixtureId: item.fixtureId,
         date: item.date,
@@ -1447,11 +1455,11 @@ function computeMatchRelevanceScore(input: {
     input;
 
   switch (competitionGroup) {
-    case "user_country":
-      score += 400;
-      break;
     case "international":
-      score += 260;
+      score += 300;
+      break;
+    case "user_country":
+      score += 200;
       break;
     case "europe":
       score += 180;
