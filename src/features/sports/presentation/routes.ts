@@ -1419,7 +1419,8 @@ export function createFootballRoutes(service: FootballServiceContract = football
       async ({ query, set }) => {
         try {
           return await service.getPlayerProfiles({
-            player: parseRequiredInteger(query.player, "player"),
+            player: parseOptionalInteger(query.player, "player"),
+            search: typeof query.search === "string" ? query.search : undefined,
           } satisfies GetPlayerProfilesQuery);
         } catch (error) {
           return handleFootballError(set, error);

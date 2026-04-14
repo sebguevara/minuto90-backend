@@ -1128,7 +1128,8 @@ export interface GetCoachsQuery {
 export interface GetPlayersSeasonsQuery {}
 
 export interface GetPlayerProfilesQuery {
-  player: number;
+  player?: number;
+  search?: string;
 }
 
 export interface GetPlayersQuery {

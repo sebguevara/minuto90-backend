@@ -117,7 +117,6 @@ export const analystChatRoutes = new Elysia({ prefix: "/api/chat" })
             // Stream from OpenAI using responses API with streaming
             const response = await openai.responses.create({
               model: prepared.model,
-              reasoning: { effort: prepared.effort },
               instructions: prepared.systemPrompt,
               input: prepared.input,
               stream: true,

@@ -145,7 +145,8 @@ export const coachsQuerySchema = t.Object({
 });
 
 export const playerProfilesQuerySchema = t.Object({
-  player: t.String(),
+  player: t.Optional(t.String()),
+  search: t.Optional(t.String()),
 });
 
 export const playersQuerySchema = t.Object({

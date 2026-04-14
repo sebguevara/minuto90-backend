@@ -51,17 +51,14 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 2, delayMs = 600): P
 
 // ── Model selection ──────────────────────────────────────────────────────────
 
-function selectModel(intent: AnalystChatIntent): {
-  model: string;
-  effort: "low" | "medium";
-} {
+function selectModel(intent: AnalystChatIntent): string {
   switch (intent) {
     case "MATCH_PREVIEW":
     case "PREDICTIONS":
     case "GENERAL":
-      return { model: "gpt-4o-mini", effort: "low" };
+      return "gpt-4o-mini";
     default:
-      return { model: "gpt-4.1-nano", effort: "low" };
+      return "gpt-4.1-nano";
   }
 }
 
@@ -184,7 +181,7 @@ export async function handleChatMessage(request: ChatRequest): Promise<ChatRespo
   };
   let state = await appendTurn(conversation, userTurn);
 
-  const { model, effort } = selectModel(classified.intent);
+  const model = selectModel(classified.intent);
   const cacheKey = buildChatResponseCacheKey(classified.intent, classified.entities);
   const ttl = getChatResponseTtlSeconds(classified.intent);
   const hasHistory = conversation.turns.length > 0;
@@ -198,7 +195,7 @@ export async function handleChatMessage(request: ChatRequest): Promise<ChatRespo
         classified.intent, classified.entities, request.message, []
       );
       const completion = await withRetry(() =>
-        openai.responses.create({ model, reasoning: { effort }, instructions: systemPrompt, input })
+        openai.responses.create({ model, instructions: systemPrompt, input })
       );
       return completion.output_text || "Lo siento, no pude generar una respuesta.";
     });
@@ -209,7 +206,7 @@ export async function handleChatMessage(request: ChatRequest): Promise<ChatRespo
       classified.intent, classified.entities, request.message, state.turns.slice(0, -1)
     );
     const completion = await withRetry(() =>
-      openai.responses.create({ model, reasoning: { effort }, instructions: systemPrompt, input })
+      openai.responses.create({ model, instructions: systemPrompt, input })
     );
     response = completion.output_text || "Lo siento, no pude generar una respuesta.";
   }
@@ -239,7 +236,6 @@ export type StreamChatPrepared = {
   model: string;
   input: string;
   systemPrompt: string;
-  effort: "low" | "medium";
   cacheHit: boolean;
   cachedResponse: string | null;
   /** Must be called after streaming completes to persist assistant turn */
@@ -266,7 +262,7 @@ export async function prepareChatStream(request: ChatRequest): Promise<StreamCha
   };
   const state = await appendTurn(conversation, userTurn);
 
-  const { model, effort } = selectModel(classified.intent);
+  const model = selectModel(classified.intent);
   const hasHistory = conversation.turns.length > 0;
 
   // Check cache for first messages
@@ -280,7 +276,6 @@ export async function prepareChatStream(request: ChatRequest): Promise<StreamCha
         model,
         input: "",
         systemPrompt: "",
-        effort,
         cacheHit: true,
         cachedResponse: cached,
         persistAssistantTurn: async (fullText: string) => {
@@ -309,7 +304,6 @@ export async function prepareChatStream(request: ChatRequest): Promise<StreamCha
     model,
     input,
     systemPrompt,
-    effort,
     cacheHit: false,
     cachedResponse: null,
     persistAssistantTurn: async (fullText: string) => {
