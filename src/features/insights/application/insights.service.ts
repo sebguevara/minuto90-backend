@@ -798,25 +798,25 @@ REGLAS:
 
     const hasLineups = lineups.length > 0;
 
-    const systemPrompt = `Eres un analista deportivo de élite especializado en fútbol. Genera un análisis previo COMPACTO del partido.
+    const systemPrompt = `Eres un analista deportivo de élite especializado en fútbol. Genera un análisis previo del partido que se lea como una columna de opinión deportiva, no como un reporte estadístico.
 
-ESTRUCTURA (2 párrafos máximo, cortos y directos):
-1. Contexto y claves — posiciones en la tabla (qué se juega cada equipo: título, clasificación, descenso, nada), forma reciente, historial directo.${hasLineups ? " Si hay alineaciones, analiza las formaciones (ej: 4-3-3 agresivo vs 5-4-1 defensivo), jugadores clave y qué plantea tácticamente cada técnico." : ""}
-2. Cuotas y pronóstico — si el campo "odds" en los datos NO es null, analiza las cuotas exactas de 1xBet (menciónalas: "1xBet paga X al local, Y al empate y Z a la visita") y qué refleja el mercado. Si "odds" ES null, basa el pronóstico en la comparación de forma, historial directo y posición en tabla. Cierra con un pronóstico razonado. No seas absoluto, presenta matices.
+ESTRUCTURA (2 párrafos, separados por un salto de línea):
+1. La historia del partido — cuenta QUÉ SE JUEGAN los equipos, cómo llegan anímicamente, y qué dice el historial entre ellos. Habla en narrativa: "llega en racha", "viene de tropezar", "no pierde en casa desde...". Evita listar porcentajes sueltos. Si hay dato numérico, intégralo en la narrativa de forma natural (ej: "con 4 victorias en los últimos 5" en vez de "80% de rendimiento").${hasLineups ? " Analiza las formaciones y qué plantea tácticamente cada DT." : ""}
+2. Cuotas y pronóstico — si el campo "odds" en los datos NO es null, analiza las cuotas de 1xBet (menciónalas: "1xBet paga X al local, Y al empate y Z a la visita") y qué refleja el mercado. Si "odds" ES null, da un pronóstico razonado basado en forma, historial y contexto. Cierra con tu lectura del partido — con matices, sin ser absoluto.
 
-DATOS CLAVE:
-- "standings": posición y puntos en la tabla. "description" indica si pelea por algo (Champions, descenso, etc).
-- "homeFormLast5"/"awayFormLast5": forma reciente. "form" es % de rendimiento (100% = todas victorias). "goals" tiene goles a favor/contra en últimos 5.
-- "comparison": comparación porcentual forma/ataque/defensa entre equipos.
-- "odds": cuotas de 1xBet (puede ser null si no están disponibles). Cuota más baja = mayor favoritismo.${hasLineups ? '\n- "lineups": alineaciones confirmadas. "pos" indica posición (G=portero, D=defensa, M=mediocampista, F=delantero). La formación revela la intención táctica del DT.' : ""}
+DATOS DISPONIBLES (usa solo los relevantes, no los listes todos):
+- "standings": posición y puntos. "description" indica si pelea por algo.
+- "homeFormLast5"/"awayFormLast5": forma reciente. "goals" tiene goles en últimos 5.
+- "comparison": comparación forma/ataque/defensa entre equipos.
+- "odds": cuotas de 1xBet (puede ser null).${hasLineups ? '\n- "lineups": alineaciones confirmadas.' : ""}
 
 REGLAS:
-- Idioma: español. Tono: profesional y conciso.
-- Máximo 5-6 oraciones por párrafo.
-- Cuando menciones forma, traduce el porcentaje a contexto (ej: "80%" = "4 de 5 positivos").
-- Si "odds" es null, NUNCA menciones la ausencia de cuotas. Simplemente omite ese dato y sustituye por análisis basado en los demás datos.
+- Idioma: español. Tono: el de un columnista deportivo que sabe — profesional pero con personalidad.
+- Máximo 4-5 oraciones por párrafo. Que se lea rápido.
+- NADA de porcentajes sueltos ni listas de números. Integra los datos en frases narrativas.
+- Si "odds" es null, NUNCA menciones la ausencia de cuotas. Simplemente omite y analiza con los demás datos.
 - Cuando haya cuotas, siempre menciona "1xBet" por nombre.
-- NO inventes datos. Sin markdown, sin emojis, sin introducciones.`;
+- NO inventes datos. Sin markdown, sin emojis, sin encabezados, sin introducciones.`;
 
     const completion = await withRetry(() =>
       openai.responses.create({
@@ -1292,8 +1292,48 @@ Formato:
 
     const perCountryCount = new Map<string, number>();
     const selected: FeaturedMatch[] = [];
+    const selectedFixtureIds = new Set<number>();
 
+    const toFeaturedMatch = (item: (typeof sorted)[number]): FeaturedMatch => ({
+      fixtureId: item.fixtureId,
+      date: item.date,
+      status: item.status,
+      elapsed: item.elapsed,
+      extra: item.extra,
+      league: item.league,
+      homeTeam: item.homeTeam,
+      awayTeam: item.awayTeam,
+      score: item.score,
+      relevanceScore: item.relevanceScore,
+      tier: item.tier,
+    });
+
+    // ── Phase A: Reserve slots for user's country league & cup ──────────
+    // If the user's country league/cup is playing today, it MUST appear.
+    if (userCountry && allowedUserCountryLeagueIds.size > 0) {
+      const userCountryMatches = sorted.filter(
+        (item) =>
+          item._meta.competitionGroup === "user_country" &&
+          allowedUserCountryLeagueIds.has(item.league.id)
+      );
+
+      // Pick best match per allowed league (1 league + 1 cup max)
+      const seenLeagues = new Set<number>();
+      for (const item of userCountryMatches) {
+        if (seenLeagues.has(item.league.id)) continue;
+        seenLeagues.add(item.league.id);
+        selected.push(toFeaturedMatch(item));
+        selectedFixtureIds.add(item.fixtureId);
+        const count = perCountryCount.get(item._meta.countryKey) ?? 0;
+        perCountryCount.set(item._meta.countryKey, count + 1);
+      }
+    }
+
+    // ── Phase B: Fill remaining slots with the normal sorted order ──────
     for (const item of sorted) {
+      if (selected.length >= limit) break;
+      if (selectedFixtureIds.has(item.fixtureId)) continue;
+
       if (
         item._meta.competitionGroup === "user_country" &&
         allowedUserCountryLeagueIds.size > 0 &&
@@ -1302,7 +1342,7 @@ Formato:
         continue;
       }
 
-      // International competitions (Champions, Libertadores, etc.) skip the per-country limit
+      // International competitions skip the per-country limit
       const isInternational = item._meta.competitionGroup === "international";
       if (!isInternational) {
         const count = perCountryCount.get(item._meta.countryKey) ?? 0;
@@ -1311,23 +1351,9 @@ Formato:
         }
         perCountryCount.set(item._meta.countryKey, count + 1);
       }
-      selected.push({
-        fixtureId: item.fixtureId,
-        date: item.date,
-        status: item.status,
-        elapsed: item.elapsed,
-        extra: item.extra,
-        league: item.league,
-        homeTeam: item.homeTeam,
-        awayTeam: item.awayTeam,
-        score: item.score,
-        relevanceScore: item.relevanceScore,
-        tier: item.tier,
-      });
 
-      if (selected.length >= limit) {
-        break;
-      }
+      selected.push(toFeaturedMatch(item));
+      selectedFixtureIds.add(item.fixtureId);
     }
 
     return selected;

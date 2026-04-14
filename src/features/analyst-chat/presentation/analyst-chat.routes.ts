@@ -27,7 +27,7 @@ export const analystChatRoutes = new Elysia({ prefix: "/api/chat" })
         const response = await handleChatMessage({
           message: body.message,
           clerkId: body.clerkId,
-          conversationId: body.conversationId,
+          conversationId: body.conversationId ?? undefined,
         });
 
         return { success: true, data: response };
@@ -40,7 +40,7 @@ export const analystChatRoutes = new Elysia({ prefix: "/api/chat" })
       body: t.Object({
         message: t.String({ minLength: 1, maxLength: 500 }),
         clerkId: t.String({ minLength: 1 }),
-        conversationId: t.Optional(t.String()),
+        conversationId: t.Optional(t.Union([t.String(), t.Null()])),
       }),
       detail: { tags: ["Chat"], summary: "Enviar mensaje (sin streaming)" },
     }
@@ -65,7 +65,7 @@ export const analystChatRoutes = new Elysia({ prefix: "/api/chat" })
       const prepared = await prepareChatStream({
         message: body.message,
         clerkId: body.clerkId,
-        conversationId: body.conversationId,
+        conversationId: body.conversationId ?? undefined,
       });
 
       // If cache hit, send the full response immediately as SSE
@@ -168,7 +168,7 @@ export const analystChatRoutes = new Elysia({ prefix: "/api/chat" })
       body: t.Object({
         message: t.String({ minLength: 1, maxLength: 500 }),
         clerkId: t.String({ minLength: 1 }),
-        conversationId: t.Optional(t.String()),
+        conversationId: t.Optional(t.Union([t.String(), t.Null()])),
       }),
       detail: { tags: ["Chat"], summary: "Enviar mensaje con streaming SSE" },
     }
