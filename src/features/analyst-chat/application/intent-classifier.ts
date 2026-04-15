@@ -96,24 +96,27 @@ const TEAM_ALIASES: Record<string, number> = {
 
 // ── League aliases ──────────────────────────────────────────────────────────
 
-const LEAGUE_ALIASES: Record<string, { id: number; season: number }> = {
-  "la liga": { id: 140, season: 2024 },
-  "liga espanola": { id: 140, season: 2024 },
-  "primera division": { id: 140, season: 2024 },
-  "premier": { id: 39, season: 2024 },
-  "premier league": { id: 39, season: 2024 },
-  "serie a": { id: 135, season: 2024 },
-  "bundesliga": { id: 78, season: 2024 },
-  "ligue 1": { id: 61, season: 2024 },
-  "champions": { id: 2, season: 2024 },
-  "champions league": { id: 2, season: 2024 },
-  "liga argentina": { id: 128, season: 2024 },
-  "liga profesional": { id: 128, season: 2024 },
+const LEAGUE_ALIASES: Record<string, { id: number; season?: number }> = {
+  // European leagues — season resolved dynamically by currentSeason()
+  "la liga": { id: 140 },
+  "liga espanola": { id: 140 },
+  "primera division": { id: 140 },
+  "premier": { id: 39 },
+  "premier league": { id: 39 },
+  "serie a": { id: 135 },
+  "bundesliga": { id: 78 },
+  "ligue 1": { id: 61 },
+  "champions": { id: 2 },
+  "champions league": { id: 2 },
+  "liga argentina": { id: 128 },
+  "liga profesional": { id: 128 },
+  // South American cups follow calendar year
   "copa libertadores": { id: 13, season: 2025 },
   "libertadores": { id: 13, season: 2025 },
   "sudamericana": { id: 11, season: 2025 },
-  "copa america": { id: 9, season: 2024 },
-  "eurocopa": { id: 4, season: 2024 },
+  // International tournaments with fixed years
+  "copa america": { id: 9 },
+  "eurocopa": { id: 4 },
   "mundial": { id: 1, season: 2026 },
 };
 
@@ -134,11 +137,13 @@ function extractEntitiesFromText(normalized: string): ResolvedEntities {
     entities.teamIds = [...new Set(matchedTeamIds)];
   }
 
-  // Resolve league
+  // Resolve league (season only set if explicitly overridden; otherwise currentSeason() handles it)
   for (const [alias, league] of Object.entries(LEAGUE_ALIASES)) {
     if (normalized.includes(alias)) {
       entities.leagueId = league.id;
-      entities.season = league.season;
+      if (league.season !== undefined) {
+        entities.season = league.season;
+      }
       break;
     }
   }

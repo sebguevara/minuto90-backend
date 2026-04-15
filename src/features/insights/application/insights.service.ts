@@ -29,6 +29,10 @@ import {
   type FeaturedCompetitionGroup,
 } from "../infrastructure/featured-competition-priority";
 import { redisInsightsCacheStore } from "../infrastructure/insights-cache.store";
+import {
+  isSecondLegRound,
+  isFirstLegRound,
+} from "../infrastructure/aggregate-detection";
 
 const COMPLETED_MATCH_STATUS = new Set(["FT", "AET", "PEN"]);
 const LIVE_MATCH_STATUS = new Set([
@@ -655,6 +659,8 @@ REGLAS:
 - Párrafos cortos: máximo 3-4 oraciones. Que se lea rápido.
 - CERO porcentajes sueltos, CERO listas. Todo en narrativa natural.
 - Cada frase debe aportar algo nuevo. Nada de relleno ni clichés vacíos.
+- NUNCA hables en futuro ni hagas predicciones. El partido YA TERMINÓ. Tu análisis es RETROSPECTIVO.
+- NUNCA digas cosas como "será interesante ver", "habrá que esperar", "de cara a lo que viene". Contá lo que pasó, no lo que podría pasar.
 - NO inventes datos. Sin markdown, sin emojis, sin encabezados, sin introducciones tipo "Vamos a repasar...".`;
 
     const completion = await withRetry(() =>
@@ -761,12 +767,46 @@ REGLAS:
       };
     }
 
+    // Knockout context: detect first/second leg and find first leg result
+    const secondLeg = isSecondLegRound(league.round);
+    const firstLeg = isFirstLegRound(league.round);
+    let knockoutContext: Record<string, unknown> | null = null;
+
+    if (secondLeg && h2hFixtures.length > 0) {
+      // Find the first leg: same league, same season, round contains "1st Leg"/"Leg 1"/"ida"
+      const firstLegFixture = h2hFixtures.find((f) =>
+        f.league.id === league.id &&
+        f.league.season === league.season &&
+        isFirstLegRound(f.league.round)
+      );
+      if (firstLegFixture) {
+        const fl = firstLegFixture;
+        // Calculate aggregate (first leg home/away may be swapped relative to second leg)
+        const flHome = fl.goals.home ?? 0;
+        const flAway = fl.goals.away ?? 0;
+        knockoutContext = {
+          isSecondLeg: true,
+          firstLegHomeTeam: fl.teams.home.name,
+          firstLegAwayTeam: fl.teams.away.name,
+          firstLegScore: `${flHome} - ${flAway}`,
+        };
+      } else {
+        knockoutContext = { isSecondLeg: true, firstLegScore: "desconocido" };
+      }
+    } else if (firstLeg) {
+      knockoutContext = {
+        isFirstLeg: true,
+        note: "Este es el partido de ida de una eliminatoria a doble partido.",
+      };
+    }
+
     const preMatchContext = {
       tournament: league.name,
       round: league.round,
       date: fixtureData.fixture.date,
       homeTeam: teams.home.name,
       awayTeam: teams.away.name,
+      knockoutContext,
       standings: {
         home: formatStanding(homeStanding as Record<string, unknown> | null),
         away: formatStanding(awayStanding as Record<string, unknown> | null),
@@ -815,8 +855,29 @@ REGLAS:
 
     const hasLineups = lineups.length > 0;
 
-    const systemPrompt = `Eres un periodista deportivo con mucha calle que escribe para fans de todos los niveles. Tu análisis previo tiene que enganchar como una buena charla de bar sobre fútbol — que cualquiera lo entienda y nadie se aburra.
+    // Build knockout-specific prompt section
+    let knockoutPromptSection = "";
+    if (secondLeg && knockoutContext) {
+      const flScore = (knockoutContext as any).firstLegScore ?? "?";
+      const flHome = (knockoutContext as any).firstLegHomeTeam ?? "?";
+      const flAway = (knockoutContext as any).firstLegAwayTeam ?? "?";
+      knockoutPromptSection = `
+CONTEXTO ELIMINATORIA: Este es el PARTIDO DE VUELTA de una eliminatoria a doble partido.
+El resultado de ida fue: ${flHome} ${flScore} ${flAway}.
+- Analiza la situación del marcador global: quién tiene ventaja, quién necesita remontar, qué resultado necesita cada equipo.
+- NUNCA digas "preparándose para la vuelta" ni "tendrán que buscar el resultado en la vuelta" — este ES el partido de vuelta.
+- Enfoca el análisis en cómo el resultado de ida condiciona este partido.
+`;
+    } else if (firstLeg) {
+      knockoutPromptSection = `
+CONTEXTO ELIMINATORIA: Este es el PARTIDO DE IDA de una eliminatoria a doble partido.
+- Analiza cómo cada equipo plantea un partido de ida: prudencia, intensidad, marcar de visitante.
+- Menciona que hay vuelta y cómo el resultado de hoy condicionará el segundo partido.
+`;
+    }
 
+    const systemPrompt = `Eres un periodista deportivo con mucha calle que escribe para fans de todos los niveles. Tu análisis previo tiene que enganchar como una buena charla de bar sobre fútbol — que cualquiera lo entienda y nadie se aburra.
+${knockoutPromptSection}
 ESTRUCTURA (3 a 5 párrafos cortos, separados por un salto de línea):
 1. El contexto — qué se juegan estos equipos, qué hay en juego de verdad. Arranca con algo que enganche: la racha, la rivalidad, la situación en la tabla. Que el lector sepa por qué debería importarle este partido.
 2. Cómo llegan — forma reciente, quién está en buen momento y quién no. Usa frases naturales: "llega encendido", "viene de tropezar", "no pierde en casa desde hace rato". Si hay dato numérico, que fluya en la frase ("ganó 4 de los últimos 5") sin listar porcentajes.${hasLineups ? " Comenta las formaciones y qué plantea cada DT." : ""}
@@ -828,6 +889,8 @@ REGLAS:
 - Párrafos cortos: máximo 3-4 oraciones cada uno. Que se lea rápido.
 - CERO porcentajes, CERO listas de números. Todo integrado en narrativa natural.
 - Cuando haya cuotas, siempre menciona "1xBet" por nombre.
+- NUNCA hables de lo que pasó en el partido. Este partido AÚN NO SE JUEGA. Tu análisis es PREDICTIVO: qué puede pasar, quién es favorito, qué claves observar.
+- NUNCA menciones resultados parciales, goles, eventos ni nada que sugiera que el partido ya empezó.
 - NO inventes datos. Sin markdown, sin emojis, sin encabezados, sin introducciones tipo "Vamos a analizar...".
 - Escribe como si fuera una columna deportiva que da gusto leer, no un informe.`;
 
@@ -934,6 +997,32 @@ REGLAS:
       };
     }
 
+    // Knockout context for live analysis
+    const liveSecondLeg = isSecondLegRound(league.round);
+    let liveKnockoutContext: Record<string, unknown> | null = null;
+    if (liveSecondLeg) {
+      // Fetch H2H to find first leg
+      const h2hRes = await footballService
+        .getFixtureHeadToHead({ h2h: `${teams.home.id}-${teams.away.id}`, last: 5 })
+        .catch(() => ({ response: [] }));
+      const h2hFixtures = h2hRes.response || [];
+      const firstLegFixture = h2hFixtures.find((f: any) =>
+        f.league.id === league.id &&
+        f.league.season === league.season &&
+        isFirstLegRound(f.league.round)
+      );
+      if (firstLegFixture) {
+        const flHome = firstLegFixture.goals.home ?? 0;
+        const flAway = firstLegFixture.goals.away ?? 0;
+        liveKnockoutContext = {
+          isSecondLeg: true,
+          firstLegHomeTeam: firstLegFixture.teams.home.name,
+          firstLegAwayTeam: firstLegFixture.teams.away.name,
+          firstLegScore: `${flHome} - ${flAway}`,
+        };
+      }
+    }
+
     const liveContext = {
       tournament: league.name,
       round: league.round,
@@ -942,6 +1031,7 @@ REGLAS:
       score: `${goals.home ?? 0} - ${goals.away ?? 0}`,
       elapsed,
       status: statusLong,
+      knockoutContext: liveKnockoutContext,
       m90Prediction,
       events: events.map((e) => ({
         time: `${e.time.elapsed}${e.time.extra ? "+" + e.time.extra : ""}'`,
@@ -974,8 +1064,17 @@ REGLAS:
         : null,
     };
 
-    const systemPrompt = `Eres un periodista deportivo comentando un partido EN VIVO como si estuvieras narrándoselo a un amigo por mensaje. Directo, enganchado al partido, con urgencia pero sin perder la claridad.
+    // Build knockout live prompt section
+    let liveKnockoutPrompt = "";
+    if (liveSecondLeg && liveKnockoutContext) {
+      const flScore = (liveKnockoutContext as any).firstLegScore ?? "?";
+      const flHome = (liveKnockoutContext as any).firstLegHomeTeam ?? "?";
+      const flAway = (liveKnockoutContext as any).firstLegAwayTeam ?? "?";
+      liveKnockoutPrompt = `\nCONTEXTO ELIMINATORIA: Este es el PARTIDO DE VUELTA. La ida terminó ${flHome} ${flScore} ${flAway}. Si "knockoutContext" está en los datos, calcula el marcador global sumando ida + lo que va de vuelta y analiza quién va clasificando.\n`;
+    }
 
+    const systemPrompt = `Eres un periodista deportivo comentando un partido EN VIVO como si estuvieras narrándoselo a un amigo por mensaje. Directo, enganchado al partido, con urgencia pero sin perder la claridad.
+${liveKnockoutPrompt}
 CONTEXTO: El partido lleva ${elapsed ?? "?"} minutos y va ${goals.home ?? 0}-${goals.away ?? 0}.
 
 ESTRUCTURA (3 a 4 párrafos cortos, separados por un salto de línea):
@@ -992,6 +1091,8 @@ DATOS CLAVE:
 REGLAS:
 - Idioma: español. Tono: presente y directo ("está dominando", "lleva", "tiene"). Como un amigo que te cuenta el partido.
 - NUNCA hables en futuro. El partido YA está en juego.
+- No repitas el análisis previo al partido. Habla de lo que ESTÁ PASANDO ahora mismo en la cancha.
+- No hagas predicciones generales — proyecta desde el estado actual del partido, lo que se ve en los datos en vivo.
 - Párrafos cortos: máximo 3-4 oraciones. Que se lea rápido.
 - CERO porcentajes sueltos. Todo en narrativa natural.
 - Si "liveOdds" es null, NUNCA menciones la ausencia de cuotas.

@@ -11,7 +11,7 @@ import { templates } from "../features/notifications/application/templates";
 import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
 import { getSubscriptionBaseline, type SubscriptionBaseline } from "../features/notifications/application/subscription-baseline";
-import { updateLiveFixturesCache, patchStandingsWithResult, saveFixtureEvents } from "./live-cache-updater";
+import { updateLiveFixturesCache, invalidateStandingsCache, saveFixtureEvents } from "./live-cache-updater";
 import { areNotificationsEnabled } from "../shared/config/notifications";
 import {
   canReceiveWhatsappNotifications,
@@ -278,20 +278,8 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
       const awayGoals = fixture.goals?.away ?? 0;
       const season = fixture.league?.season ?? CURRENT_SEASON;
 
-      if (
-        typeof leagueId === "number" &&
-        typeof homeTeamId === "number" &&
-        typeof awayTeamId === "number"
-      ) {
-        patchStandingsWithResult({
-          leagueId,
-          season,
-          homeTeamId,
-          awayTeamId,
-          homeGoals,
-          awayGoals,
-          fixtureId,
-        }).catch(() => {});
+      if (typeof leagueId === "number") {
+        invalidateStandingsCache(leagueId, season).catch(() => {});
       }
     }
   }
@@ -433,20 +421,8 @@ async function handleDisappearances(currentIds: number[]) {
       const homeTeamId = fixture.teams?.home?.id;
       const awayTeamId = fixture.teams?.away?.id;
       const season = fixture.league?.season ?? CURRENT_SEASON;
-      if (
-        typeof leagueId === "number" &&
-        typeof homeTeamId === "number" &&
-        typeof awayTeamId === "number"
-      ) {
-        patchStandingsWithResult({
-          leagueId,
-          season,
-          homeTeamId,
-          awayTeamId,
-          homeGoals: scoreHome,
-          awayGoals: scoreAway,
-          fixtureId,
-        }).catch(() => {});
+      if (typeof leagueId === "number") {
+        invalidateStandingsCache(leagueId, season).catch(() => {});
       }
 
       logInfo("live.disappeared.full_time.enqueued", {

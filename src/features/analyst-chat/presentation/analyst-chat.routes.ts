@@ -68,22 +68,42 @@ export const analystChatRoutes = new Elysia({ prefix: "/api/chat" })
         conversationId: body.conversationId ?? undefined,
       });
 
-      // If cache hit, send the full response immediately as SSE
+      // If cache hit, simulate streaming so the UX feels consistent
       if (prepared.cacheHit && prepared.cachedResponse) {
         const fullText = prepared.cachedResponse;
         await prepared.persistAssistantTurn(fullText);
 
         const encoder = new TextEncoder();
         const stream = new ReadableStream({
-          start(controller) {
+          async start(controller) {
             controller.enqueue(
               encoder.encode(
                 `data: ${JSON.stringify({ type: "meta", conversationId: prepared.conversationId, intent: prepared.intent, model: prepared.model, cacheHit: true })}\n\n`
               )
             );
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ type: "text", content: fullText })}\n\n`)
-            );
+
+            // Chunk by whitespace-preserving splits (~3-5 words per chunk)
+            const words = fullText.split(/(\s+)/);
+            let chunk = "";
+            let wordCount = 0;
+            for (const segment of words) {
+              chunk += segment;
+              if (/\S/.test(segment)) wordCount++;
+              if (wordCount >= 4) {
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({ type: "text", content: chunk })}\n\n`)
+                );
+                chunk = "";
+                wordCount = 0;
+                await new Promise((r) => setTimeout(r, 10));
+              }
+            }
+            if (chunk) {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ type: "text", content: chunk })}\n\n`)
+              );
+            }
+
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`)
             );
@@ -120,6 +140,7 @@ export const analystChatRoutes = new Elysia({ prefix: "/api/chat" })
               instructions: prepared.systemPrompt,
               input: prepared.input,
               stream: true,
+              ...(prepared.useWebSearch ? { tools: [{ type: "web_search_preview" as const }] } : {}),
             });
 
             for await (const event of response) {

@@ -62,6 +62,11 @@ function selectModel(intent: AnalystChatIntent): string {
   }
 }
 
+/** Intents that benefit from web search when Football-API data is insufficient. */
+function shouldUseWebSearch(intent: AnalystChatIntent): boolean {
+  return intent === "GENERAL" || intent === "TRANSFERS" || intent === "INJURIES";
+}
+
 // ── Rate limiting ────────────────────────────────────────────────────────────
 
 export async function checkRateLimit(clerkId: string): Promise<RateLimitResult> {
@@ -238,6 +243,7 @@ export type StreamChatPrepared = {
   systemPrompt: string;
   cacheHit: boolean;
   cachedResponse: string | null;
+  useWebSearch: boolean;
   /** Must be called after streaming completes to persist assistant turn */
   persistAssistantTurn: (fullText: string) => Promise<void>;
 };
@@ -278,6 +284,7 @@ export async function prepareChatStream(request: ChatRequest): Promise<StreamCha
         systemPrompt: "",
         cacheHit: true,
         cachedResponse: cached,
+        useWebSearch: false,
         persistAssistantTurn: async (fullText: string) => {
           await appendTurn(state, {
             role: "assistant",
@@ -306,6 +313,7 @@ export async function prepareChatStream(request: ChatRequest): Promise<StreamCha
     systemPrompt,
     cacheHit: false,
     cachedResponse: null,
+    useWebSearch: shouldUseWebSearch(classified.intent),
     persistAssistantTurn: async (fullText: string) => {
       // Cache the response for future identical queries
       if (!hasHistory) {
