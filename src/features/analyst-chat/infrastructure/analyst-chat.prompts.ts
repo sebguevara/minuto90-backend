@@ -35,6 +35,8 @@ FORMATO DE DATOS:
 - Cada fila contiene los valores separados por comas.`;
 
 const INTENT_ADDENDA: Partial<Record<AnalystChatIntent, string>> = {
+  MATCH_DAY:
+    "Resumi los partidos del dia: resultados finales, partidos en curso y proximos. Destaca lo mas relevante: goleadas, sorpresas, partidos de eliminatoria. Se directo y concreto.",
   MATCH_PREVIEW:
     "Analiza las posiciones en tabla, forma reciente, historial directo, cuotas (si disponibles) y perfiles tacticos. Cierra con un pronostico razonado con matices.",
   MATCH_LIVE:

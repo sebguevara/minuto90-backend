@@ -3,6 +3,8 @@ import type { AnalystChatIntent } from "../domain/analyst-chat.types";
 /** TTL in seconds for a cached LLM response, keyed by intent. */
 export function getChatResponseTtlSeconds(intent: AnalystChatIntent): number {
   switch (intent) {
+    case "MATCH_DAY":
+      return 5 * 60; // 5 min — fixtures update as matches finish
     case "MATCH_LIVE":
       return 60; // 1 min — data changes every few seconds
     case "MATCH_PREVIEW":

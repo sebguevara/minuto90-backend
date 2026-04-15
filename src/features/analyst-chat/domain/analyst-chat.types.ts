@@ -1,6 +1,7 @@
 // ── Intent enum ──────────────────────────────────────────────────────────────
 
 export const ANALYST_CHAT_INTENTS = [
+  "MATCH_DAY",
   "MATCH_PREVIEW",
   "MATCH_LIVE",
   "MATCH_RESULT",

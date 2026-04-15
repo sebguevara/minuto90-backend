@@ -16,6 +16,17 @@ type IntentMeta = {
 };
 
 export const INTENT_META: Record<AnalystChatIntent, IntentMeta> = {
+  MATCH_DAY: {
+    label: "Partidos del dia",
+    patterns: [
+      /\b(que paso hoy|que paso ayer|que hay hoy|que hubo hoy|partidos de hoy|partidos de ayer|resultados de hoy|resultados de ayer)\b/,
+      /\b(jornada de hoy|jornada de ayer|fecha de hoy|que se juega hoy|que se jugo|como fue la jornada)\b/,
+      /\b(que partidos hay|que partidos hubo|resumen del dia|resumen de la jornada|resumen de hoy)\b/,
+    ],
+    requiresTeam: false,
+    requiresLeague: false,
+    requiresFixture: false,
+  },
   MATCH_LIVE: {
     label: "Partido en vivo",
     patterns: [
@@ -32,9 +43,9 @@ export const INTENT_META: Record<AnalystChatIntent, IntentMeta> = {
       /\b(como quedo|como termino|resultado de|que paso en|como salio)\b/,
       /\b(quien gano ayer|quien gano el|resultados de ayer|resultado del)\b/,
     ],
-    requiresTeam: true,
+    requiresTeam: false,
     requiresLeague: false,
-    requiresFixture: true,
+    requiresFixture: false,
   },
   MATCH_PREVIEW: {
     label: "Previa de partido",
@@ -147,6 +158,7 @@ export const INTENT_META: Record<AnalystChatIntent, IntentMeta> = {
 
 /** Ordered list of intents for pattern matching (higher priority first). */
 export const INTENT_PRIORITY: AnalystChatIntent[] = [
+  "MATCH_DAY",
   "MATCH_LIVE",
   "MATCH_RESULT",
   "MATCH_PREVIEW",

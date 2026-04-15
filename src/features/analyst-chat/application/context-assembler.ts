@@ -201,8 +201,11 @@ async function assembleMatchLive(entities: ResolvedEntities): Promise<string> {
 
 async function assembleMatchResult(entities: ResolvedEntities): Promise<string> {
   const fixtureId = entities.fixtureId;
-  if (!fixtureId)
-    return "No se encontro el partido solicitado.";
+
+  // No specific fixture: fallback to match day results
+  if (!fixtureId) {
+    return assembleMatchDay(entities);
+  }
 
   const [fixtureRes, statsRes, eventsRes, playersRes] = await Promise.all([
     safe(() => footballService.getFixtures({ id: fixtureId })),
@@ -461,25 +464,90 @@ async function assembleTransfers(entities: ResolvedEntities): Promise<string> {
   return encodeTransfers(transfers.slice(0, 5));
 }
 
+// ── Match day (fixtures by date + optional league) ──────────────────────────
+
+async function assembleMatchDay(entities: ResolvedEntities): Promise<string> {
+  const date = entities.date ?? new Date().toISOString().slice(0, 10);
+  const leagueId = entities.leagueId;
+
+  const params: Record<string, string | number> = { date };
+  if (leagueId) params.league = leagueId;
+  if (entities.season) params.season = entities.season;
+
+  const res = await safe(() => footballService.getFixtures(params));
+  const fixtures = res?.response ?? [];
+  if (!fixtures.length) return `No hay partidos para la fecha ${date}${leagueId ? " en esta liga" : ""}.`;
+
+  // Sort: finished first, then live, then scheduled
+  const statusOrder = (s: string) => {
+    if (["FT", "AET", "PEN"].includes(s)) return 0;
+    if (["1H", "2H", "ET", "HT", "LIVE", "BT", "P"].includes(s)) return 1;
+    return 2;
+  };
+
+  const sorted = [...fixtures].sort(
+    (a, b) => statusOrder(a.fixture.status.short) - statusOrder(b.fixture.status.short)
+  );
+
+  // Limit to most relevant (max 20)
+  const top = sorted.slice(0, 20);
+  const rows = top.map((f: any) => ({
+    liga: f.league.name,
+    ronda: f.league.round,
+    local: f.teams.home.name,
+    visitante: f.teams.away.name,
+    marcador: `${f.goals.home ?? "-"} - ${f.goals.away ?? "-"}`,
+    estado: f.fixture.status.long,
+    hora: new Date(f.fixture.date).toISOString().slice(11, 16),
+  }));
+
+  return encode({ fecha: date, partidos: rows });
+}
+
+// ── Player stats ────────────────────────────────────────────────────────────
+
+async function assemblePlayerStats(entities: ResolvedEntities): Promise<string> {
+  const leagueId = entities.leagueId;
+  const teamId = entities.teamIds?.[0];
+  const season = entities.season ?? currentSeason();
+
+  // Try top scorers if we have a league
+  if (leagueId) {
+    const res = await safe(() =>
+      footballService.getPlayersTopScorers({ league: leagueId, season })
+    );
+    const scorers = res?.response ?? [];
+    if (scorers.length) return encodeTopScorers(scorers);
+  }
+
+  // Fallback: team stats if we have a team
+  if (teamId) {
+    return assembleTeamStats(entities);
+  }
+
+  return "No se pudo obtener estadisticas de jugadores. Intenta especificar un equipo o liga.";
+}
+
 // ── Main assembler ───────────────────────────────────────────────────────────
 
 const ASSEMBLERS: Record<
   AnalystChatIntent,
   (entities: ResolvedEntities) => Promise<string>
 > = {
+  MATCH_DAY: assembleMatchDay,
   MATCH_PREVIEW: assembleMatchPreview,
   MATCH_LIVE: assembleMatchLive,
   MATCH_RESULT: assembleMatchResult,
   STANDINGS: assembleStandings,
   TEAM_FORM: assembleTeamForm,
   TEAM_STATS: assembleTeamStats,
-  PLAYER_STATS: assembleTeamStats, // reuse team stats for now; WS player queries can be added later
+  PLAYER_STATS: assemblePlayerStats,
   HEAD_TO_HEAD: assembleH2H,
   TOP_SCORERS: assembleTopScorers,
-  PREDICTIONS: assembleMatchPreview, // same data as preview
+  PREDICTIONS: assembleMatchPreview,
   INJURIES: assembleInjuries,
   TRANSFERS: assembleTransfers,
-  GENERAL: async () => "", // no data needed
+  GENERAL: async () => "",
 };
 
 /** Assemble context data for a classified intent. */

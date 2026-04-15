@@ -27,6 +27,11 @@ import type {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
+/** Strip [SUGERENCIAS] tags from response text for non-streaming clients. */
+function stripSuggestionTags(text: string): string {
+  return text.replace(/\[SUGERENCIAS\].*?\[\/SUGERENCIAS\]/s, "").trim();
+}
+
 const RATE_LIMIT_MAX = 20;
 const RATE_LIMIT_WINDOW_SECONDS = 3600;
 const LOCK_TTL_SECONDS = 25;
@@ -52,14 +57,8 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 2, delayMs = 600): P
 // ── Model selection ──────────────────────────────────────────────────────────
 
 function selectModel(intent: AnalystChatIntent): string {
-  switch (intent) {
-    case "MATCH_PREVIEW":
-    case "PREDICTIONS":
-    case "GENERAL":
-      return "gpt-4o-mini";
-    default:
-      return "gpt-4.1-nano";
-  }
+  // gpt-4o-mini for all intents — nano is too weak for analysis quality
+  return "gpt-4o-mini";
 }
 
 /** Intents that benefit from web search when Football-API data is insufficient. */
@@ -227,7 +226,7 @@ export async function handleChatMessage(request: ChatRequest): Promise<ChatRespo
 
   return {
     conversationId: state.id,
-    response,
+    response: stripSuggestionTags(response),
     intent: classified.intent,
     meta: { tokensIn: 0, tokensOut: 0, model, latencyMs: Date.now() - startMs, cacheHit },
   };
