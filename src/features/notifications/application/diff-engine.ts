@@ -79,6 +79,16 @@ function isEventAlreadyKnown(oldSet: Set<string>, event: ApiFootballFixtureEvent
   return oldSet.has(buildEventKeyLegacy(event));
 }
 
+/** Key sin player para shootout kicks: evita duplicados cuando la API agrega el nombre después. */
+function buildShootoutKickKey(event: ApiFootballFixtureEvent): string {
+  const elapsed = event?.time?.elapsed ?? "";
+  const extra = event?.time?.extra ?? "";
+  const team = event?.team?.id ?? event?.team?.name ?? "";
+  const type = event?.type ?? "";
+  const detail = event?.detail ?? "";
+  return [type, detail, team, elapsed, extra].join("|");
+}
+
 function buildEventKeys(events: ApiFootballFixtureEvent[] | undefined): string[] {
   if (!events?.length) return [];
   const keys: string[] = [];
@@ -204,16 +214,23 @@ function collectNewGoalEvents(
 
 /** Lanzamientos de la tanda: eventos Goal con detalle Penalty / Missed Penalty solo con estado `P`. */
 function collectNewShootoutKickEvents(
-  oldEventKeySet: Set<string>,
+  oldEvents: ApiFootballFixtureEvent[] | undefined,
   newEvents: ApiFootballFixtureEvent[],
   newStatus: string | null,
   isColdStart: boolean
 ): ApiFootballFixtureEvent[] {
   if (isColdStart || newStatus !== "P") return [];
+  // Dedup sin player: la API puede mandar el mismo penal primero sin nombre y luego con nombre.
+  const oldShootoutKeys = new Set<string>();
+  if (oldEvents?.length) {
+    for (const e of oldEvents) {
+      if (isShootoutKickEvent(e)) oldShootoutKeys.add(buildShootoutKickKey(e));
+    }
+  }
   const out: ApiFootballFixtureEvent[] = [];
   for (const e of newEvents) {
     if (!isShootoutKickEvent(e)) continue;
-    if (isEventAlreadyKnown(oldEventKeySet, e)) continue;
+    if (oldShootoutKeys.has(buildShootoutKickKey(e))) continue;
     out.push(e);
   }
   return out;
@@ -495,22 +512,20 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     }
 
     const penScore = parsePenaltyShootoutScore(newFixture);
-    const newShootoutKicks = collectNewShootoutKickEvents(oldEventKeySet, newEvents, newStatus, isColdStart);
+    const newShootoutKicks = collectNewShootoutKickEvents(oldState?.fixture?.events, newEvents, newStatus, isColdStart);
     for (const e of newShootoutKicks) {
       const detail = (e.detail ?? "").trim();
       const converted = detail !== "Missed Penalty";
       triggers.push({
         fixtureId,
         type: "PENALTY_SHOOTOUT_KICK",
-        eventKey: `event:${buildEventKey(e)}`,
+        eventKey: `event:${buildShootoutKickKey(e)}`,
         message: templates.penaltyShootoutKick({
           homeTeam,
           awayTeam,
           leagueName,
           matchUrl,
           teamName: teamFromEvent(e, newFixture),
-          playerName: playerNameOrUnknown(e),
-          minute: minuteFromEvent(e),
           converted,
           shootoutHome: penScore?.home ?? null,
           shootoutAway: penScore?.away ?? null,

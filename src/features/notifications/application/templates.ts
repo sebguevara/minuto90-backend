@@ -24,7 +24,7 @@ export const templates = {
     }
   ) =>
     [
-      "⚽ *Gol*",
+      "⚽ *Gol!!*",
       "",
       `*${input.teamName}*`,
       ...(input.playerName ? [`*${input.playerName}* · _${input.minute}′_`] : [`_${input.minute}′_`]),
@@ -143,8 +143,6 @@ export const templates = {
   penaltyShootoutKick: (
     input: TemplateBase & {
       teamName: string;
-      playerName: string;
-      minute: number | string;
       converted: boolean;
       shootoutHome: number | null;
       shootoutAway: number | null;
@@ -158,7 +156,6 @@ export const templates = {
       "🎯 *Penal (tanda)*",
       "",
       `*${input.teamName}*`,
-      `*${input.playerName}* · _${input.minute}′_`,
       input.converted ? "✅ *Gol* en la serie." : "❌ *Penal errado*.",
       "",
       serieLine,
