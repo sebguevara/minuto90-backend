@@ -160,7 +160,7 @@ const TTL_BY_ENDPOINT: Record<string, number> = {
   "/teams/seasons": 60 * 60 * 24,
   "/teams/countries": 60 * 60 * 24,
   "/venues": 60 * 60 * 24,
-  "/standings": 60 * 30,
+  "/standings": 0,
   "/injuries": 60 * 5,
   "/predictions": 60 * 10,
   "/coachs": 60 * 30,
