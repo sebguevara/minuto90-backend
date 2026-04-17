@@ -12,6 +12,7 @@ import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
 import { getSubscriptionBaseline, type SubscriptionBaseline } from "../features/notifications/application/subscription-baseline";
 import { updateLiveFixturesCache, invalidateStandingsCache, saveFixtureEvents } from "./live-cache-updater";
+import { saveHalftimeSnapshot } from "./halftime-snapshot";
 import { areNotificationsEnabled } from "../shared/config/notifications";
 import {
   canReceiveWhatsappNotifications,
@@ -268,6 +269,13 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
 
   if (triggers.length) {
     await dispatchTriggers({ fixtureId, triggers, newState });
+
+    const hasHalftime = triggers.some((t) => t.type === "HALFTIME");
+    if (hasHalftime) {
+      saveHalftimeSnapshot(fixtureId).catch((err) => {
+        logWarn("halftime-snapshot.trigger_failed", { fixtureId, err: (err as Error)?.message });
+      });
+    }
 
     const hasFullTime = triggers.some((t) => t.type === "FULL_TIME");
     if (hasFullTime) {

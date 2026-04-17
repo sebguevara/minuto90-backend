@@ -6,6 +6,7 @@ import {
   getTeamMatchProfile,
 } from "../../stats/application/stats.service";
 import { openai } from "../infrastructure/openai.client";
+import { getHalftimeSnapshot, computeSecondHalfTeamStats } from "../../../workers/halftime-snapshot";
 import {
   buildDailyInsightsCacheKey,
   buildFeaturedMatchesCacheKey,
@@ -576,11 +577,12 @@ export class InsightsService {
     fixtureId: number,
     fixtureData: ApiFootballFixtureItem
   ): Promise<string> {
-    const [statsRes, eventsRes, lineupsRes, playersRes] = await Promise.all([
+    const [statsRes, eventsRes, lineupsRes, playersRes, halftimeSnapshot] = await Promise.all([
       footballService.getFixtureStatistics({ fixture: fixtureId }),
       footballService.getFixtureEvents({ fixture: fixtureId }),
       footballService.getFixtureLineups({ fixture: fixtureId }),
       footballService.getFixturePlayers({ fixture: fixtureId }),
+      getHalftimeSnapshot(fixtureId),
     ]);
 
     const { league, teams, goals, score } = fixtureData;
@@ -644,6 +646,17 @@ export class InsightsService {
         coach: l.coach?.name ?? null,
       })),
       topPlayers,
+      statsByHalf: halftimeSnapshot
+        ? {
+            firstHalf: halftimeSnapshot.teamStats.map((t) => ({
+              team: t.teamName,
+              stats: t.statistics,
+            })),
+            secondHalf: computeSecondHalfTeamStats(halftimeSnapshot.teamStats, statistics).map(
+              (t) => ({ team: t.teamName, stats: t.statistics })
+            ),
+          }
+        : null,
     };
 
     const systemPrompt = `Eres un periodista deportivo que cuenta partidos como si estuvieras charlando con un amigo en un bar. Nada de informes corporativos — aquí se habla de fútbol de verdad.
@@ -661,6 +674,7 @@ REGLAS:
 - Cada frase debe aportar algo nuevo. Nada de relleno ni clichés vacíos.
 - NUNCA hables en futuro ni hagas predicciones. El partido YA TERMINÓ. Tu análisis es RETROSPECTIVO.
 - NUNCA digas cosas como "será interesante ver", "habrá que esperar", "de cara a lo que viene". Contá lo que pasó, no lo que podría pasar.
+- Si "statsByHalf" está disponible en los datos, analiza cómo cambió el partido entre el primer y segundo tiempo: quién dominó cada mitad, cambios de ritmo, si un equipo mejoró o empeoró notablemente. Integra esta información en la narrativa de forma natural.
 - NO inventes datos. Sin markdown, sin emojis, sin encabezados, sin introducciones tipo "Vamos a repasar...".`;
 
     const completion = await withRetry(() =>
