@@ -94,3 +94,18 @@ export type Post = Prisma.PostModel
  * 
  */
 export type MundialPronostico = Prisma.MundialPronosticoModel
+/**
+ * Model FixtureStatsPeriod
+ * 
+ */
+export type FixtureStatsPeriod = Prisma.FixtureStatsPeriodModel
+/**
+ * Model FixturePlayerStatsPeriod
+ * 
+ */
+export type FixturePlayerStatsPeriod = Prisma.FixturePlayerStatsPeriodModel
+/**
+ * Model MatchMomentumInsight
+ * 
+ */
+export type MatchMomentumInsight = Prisma.MatchMomentumInsightModel

@@ -394,7 +394,10 @@ export const ModelName = {
   News: 'News',
   NewsTag: 'NewsTag',
   Post: 'Post',
-  MundialPronostico: 'MundialPronostico'
+  MundialPronostico: 'MundialPronostico',
+  FixtureStatsPeriod: 'FixtureStatsPeriod',
+  FixturePlayerStatsPeriod: 'FixturePlayerStatsPeriod',
+  MatchMomentumInsight: 'MatchMomentumInsight'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -410,7 +413,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "pushSubscription" | "user" | "favorite" | "notificationSubscriber" | "matchSubscription" | "evolutionInstance" | "newsCategory" | "news" | "newsTag" | "post" | "mundialPronostico"
+    modelProps: "pushSubscription" | "user" | "favorite" | "notificationSubscriber" | "matchSubscription" | "evolutionInstance" | "newsCategory" | "news" | "newsTag" | "post" | "mundialPronostico" | "fixtureStatsPeriod" | "fixturePlayerStatsPeriod" | "matchMomentumInsight"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1228,6 +1231,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    FixtureStatsPeriod: {
+      payload: Prisma.$FixtureStatsPeriodPayload<ExtArgs>
+      fields: Prisma.FixtureStatsPeriodFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.FixtureStatsPeriodFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.FixtureStatsPeriodFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload>
+        }
+        findFirst: {
+          args: Prisma.FixtureStatsPeriodFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.FixtureStatsPeriodFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload>
+        }
+        findMany: {
+          args: Prisma.FixtureStatsPeriodFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload>[]
+        }
+        create: {
+          args: Prisma.FixtureStatsPeriodCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload>
+        }
+        createMany: {
+          args: Prisma.FixtureStatsPeriodCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.FixtureStatsPeriodCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload>[]
+        }
+        delete: {
+          args: Prisma.FixtureStatsPeriodDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload>
+        }
+        update: {
+          args: Prisma.FixtureStatsPeriodUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload>
+        }
+        deleteMany: {
+          args: Prisma.FixtureStatsPeriodDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.FixtureStatsPeriodUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.FixtureStatsPeriodUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload>[]
+        }
+        upsert: {
+          args: Prisma.FixtureStatsPeriodUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixtureStatsPeriodPayload>
+        }
+        aggregate: {
+          args: Prisma.FixtureStatsPeriodAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateFixtureStatsPeriod>
+        }
+        groupBy: {
+          args: Prisma.FixtureStatsPeriodGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FixtureStatsPeriodGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.FixtureStatsPeriodCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FixtureStatsPeriodCountAggregateOutputType> | number
+        }
+      }
+    }
+    FixturePlayerStatsPeriod: {
+      payload: Prisma.$FixturePlayerStatsPeriodPayload<ExtArgs>
+      fields: Prisma.FixturePlayerStatsPeriodFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.FixturePlayerStatsPeriodFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.FixturePlayerStatsPeriodFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload>
+        }
+        findFirst: {
+          args: Prisma.FixturePlayerStatsPeriodFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.FixturePlayerStatsPeriodFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload>
+        }
+        findMany: {
+          args: Prisma.FixturePlayerStatsPeriodFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload>[]
+        }
+        create: {
+          args: Prisma.FixturePlayerStatsPeriodCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload>
+        }
+        createMany: {
+          args: Prisma.FixturePlayerStatsPeriodCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.FixturePlayerStatsPeriodCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload>[]
+        }
+        delete: {
+          args: Prisma.FixturePlayerStatsPeriodDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload>
+        }
+        update: {
+          args: Prisma.FixturePlayerStatsPeriodUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload>
+        }
+        deleteMany: {
+          args: Prisma.FixturePlayerStatsPeriodDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.FixturePlayerStatsPeriodUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.FixturePlayerStatsPeriodUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload>[]
+        }
+        upsert: {
+          args: Prisma.FixturePlayerStatsPeriodUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FixturePlayerStatsPeriodPayload>
+        }
+        aggregate: {
+          args: Prisma.FixturePlayerStatsPeriodAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateFixturePlayerStatsPeriod>
+        }
+        groupBy: {
+          args: Prisma.FixturePlayerStatsPeriodGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FixturePlayerStatsPeriodGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.FixturePlayerStatsPeriodCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FixturePlayerStatsPeriodCountAggregateOutputType> | number
+        }
+      }
+    }
+    MatchMomentumInsight: {
+      payload: Prisma.$MatchMomentumInsightPayload<ExtArgs>
+      fields: Prisma.MatchMomentumInsightFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MatchMomentumInsightFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MatchMomentumInsightFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload>
+        }
+        findFirst: {
+          args: Prisma.MatchMomentumInsightFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MatchMomentumInsightFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload>
+        }
+        findMany: {
+          args: Prisma.MatchMomentumInsightFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload>[]
+        }
+        create: {
+          args: Prisma.MatchMomentumInsightCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload>
+        }
+        createMany: {
+          args: Prisma.MatchMomentumInsightCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MatchMomentumInsightCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload>[]
+        }
+        delete: {
+          args: Prisma.MatchMomentumInsightDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload>
+        }
+        update: {
+          args: Prisma.MatchMomentumInsightUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload>
+        }
+        deleteMany: {
+          args: Prisma.MatchMomentumInsightDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MatchMomentumInsightUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MatchMomentumInsightUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload>[]
+        }
+        upsert: {
+          args: Prisma.MatchMomentumInsightUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchMomentumInsightPayload>
+        }
+        aggregate: {
+          args: Prisma.MatchMomentumInsightAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMatchMomentumInsight>
+        }
+        groupBy: {
+          args: Prisma.MatchMomentumInsightGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MatchMomentumInsightGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MatchMomentumInsightCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MatchMomentumInsightCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1449,6 +1674,53 @@ export const MundialPronosticoScalarFieldEnum = {
 } as const
 
 export type MundialPronosticoScalarFieldEnum = (typeof MundialPronosticoScalarFieldEnum)[keyof typeof MundialPronosticoScalarFieldEnum]
+
+
+export const FixtureStatsPeriodScalarFieldEnum = {
+  id: 'id',
+  fixtureId: 'fixtureId',
+  snapshotId: 'snapshotId',
+  teamId: 'teamId',
+  teamName: 'teamName',
+  statistics: 'statistics',
+  capturedAt: 'capturedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FixtureStatsPeriodScalarFieldEnum = (typeof FixtureStatsPeriodScalarFieldEnum)[keyof typeof FixtureStatsPeriodScalarFieldEnum]
+
+
+export const FixturePlayerStatsPeriodScalarFieldEnum = {
+  id: 'id',
+  fixtureId: 'fixtureId',
+  snapshotId: 'snapshotId',
+  teamId: 'teamId',
+  playerId: 'playerId',
+  playerName: 'playerName',
+  statistics: 'statistics',
+  capturedAt: 'capturedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FixturePlayerStatsPeriodScalarFieldEnum = (typeof FixturePlayerStatsPeriodScalarFieldEnum)[keyof typeof FixturePlayerStatsPeriodScalarFieldEnum]
+
+
+export const MatchMomentumInsightScalarFieldEnum = {
+  id: 'id',
+  fixtureId: 'fixtureId',
+  minute: 'minute',
+  signalType: 'signalType',
+  team: 'team',
+  narrative: 'narrative',
+  cardTitle: 'cardTitle',
+  emoji: 'emoji',
+  stats: 'stats',
+  delta: 'delta',
+  probability: 'probability',
+  createdAt: 'createdAt'
+} as const
+
+export type MatchMomentumInsightScalarFieldEnum = (typeof MatchMomentumInsightScalarFieldEnum)[keyof typeof MatchMomentumInsightScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1687,6 +1959,9 @@ export type GlobalOmitConfig = {
   newsTag?: Prisma.NewsTagOmit
   post?: Prisma.PostOmit
   mundialPronostico?: Prisma.MundialPronosticoOmit
+  fixtureStatsPeriod?: Prisma.FixtureStatsPeriodOmit
+  fixturePlayerStatsPeriod?: Prisma.FixturePlayerStatsPeriodOmit
+  matchMomentumInsight?: Prisma.MatchMomentumInsightOmit
 }
 
 /* Types for Logging */

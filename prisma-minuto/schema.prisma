@@ -220,3 +220,58 @@ model MundialPronostico {
 
   @@index([score])
 }
+
+// ─── Fixture stats snapshots por período ─────────────────────────────────────
+// Persistencia durable de estadísticas capturadas en hitos del partido:
+// first-half-end, full-time-end, extra-first-half-end, final.
+// Redis sigue siendo cache hot; esta tabla es la fuente de verdad.
+
+model FixtureStatsPeriod {
+  id         String   @id @default(cuid())
+  fixtureId  Int
+  snapshotId String
+  teamId     Int
+  teamName   String
+  statistics Json
+  capturedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([fixtureId, snapshotId, teamId])
+  @@index([fixtureId])
+}
+
+model FixturePlayerStatsPeriod {
+  id         String   @id @default(cuid())
+  fixtureId  Int
+  snapshotId String
+  teamId     Int
+  playerId   Int
+  playerName String
+  statistics Json
+  capturedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([fixtureId, snapshotId, playerId])
+  @@index([fixtureId])
+}
+
+// Insights de momentum generados durante el partido.
+// Se persisten para que sobrevivan a recargas/navegación y estén
+// disponibles aunque el usuario entre después del live.
+model MatchMomentumInsight {
+  id          String   @id @default(cuid())
+  fixtureId   Int
+  minute      Int
+  signalType  String
+  team        String
+  narrative   String
+  cardTitle   String
+  emoji       String
+  stats       Json
+  delta       Json
+  probability Float?
+  createdAt   DateTime @default(now())
+
+  @@unique([fixtureId, signalType, team, minute])
+  @@index([fixtureId, createdAt])
+}

@@ -45,7 +45,7 @@ import {
   getFootballLiveSnapshot,
 } from "../infrastructure/football-live.snapshot";
 import { getFixtureEventsMap } from "../../../workers/live-cache-updater";
-import { getHalftimeSnapshot, computeSecondHalfTeamStats } from "../../../workers/halftime-snapshot";
+import { getFixtureStatsByPeriodResponse } from "../../../workers/halftime-snapshot";
 import { DEFAULT_ODDS_BET, DEFAULT_ODDS_BOOKMAKER } from "../infrastructure/football-odds-cache";
 import {
   getCachedOddsResponse as getCachedPrematchOddsResponse,
@@ -1261,20 +1261,11 @@ export function createFootballRoutes(service: FootballServiceContract = football
       async ({ query, set }) => {
         try {
           const fixtureId = parseRequiredInteger(query.fixture, "fixture");
-          const snapshot = await getHalftimeSnapshot(fixtureId);
-          if (!snapshot) {
-            return { hasSnapshot: false };
-          }
+          const statsByPeriod = await getFixtureStatsByPeriodResponse(fixtureId);
+          if (!statsByPeriod.hasSnapshot) return statsByPeriod;
 
           const statsRes = await service.getFixtureStatistics({ fixture: fixtureId });
-          const fullTimeStats = statsRes.response ?? [];
-          const secondHalf = computeSecondHalfTeamStats(snapshot.teamStats, fullTimeStats);
-
-          return {
-            hasSnapshot: true,
-            firstHalf: snapshot.teamStats,
-            secondHalf,
-          };
+          return await getFixtureStatsByPeriodResponse(fixtureId, statsRes.response ?? []);
         } catch (error) {
           return handleFootballError(set, error);
         }

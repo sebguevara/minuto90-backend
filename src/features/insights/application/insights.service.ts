@@ -6,7 +6,7 @@ import {
   getTeamMatchProfile,
 } from "../../stats/application/stats.service";
 import { openai } from "../infrastructure/openai.client";
-import { getHalftimeSnapshot, computeSecondHalfTeamStats } from "../../../workers/halftime-snapshot";
+import { getFixtureStatsByPeriodResponse } from "../../../workers/halftime-snapshot";
 import {
   buildDailyInsightsCacheKey,
   buildFeaturedMatchesCacheKey,
@@ -577,12 +577,11 @@ export class InsightsService {
     fixtureId: number,
     fixtureData: ApiFootballFixtureItem
   ): Promise<string> {
-    const [statsRes, eventsRes, lineupsRes, playersRes, halftimeSnapshot] = await Promise.all([
+    const [statsRes, eventsRes, lineupsRes, playersRes] = await Promise.all([
       footballService.getFixtureStatistics({ fixture: fixtureId }),
       footballService.getFixtureEvents({ fixture: fixtureId }),
       footballService.getFixtureLineups({ fixture: fixtureId }),
       footballService.getFixturePlayers({ fixture: fixtureId }),
-      getHalftimeSnapshot(fixtureId),
     ]);
 
     const { league, teams, goals, score } = fixtureData;
@@ -590,6 +589,7 @@ export class InsightsService {
     const events = eventsRes.response || [];
     const lineups = lineupsRes.response || [];
     const playersData = playersRes.response || [];
+    const statsByPeriod = await getFixtureStatsByPeriodResponse(fixtureId, statistics);
 
     const topPlayers = playersData.flatMap((t) =>
       t.players
@@ -646,15 +646,17 @@ export class InsightsService {
         coach: l.coach?.name ?? null,
       })),
       topPlayers,
-      statsByHalf: halftimeSnapshot
+      statsByHalf: statsByPeriod.hasSnapshot
         ? {
-            firstHalf: halftimeSnapshot.teamStats.map((t) => ({
-              team: t.teamName,
-              stats: t.statistics,
+            periods: statsByPeriod.periods.map((period) => ({
+              id: period.id,
+              label: period.label,
+              status: period.status,
+              teams: period.teams.map((team) => ({
+                team: team.teamName,
+                stats: team.statistics,
+              })),
             })),
-            secondHalf: computeSecondHalfTeamStats(halftimeSnapshot.teamStats, statistics).map(
-              (t) => ({ team: t.teamName, stats: t.statistics })
-            ),
           }
         : null,
     };
@@ -674,7 +676,7 @@ REGLAS:
 - Cada frase debe aportar algo nuevo. Nada de relleno ni clichés vacíos.
 - NUNCA hables en futuro ni hagas predicciones. El partido YA TERMINÓ. Tu análisis es RETROSPECTIVO.
 - NUNCA digas cosas como "será interesante ver", "habrá que esperar", "de cara a lo que viene". Contá lo que pasó, no lo que podría pasar.
-- Si "statsByHalf" está disponible en los datos, analiza cómo cambió el partido entre el primer y segundo tiempo: quién dominó cada mitad, cambios de ritmo, si un equipo mejoró o empeoró notablemente. Integra esta información en la narrativa de forma natural.
+- Si "statsByHalf" está disponible en los datos, es OBLIGATORIO analizar por separado el primer tiempo y el segundo tiempo (y los tiempos extra si existen): quién dominó cada tramo, cambios de ritmo, y si un equipo mejoró o empeoró notablemente de un período a otro. Usa las estadísticas de cada período (posesión, tiros, pases clave) para fundamentar el contraste. Integra esa comparación en la narrativa de forma natural, sin listar números sueltos.
 - NO inventes datos. Sin markdown, sin emojis, sin encabezados, sin introducciones tipo "Vamos a repasar...".`;
 
     const completion = await withRetry(() =>
@@ -954,6 +956,8 @@ REGLAS:
     const lineups = lineupsRes.response || [];
     const liveOdds = liveOddsRes.response?.[0] ?? null;
     const prediction = predictionsRes.response?.[0] ?? null;
+    // Stats por período: disponibles desde el entretiempo en adelante (1T cerrado, luego FT/ET).
+    const statsByPeriod = await getFixtureStatsByPeriodResponse(fixtureId, statistics);
 
     // Extract 1xBet live odds
     const oneXBetLiveOdds = liveOdds?.odds
@@ -1076,6 +1080,19 @@ REGLAS:
             away: oneXBetLiveOdds.away ?? null,
           }
         : null,
+      statsByHalf: statsByPeriod.hasSnapshot
+        ? {
+            periods: statsByPeriod.periods.map((period) => ({
+              id: period.id,
+              label: period.label,
+              status: period.status,
+              teams: period.teams.map((team) => ({
+                team: team.teamName,
+                stats: team.statistics,
+              })),
+            })),
+          }
+        : null,
     };
 
     // Build knockout live prompt section
@@ -1111,6 +1128,7 @@ REGLAS:
 - CERO porcentajes sueltos. Todo en narrativa natural.
 - Si "liveOdds" es null, NUNCA menciones la ausencia de cuotas.
 - Cuando haya cuotas, menciona "1xBet" por nombre. Cuando uses el pronóstico, menciona "Minuto 90" por nombre.
+- Si "statsByHalf" está en los datos, úsalo para comparar cómo cambió el juego entre el primer tiempo y el tramo en curso (posesión, tiros, ritmo). Integra ese contraste en la narrativa de forma natural, sin listar números sueltos.
 - NO inventes datos. Sin markdown, sin emojis, sin encabezados, sin introducciones.`;
 
     const completion = await withRetry(() =>

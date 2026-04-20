@@ -12,7 +12,7 @@ import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
 import { getSubscriptionBaseline, type SubscriptionBaseline } from "../features/notifications/application/subscription-baseline";
 import { updateLiveFixturesCache, invalidateStandingsCache, saveFixtureEvents } from "./live-cache-updater";
-import { saveHalftimeSnapshot } from "./halftime-snapshot";
+import { captureFixtureStatsPeriodSnapshot } from "./halftime-snapshot";
 import { areNotificationsEnabled } from "../shared/config/notifications";
 import {
   canReceiveWhatsappNotifications,
@@ -270,13 +270,6 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
   if (triggers.length) {
     await dispatchTriggers({ fixtureId, triggers, newState });
 
-    const hasHalftime = triggers.some((t) => t.type === "HALFTIME");
-    if (hasHalftime) {
-      saveHalftimeSnapshot(fixtureId).catch((err) => {
-        logWarn("halftime-snapshot.trigger_failed", { fixtureId, err: (err as Error)?.message });
-      });
-    }
-
     const hasFullTime = triggers.some((t) => t.type === "FULL_TIME");
     if (hasFullTime) {
       const leagueId = fixture.league?.id;
@@ -291,6 +284,12 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
       }
     }
   }
+
+  await captureFixtureStatsPeriodSnapshot({
+    fixtureId,
+    statusShort: fixture.fixture.status?.short ?? null,
+    elapsed: fixture.fixture.status?.elapsed ?? null,
+  });
 
   // Persist events so they survive beyond the short live-snapshot TTL and remain
   // available for finished matches in the home feed (red cards, goals, etc.).
@@ -393,6 +392,12 @@ async function handleDisappearances(currentIds: number[]) {
 
       const ok = await shouldEmitTrigger(fixtureId, `FULL_TIME_DISAPPEARED:disappeared`);
       if (!ok) continue;
+
+      await captureFixtureStatsPeriodSnapshot({
+        fixtureId,
+        statusShort: "FT",
+        elapsed: elapsed ?? 90,
+      });
 
       const subs = await minutoPrismaClient.matchSubscription.findMany({
         where: { fixtureId },

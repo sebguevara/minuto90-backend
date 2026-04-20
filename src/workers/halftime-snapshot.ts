@@ -1,30 +1,34 @@
 import { footballApiClient } from "../features/sports/infrastructure/football-api.client";
 import type {
-  ApiFootballFixtureStatisticsItem,
-  ApiFootballFixtureStatisticLine,
   ApiFootballFixturePlayersItem,
+  ApiFootballFixtureStatisticsItem,
 } from "../features/sports/domain/football.types";
 import { redisConnection } from "../shared/redis/redis.connection";
 import { logInfo, logWarn } from "../shared/logging/logger";
+import {
+  buildFixtureStatsPeriodsResponse,
+  createEmptyFixtureStatsPeriodStore,
+  getSnapshotIdsToCaptureForStatus,
+  normalizeTeamStats,
+  subtractTeamStats,
+  type FootballFixtureStatsPeriodStore,
+  type FootballStatsByPeriodResponse,
+  type PlayerStatSnapshotRow,
+  type TeamStatSnapshot,
+} from "./fixture-stats-periods.logic";
+import {
+  loadPlayerPeriods,
+  loadStoreFromDb,
+  savePlayerSnapshots,
+  saveTeamSnapshots,
+} from "./fixture-stats-periods.repo";
+
+export * from "./fixture-stats-periods.logic";
+export { loadPlayerPeriods } from "./fixture-stats-periods.repo";
 
 const SNAPSHOT_TTL_SECONDS = 60 * 60 * 24 * 90; // 90 days
-const snapshotKey = (fixtureId: number) => `ht_snapshot:${fixtureId}`;
-
-// Stats that are percentages or derived — cannot be subtracted
-const PERCENTAGE_STATS = new Set([
-  "Ball Possession",
-  "Passes %",
-]);
-
-/* ------------------------------------------------------------------ */
-/*  Types                                                             */
-/* ------------------------------------------------------------------ */
-
-export interface TeamStatSnapshot {
-  teamId: number;
-  teamName: string;
-  statistics: ApiFootballFixtureStatisticLine[];
-}
+const legacyHalftimeSnapshotKey = (fixtureId: number) => `ht_snapshot:${fixtureId}`;
+const periodSnapshotKey = (fixtureId: number) => `football:fixture_stats_periods:${fixtureId}`;
 
 export interface PlayerStatSnapshot {
   playerId: number;
@@ -40,73 +44,72 @@ export interface HalftimeSnapshot {
   playerStats: PlayerStatSnapshot[];
 }
 
-/* ------------------------------------------------------------------ */
-/*  Save snapshot at halftime                                         */
-/* ------------------------------------------------------------------ */
-
-export async function saveHalftimeSnapshot(fixtureId: number): Promise<void> {
+function parseStore(raw: string, fixtureId: number): FootballFixtureStatsPeriodStore | null {
   try {
-    const [statsRes, playersRes] = await Promise.all([
-      footballApiClient.getFixtureStatistics({ fixture: fixtureId }),
-      footballApiClient.getFixturePlayers({ fixture: fixtureId }),
-    ]);
-
-    const teamStats: TeamStatSnapshot[] = (statsRes.response ?? []).map(
-      (item: ApiFootballFixtureStatisticsItem) => ({
-        teamId: item.team.id,
-        teamName: item.team.name,
-        statistics: item.statistics,
-      })
-    );
-
-    const playerStats: PlayerStatSnapshot[] = (playersRes.response ?? []).flatMap(
-      (team: ApiFootballFixturePlayersItem) =>
-        team.players.map((p) => ({
-          playerId: p.player.id,
-          teamId: team.team.id,
-          name: p.player.name,
-          statistics: p.statistics[0] as unknown as Record<string, unknown>,
-        }))
-    );
-
-    const snapshot: HalftimeSnapshot = {
+    const parsed = JSON.parse(raw) as FootballFixtureStatsPeriodStore;
+    if (!parsed || parsed.fixtureId !== fixtureId || typeof parsed.snapshots !== "object") return null;
+    return {
+      version: 1,
       fixtureId,
-      capturedAt: new Date().toISOString(),
-      teamStats,
-      playerStats,
+      updatedAt: parsed.updatedAt ?? new Date().toISOString(),
+      lastStatusShort: parsed.lastStatusShort ?? null,
+      lastElapsed: parsed.lastElapsed ?? null,
+      snapshots: {
+        "first-half-end": parsed.snapshots["first-half-end"]
+          ? normalizeTeamStats(parsed.snapshots["first-half-end"])
+          : undefined,
+        "full-time-end": parsed.snapshots["full-time-end"]
+          ? normalizeTeamStats(parsed.snapshots["full-time-end"])
+          : undefined,
+        "extra-first-half-end": parsed.snapshots["extra-first-half-end"]
+          ? normalizeTeamStats(parsed.snapshots["extra-first-half-end"])
+          : undefined,
+        final: parsed.snapshots.final ? normalizeTeamStats(parsed.snapshots.final) : undefined,
+      },
     };
-
-    await redisConnection.set(
-      snapshotKey(fixtureId),
-      JSON.stringify(snapshot),
-      "EX",
-      SNAPSHOT_TTL_SECONDS
-    );
-
-    logInfo("halftime-snapshot.saved", {
-      fixtureId,
-      teams: teamStats.length,
-      players: playerStats.length,
-    });
-  } catch (err: any) {
-    logWarn("halftime-snapshot.save_failed", {
-      fixtureId,
-      err: err?.message ?? String(err),
-    });
+  } catch {
+    return null;
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Read snapshot                                                     */
-/* ------------------------------------------------------------------ */
-
-export async function getHalftimeSnapshot(fixtureId: number): Promise<HalftimeSnapshot | null> {
+async function readLegacyHalftimeSnapshot(fixtureId: number): Promise<FootballFixtureStatsPeriodStore | null> {
+  const raw = await redisConnection.get(legacyHalftimeSnapshotKey(fixtureId));
+  if (!raw) return null;
   try {
-    const raw = await redisConnection.get(snapshotKey(fixtureId));
-    if (!raw) return null;
-    return JSON.parse(raw) as HalftimeSnapshot;
+    const legacy = JSON.parse(raw) as HalftimeSnapshot;
+    if (!legacy?.teamStats?.length) return null;
+    return {
+      ...createEmptyFixtureStatsPeriodStore(fixtureId),
+      updatedAt: legacy.capturedAt ?? new Date().toISOString(),
+      lastStatusShort: "HT",
+      snapshots: {
+        "first-half-end": normalizeTeamStats(legacy.teamStats),
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getFixtureStatsPeriodsStore(
+  fixtureId: number
+): Promise<FootballFixtureStatsPeriodStore | null> {
+  try {
+    const raw = await redisConnection.get(periodSnapshotKey(fixtureId));
+    if (raw) {
+      const parsed = parseStore(raw, fixtureId);
+      if (parsed) return parsed;
+    }
+    const legacy = await readLegacyHalftimeSnapshot(fixtureId);
+    if (legacy) return legacy;
+    const dbStore = await loadStoreFromDb(fixtureId);
+    if (dbStore) {
+      // Rehidratar Redis para mantener el hot path caliente en próximas lecturas.
+      writeFixtureStatsPeriodsStore(dbStore).catch(() => {});
+    }
+    return dbStore;
   } catch (err: any) {
-    logWarn("halftime-snapshot.get_failed", {
+    logWarn("fixture-stats-periods.get_failed", {
       fixtureId,
       err: err?.message ?? String(err),
     });
@@ -114,53 +117,151 @@ export async function getHalftimeSnapshot(fixtureId: number): Promise<HalftimeSn
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Compute second-half stats by subtracting HT from FT              */
-/* ------------------------------------------------------------------ */
+async function writeFixtureStatsPeriodsStore(store: FootballFixtureStatsPeriodStore): Promise<void> {
+  await redisConnection.set(
+    periodSnapshotKey(store.fixtureId),
+    JSON.stringify(store),
+    "EX",
+    SNAPSHOT_TTL_SECONDS
+  );
+}
 
-function parseStatValue(value: string | number | boolean | null): number | null {
-  if (value === null || value === undefined || typeof value === "boolean") return null;
-  if (typeof value === "number") return value;
-  const cleaned = String(value).replace("%", "").trim();
-  const parsed = Number.parseFloat(cleaned);
-  return Number.isFinite(parsed) ? parsed : null;
+async function fetchCurrentTeamStats(fixtureId: number): Promise<TeamStatSnapshot[]> {
+  const statsRes = await footballApiClient.getFixtureStatistics({ fixture: fixtureId });
+  return normalizeTeamStats(statsRes.response ?? []);
+}
+
+function normalizePlayersResponse(items: ApiFootballFixturePlayersItem[]): PlayerStatSnapshotRow[] {
+  const rows: PlayerStatSnapshotRow[] = [];
+  for (const item of items ?? []) {
+    const teamId = item.team?.id;
+    if (typeof teamId !== "number") continue;
+    for (const playerEntry of item.players ?? []) {
+      const playerId = playerEntry.player?.id;
+      if (typeof playerId !== "number") continue;
+      rows.push({
+        teamId,
+        playerId,
+        playerName: playerEntry.player?.name ?? "",
+        statistics: playerEntry.statistics ?? [],
+      });
+    }
+  }
+  return rows;
+}
+
+async function fetchCurrentPlayerStats(fixtureId: number): Promise<PlayerStatSnapshotRow[]> {
+  try {
+    const res = await footballApiClient.getFixturePlayers({ fixture: fixtureId });
+    return normalizePlayersResponse(res.response ?? []);
+  } catch (err: any) {
+    logWarn("fixture-stats-periods.players_fetch_failed", {
+      fixtureId,
+      err: err?.message ?? String(err),
+    });
+    return [];
+  }
+}
+
+export async function captureFixtureStatsPeriodSnapshot(input: {
+  fixtureId: number;
+  statusShort: string | null | undefined;
+  elapsed?: number | null;
+}): Promise<void> {
+  const { fixtureId, statusShort, elapsed = null } = input;
+
+  try {
+    const existingStore =
+      (await getFixtureStatsPeriodsStore(fixtureId)) ?? createEmptyFixtureStatsPeriodStore(fixtureId);
+    const store: FootballFixtureStatsPeriodStore = {
+      ...existingStore,
+      updatedAt: new Date().toISOString(),
+      lastStatusShort: statusShort ?? null,
+      lastElapsed: elapsed ?? null,
+      snapshots: { ...existingStore.snapshots },
+    };
+
+    const snapshotIds = getSnapshotIdsToCaptureForStatus(store, statusShort);
+    if (!snapshotIds.length && !existingStore.snapshots["first-half-end"]) return;
+
+    let capturedPlayers: PlayerStatSnapshotRow[] = [];
+    if (snapshotIds.length) {
+      const [currentStats, currentPlayers] = await Promise.all([
+        fetchCurrentTeamStats(fixtureId),
+        fetchCurrentPlayerStats(fixtureId),
+      ]);
+      if (!currentStats.length) return;
+      capturedPlayers = currentPlayers;
+      for (const snapshotId of snapshotIds) {
+        store.snapshots[snapshotId] = currentStats;
+      }
+    }
+
+    await writeFixtureStatsPeriodsStore(store);
+
+    if (snapshotIds.length) {
+      // Dual-write en Postgres. Fallos no bloquean (Redis es fuente de verdad en vivo).
+      await Promise.all([
+        ...snapshotIds.map((snapshotId) =>
+          saveTeamSnapshots(fixtureId, snapshotId, store.snapshots[snapshotId] ?? [])
+        ),
+        ...(capturedPlayers.length
+          ? snapshotIds.map((snapshotId) => savePlayerSnapshots(fixtureId, snapshotId, capturedPlayers))
+          : []),
+      ]);
+
+      logInfo("fixture-stats-periods.snapshots_saved", {
+        fixtureId,
+        statusShort,
+        elapsed,
+        snapshots: snapshotIds,
+        teams: snapshotIds.length ? store.snapshots[snapshotIds[0]]?.length ?? 0 : 0,
+        players: capturedPlayers.length,
+      });
+    }
+  } catch (err: any) {
+    logWarn("fixture-stats-periods.capture_failed", {
+      fixtureId,
+      statusShort,
+      err: err?.message ?? String(err),
+    });
+  }
+}
+
+export async function getFixtureStatsByPeriodResponse(
+  fixtureId: number,
+  currentStatsInput?: TeamStatSnapshot[] | ApiFootballFixtureStatisticsItem[]
+): Promise<FootballStatsByPeriodResponse> {
+  const [store, players] = await Promise.all([
+    getFixtureStatsPeriodsStore(fixtureId),
+    loadPlayerPeriods(fixtureId),
+  ]);
+  return buildFixtureStatsPeriodsResponse(store, currentStatsInput, players);
+}
+
+export async function saveHalftimeSnapshot(fixtureId: number): Promise<void> {
+  await captureFixtureStatsPeriodSnapshot({
+    fixtureId,
+    statusShort: "HT",
+    elapsed: 45,
+  });
+}
+
+export async function getHalftimeSnapshot(fixtureId: number): Promise<HalftimeSnapshot | null> {
+  const store = await getFixtureStatsPeriodsStore(fixtureId);
+  const teamStats = store?.snapshots["first-half-end"];
+  if (!teamStats) return null;
+  return {
+    fixtureId,
+    capturedAt: store.updatedAt,
+    teamStats,
+    playerStats: [],
+  };
 }
 
 export function computeSecondHalfTeamStats(
   htStats: TeamStatSnapshot[],
   ftStats: ApiFootballFixtureStatisticsItem[]
 ): TeamStatSnapshot[] {
-  return ftStats.map((ftTeam) => {
-    const htTeam = htStats.find((ht) => ht.teamId === ftTeam.team.id);
-    if (!htTeam) {
-      return {
-        teamId: ftTeam.team.id,
-        teamName: ftTeam.team.name,
-        statistics: ftTeam.statistics,
-      };
-    }
-
-    const htMap = new Map(htTeam.statistics.map((s) => [s.type, s.value]));
-
-    const secondHalfStats: ApiFootballFixtureStatisticLine[] = ftTeam.statistics.map((ftStat) => {
-      if (PERCENTAGE_STATS.has(ftStat.type)) {
-        return { type: ftStat.type, value: null };
-      }
-
-      const ftVal = parseStatValue(ftStat.value);
-      const htVal = parseStatValue(htMap.get(ftStat.type) ?? null);
-
-      if (ftVal === null || htVal === null) {
-        return { type: ftStat.type, value: ftStat.value };
-      }
-
-      return { type: ftStat.type, value: Math.max(0, ftVal - htVal) };
-    });
-
-    return {
-      teamId: ftTeam.team.id,
-      teamName: ftTeam.team.name,
-      statistics: secondHalfStats,
-    };
-  });
+  return subtractTeamStats(htStats, ftStats);
 }

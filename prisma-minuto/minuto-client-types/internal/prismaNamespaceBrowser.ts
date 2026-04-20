@@ -61,7 +61,10 @@ export const ModelName = {
   News: 'News',
   NewsTag: 'NewsTag',
   Post: 'Post',
-  MundialPronostico: 'MundialPronostico'
+  MundialPronostico: 'MundialPronostico',
+  FixtureStatsPeriod: 'FixtureStatsPeriod',
+  FixturePlayerStatsPeriod: 'FixturePlayerStatsPeriod',
+  MatchMomentumInsight: 'MatchMomentumInsight'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -262,6 +265,53 @@ export const MundialPronosticoScalarFieldEnum = {
 } as const
 
 export type MundialPronosticoScalarFieldEnum = (typeof MundialPronosticoScalarFieldEnum)[keyof typeof MundialPronosticoScalarFieldEnum]
+
+
+export const FixtureStatsPeriodScalarFieldEnum = {
+  id: 'id',
+  fixtureId: 'fixtureId',
+  snapshotId: 'snapshotId',
+  teamId: 'teamId',
+  teamName: 'teamName',
+  statistics: 'statistics',
+  capturedAt: 'capturedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FixtureStatsPeriodScalarFieldEnum = (typeof FixtureStatsPeriodScalarFieldEnum)[keyof typeof FixtureStatsPeriodScalarFieldEnum]
+
+
+export const FixturePlayerStatsPeriodScalarFieldEnum = {
+  id: 'id',
+  fixtureId: 'fixtureId',
+  snapshotId: 'snapshotId',
+  teamId: 'teamId',
+  playerId: 'playerId',
+  playerName: 'playerName',
+  statistics: 'statistics',
+  capturedAt: 'capturedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FixturePlayerStatsPeriodScalarFieldEnum = (typeof FixturePlayerStatsPeriodScalarFieldEnum)[keyof typeof FixturePlayerStatsPeriodScalarFieldEnum]
+
+
+export const MatchMomentumInsightScalarFieldEnum = {
+  id: 'id',
+  fixtureId: 'fixtureId',
+  minute: 'minute',
+  signalType: 'signalType',
+  team: 'team',
+  narrative: 'narrative',
+  cardTitle: 'cardTitle',
+  emoji: 'emoji',
+  stats: 'stats',
+  delta: 'delta',
+  probability: 'probability',
+  createdAt: 'createdAt'
+} as const
+
+export type MatchMomentumInsightScalarFieldEnum = (typeof MatchMomentumInsightScalarFieldEnum)[keyof typeof MatchMomentumInsightScalarFieldEnum]
 
 
 export const SortOrder = {

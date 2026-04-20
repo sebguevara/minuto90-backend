@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { insightsService } from "../application/insights.service";
 import { generateMomentumNarrative } from "../application/momentum.service";
 import type { MomentumSignal } from "../application/momentum.types";
+import { listMomentumInsights, saveMomentumInsight } from "../infrastructure/momentum.repo";
 
 export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
   .get(
@@ -114,6 +115,29 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
       },
     }
   )
+  .get(
+    "/match/:fixtureId/momentum",
+    async ({ params, set }) => {
+      try {
+        const insights = await listMomentumInsights(params.fixtureId);
+        return { success: true, data: insights };
+      } catch (error: any) {
+        set.status = 500;
+        return { success: false, error: error.message ?? "Error al listar insights" };
+      }
+    },
+    {
+      params: t.Object({
+        fixtureId: t.Numeric({ description: "Fixture ID for the match" }),
+      }),
+      detail: {
+        tags: ["Insights"],
+        summary: "Listar insights de momentum persistidos",
+        description:
+          "Devuelve todos los insights de momentum generados previamente para el partido, ordenados cronológicamente.",
+      },
+    }
+  )
   .post(
     "/match/:fixtureId/momentum",
     async ({ params, body, set }) => {
@@ -123,6 +147,8 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
           fixtureId: params.fixtureId,
         };
         const narrative = await generateMomentumNarrative(signal);
+        // Persist: fallos de DB no bloquean la respuesta al cliente.
+        saveMomentumInsight(signal, narrative).catch(() => {});
         return { success: true, data: narrative };
       } catch (error: any) {
         set.status = 500;

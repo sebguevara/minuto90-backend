@@ -41,7 +41,7 @@ export type ApiFootballLiveFixture = {
     date?: string;
     status: { short: ApiFootballFixtureStatusShort; elapsed?: number | null };
   };
-  league?: { id?: number | null; name?: string | null };
+  league?: { id?: number | null; name?: string | null; season?: number | null };
   teams?: {
     home?: { id?: number | null; name?: string | null };
     away?: { id?: number | null; name?: string | null };
@@ -124,4 +124,3 @@ export class ApiFootballLiveClient {
 }
 
 export const apiFootballLiveClient = new ApiFootballLiveClient();
-
