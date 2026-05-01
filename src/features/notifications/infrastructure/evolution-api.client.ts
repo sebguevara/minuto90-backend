@@ -12,10 +12,26 @@ const DEFAULT_EVOLUTION_BASE_URL = process.env.EVOLUTION_API_URL ?? "http://loca
 const shouldUseJid = () =>
   (process.env.EVOLUTION_USE_JID ?? "false").toLowerCase() === "true";
 
+const ARGENTINA_DIAL_CODE = "54";
+
+/**
+ * Argentina admite el "9" del mobile internacional y el "0" del trunk domestico
+ * justo despues del codigo de pais. Los colapsamos a `54<area><numero>` para
+ * deduplicar (`5493794619729`, `5403794619729` y `543794619729` son el mismo).
+ */
+export function normalizeArgentinaPhone(digits: string): string {
+  if (!digits.startsWith(ARGENTINA_DIAL_CODE)) return digits;
+  let rest = digits.slice(ARGENTINA_DIAL_CODE.length);
+  while (rest.length > 0 && (rest[0] === "9" || rest[0] === "0")) {
+    rest = rest.slice(1);
+  }
+  return ARGENTINA_DIAL_CODE + rest;
+}
+
 export function normalizePhoneNumber(raw: string): string {
   const digits = raw.replace(/[^\d]/g, "");
   if (!digits) throw new Error("Invalid phone number");
-  return digits;
+  return normalizeArgentinaPhone(digits);
 }
 
 export function toEvolutionNumber(raw: string): string {

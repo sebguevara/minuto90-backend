@@ -9,6 +9,7 @@ import {
   deleteSubscriptionBaseline,
   moveSubscriptionBaseline,
 } from "./subscription-baseline";
+import { normalizePhoneNumber } from "../infrastructure/evolution-api.client";
 
 const FOOTBALL_TIMEZONE = "UTC";
 const TEAM_FAVORITE_LOOKAHEAD = Number(
@@ -68,7 +69,9 @@ function digitsOnlyOrNull(value: string | null | undefined, field: string) {
 
 function buildPhoneNumber(input: { dialCode: string | null; nationalNumber: string | null }) {
   if (!input.dialCode || !input.nationalNumber) return null;
-  return `${input.dialCode}${input.nationalNumber}`;
+  // Normalizamos para que variantes equivalentes (ej. AR con/sin "9" o "0")
+  // colapsen al mismo canonico y dispare el unique constraint.
+  return normalizePhoneNumber(`${input.dialCode}${input.nationalNumber}`);
 }
 
 async function moveSubscriptionsBetweenSubscribers(input: {
