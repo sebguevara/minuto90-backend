@@ -38,6 +38,11 @@ export type StoredMatchState = {
   eventKeys: string[];
   fixture: ApiFootballLiveFixture;
   updatedAtMs: number;
+  /** Cuenta acumulada de goles "phantom" emitidos por lado (gol notificado sin que la API
+   *  haya publicado el evento todavía). Se usa para suprimir notificaciones retroactivas
+   *  cuando el evento real aparece tarde y el marcador ya estaba reflejado. */
+  phantomGoalsHome?: number;
+  phantomGoalsAway?: number;
 };
 
 const terminalStatuses = new Set(["FT", "AET", "PEN"]);
@@ -113,11 +118,28 @@ function minuteFromEvent(e: ApiFootballFixtureEvent | null): number | string {
   return typeof m === "number" && Number.isFinite(m) ? m : "?";
 }
 
-/** Firma estable del gol (sin minuto/extra): API-Football a veces corrige 35′→36′ y cambiaba la clave → doble WhatsApp. */
+/**
+ * Firma del gol con jugador (sin minuto/extra). Permite distinguir dos goles del mismo equipo
+ * por jugadores distintos, y diferencia un evento sin scorer (`detail|team|`) del mismo gol con
+ * scorer publicado después (`detail|team|Cavani`) — el segundo cuenta como nuevo y se notifica
+ * con el nombre del scorer. Sigue siendo estable ante correcciones de minuto.
+ */
 function goalSignature(e: ApiFootballFixtureEvent): string {
   const team = e?.team?.id ?? e?.team?.name ?? "";
   const detail = e?.detail ?? "";
+  const player = e?.player?.id ?? e?.player?.name ?? "";
+  return `${detail}|${team}|${player}`;
+}
+
+/** Firma agnóstica al scorer: usada para detectar player-fillin y para contar "raw events" por lado. */
+function goalSignatureNoPlayer(e: ApiFootballFixtureEvent): string {
+  const team = e?.team?.id ?? e?.team?.name ?? "";
+  const detail = e?.detail ?? "";
   return `${detail}|${team}`;
+}
+
+function hasScorer(e: ApiFootballFixtureEvent): boolean {
+  return Boolean(e?.player?.name && String(e.player.name).trim().length);
 }
 
 /**
@@ -146,9 +168,46 @@ function countSignatureRegularMatchGoals(
   if (!events?.length) return 0;
   let n = 0;
   for (const e of events) {
-    if (isRegularPlayMatchGoalForNotification(e, inShootout) && goalSignature(e) === sig) n++;
+    // Solo contamos goles con scorer ya publicado: si en old hubo un evento sin player,
+    // no debe bloquear la notificación de la misma transición cuando el scorer aparezca.
+    if (
+      isRegularPlayMatchGoalForNotification(e, inShootout) &&
+      hasScorer(e) &&
+      goalSignature(e) === sig
+    ) {
+      n++;
+    }
   }
   return n;
+}
+
+/** Cuenta eventos de gol nuevos para un lado (sin filtrar por scorer): sirve para distinguir
+ *  "hueco real" (la API no publicó nada) de "evento publicado pero sin nombre todavía". */
+function countRawNewGoalEventsForSide(
+  oldEvents: ApiFootballFixtureEvent[] | undefined,
+  newEvents: ApiFootballFixtureEvent[],
+  side: "home" | "away",
+  fixture: ApiFootballLiveFixture,
+  inShootout: boolean
+): number {
+  const oldSigCounts = new Map<string, number>();
+  for (const e of oldEvents ?? []) {
+    if (!isRegularPlayMatchGoalForNotification(e, inShootout)) continue;
+    if (resolveEventTeamSide(e, fixture) !== side) continue;
+    const k = goalSignatureNoPlayer(e);
+    oldSigCounts.set(k, (oldSigCounts.get(k) ?? 0) + 1);
+  }
+  const seen = new Map<string, number>();
+  let raw = 0;
+  for (const e of newEvents) {
+    if (!isRegularPlayMatchGoalForNotification(e, inShootout)) continue;
+    if (resolveEventTeamSide(e, fixture) !== side) continue;
+    const k = goalSignatureNoPlayer(e);
+    const nth = (seen.get(k) ?? 0) + 1;
+    seen.set(k, nth);
+    if (nth > (oldSigCounts.get(k) ?? 0)) raw++;
+  }
+  return raw;
 }
 
 function isShootoutKickEvent(event: ApiFootballFixtureEvent | null | undefined): boolean {
@@ -193,7 +252,10 @@ function isVarGoalCancellationLikeEvent(event: ApiFootballFixtureEvent | null | 
   return false;
 }
 
-/** Goles nuevos en `newEvents` respetando orden (misma firma: enésima ocurrencia > la que había en old). */
+/** Goles nuevos en `newEvents` respetando orden (misma firma: enésima ocurrencia > la que había en old).
+ *  Eventos sin scorer se omiten: esperamos a que la API publique el nombre antes de avisar.
+ *  Si no hay evento de gol todavía pero el marcador subió, el gol se cubre con un phantom (ver
+ *  computeDiffTriggers). */
 function collectNewGoalEvents(
   oldEvents: ApiFootballFixtureEvent[] | undefined,
   newEvents: ApiFootballFixtureEvent[],
@@ -203,6 +265,7 @@ function collectNewGoalEvents(
   const nthBySig = new Map<string, number>();
   for (const e of newEvents) {
     if (!isRegularPlayMatchGoalForNotification(e, inShootout)) continue;
+    if (!hasScorer(e)) continue;
     const sig = goalSignature(e);
     const prevCount = countSignatureRegularMatchGoals(oldEvents, sig, inShootout);
     const nth = (nthBySig.get(sig) ?? 0) + 1;
@@ -361,6 +424,9 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
   const newEvents = newFixture.events ?? [];
 
   const triggers: DiffTrigger[] = [];
+  // Phantom counters: necesarios después del bloque GOAL para persistirlos en `newState`.
+  let phantomGoalsAddedHome = 0;
+  let phantomGoalsAddedAway = 0;
 
   // Cold start baseline: avoid sending historical goals/cards when we have no previous state.
   // We'll still persist state so subsequent polls can diff correctly.
@@ -455,43 +521,165 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
     });
   }
 
-  // GOAL: solo filas nuevas en `events` (nunca inventar gol con el “último evento” si el marcador sube solo).
-  // Marcador en el mensaje = API solo cuando hay exactamente un gol nuevo y coincide el delta (+1).
-  // Nota: penales durante el juego normal (detail=Penalty, status≠P) sí se notifican como gol.
+  // GOAL: la cantidad de triggers se decide por el delta de marcador (no por la cantidad
+  // de eventos nuevos), para no perder goles cuando la API tarda en publicar el evento.
+  // Si hay menos eventos que el delta, se generan "phantoms" (sin jugador) para cerrar
+  // la diferencia; cuando el evento real aparezca en un poll posterior, el dedup por
+  // mensaje (per-suscriptor) evita duplicarlo.
   if (!isColdStart) {
-    const netGoalDelta =
-      newScoreHome - oldScoreHome + (newScoreAway - oldScoreAway);
+    const homeDelta = newScoreHome - oldScoreHome;
+    const awayDelta = newScoreAway - oldScoreAway;
+    const netGoalDelta = homeDelta + awayDelta;
 
     const oldFeed = oldState?.fixture?.events;
     const inShootout = newStatus === "P";
     const collected = collectNewGoalEvents(oldFeed, newEvents, inShootout);
 
-    let goalsToEmit: Array<{ event: ApiFootballFixtureEvent; nth: number }> = [];
-    if (netGoalDelta > 0) {
-      if (collected.length === 0) {
-        goalsToEmit = [];
-      } else {
-        const take = Math.min(netGoalDelta, collected.length);
-        goalsToEmit = collected.slice(-take);
-      }
-    } else if (netGoalDelta === 0 && collected.length === 1) {
-      goalsToEmit = collected;
+    const collectedHome: Array<{ event: ApiFootballFixtureEvent; nth: number }> = [];
+    const collectedAway: Array<{ event: ApiFootballFixtureEvent; nth: number }> = [];
+    for (const c of collected) {
+      const side = resolveEventTeamSide(c.event, newFixture);
+      if (side === "home") collectedHome.push(c);
+      else if (side === "away") collectedAway.push(c);
     }
 
+    // Raw count: cuántos eventos nuevos aparecen en el feed por lado (con o sin scorer).
+    // Sirve para distinguir "hueco real" (la API no publicó nada todavía → phantom) de
+    // "evento publicado sin nombre" (esperar a que llegue el scorer, no phantomear).
+    const rawNewHomeCount = countRawNewGoalEventsForSide(oldFeed, newEvents, "home", newFixture, inShootout);
+    const rawNewAwayCount = countRawNewGoalEventsForSide(oldFeed, newEvents, "away", newFixture, inShootout);
+
+    type EmitItem = {
+      event: ApiFootballFixtureEvent | null;
+      nth: number | null;
+      side: "home" | "away";
+    };
+    const emissionQueue: EmitItem[] = [];
+
+    if (netGoalDelta > 0) {
+      // Score subió: emitir hasta `delta` triggers por lado, distinguiendo:
+      //  - Real: evento con scorer disponible (se incluye en `collected`).
+      //  - Phantom: hueco que la API no publicó (delta > rawNewCount); cubrimos el delta
+      //    para que el usuario reciba la notificación aunque la API tarde mucho en publicar.
+      //  - Espera: hay evento sin scorer (rawNewCount cubre el delta pero no tenemos nombre);
+      //    no emitimos phantom — esperamos al próximo poll a que la API rellene el scorer.
+      const homeRealCount = Math.max(0, Math.min(homeDelta, collectedHome.length));
+      const awayRealCount = Math.max(0, Math.min(awayDelta, collectedAway.length));
+      const homeReal = homeRealCount > 0 ? collectedHome.slice(-homeRealCount) : [];
+      const awayReal = awayRealCount > 0 ? collectedAway.slice(-awayRealCount) : [];
+      const homePhantomCount = Math.max(0, homeDelta - rawNewHomeCount);
+      const awayPhantomCount = Math.max(0, awayDelta - rawNewAwayCount);
+
+      if (homeDelta > 0) {
+        for (let i = 0; i < homePhantomCount; i++) {
+          emissionQueue.push({ event: null, nth: null, side: "home" });
+          phantomGoalsAddedHome++;
+        }
+        for (const r of homeReal) {
+          emissionQueue.push({ event: r.event, nth: r.nth, side: "home" });
+        }
+      }
+      if (awayDelta > 0) {
+        for (let i = 0; i < awayPhantomCount; i++) {
+          emissionQueue.push({ event: null, nth: null, side: "away" });
+          phantomGoalsAddedAway++;
+        }
+        for (const r of awayReal) {
+          emissionQueue.push({ event: r.event, nth: r.nth, side: "away" });
+        }
+      }
+    } else if (netGoalDelta === 0 && collected.length === 1) {
+      // Score no cambió pero apareció un evento (con scorer):
+      //   (a) "Score implied by event": la API publicó el evento antes de actualizar `goals`
+      //       → emitimos con bumpScoreForGoal sobre el marcador actual.
+      //   (b) "Player fillin": un evento previo sin scorer ahora tiene nombre → emitimos
+      //       con el marcador anclado a la API (no bumpeamos porque el score ya estaba bien).
+      //   (c) "Retroactivo después de phantom": habíamos emitido un phantom para el lado del
+      //       evento; el real llega tarde y bumpear daría un score erróneo → suprimimos.
+      const c = collected[0]!;
+      const side = resolveEventTeamSide(c.event, newFixture);
+      const sig = goalSignature(c.event);
+      const prevCountInOld = countSignatureRegularMatchGoals(oldFeed, sig, inShootout);
+      const sigNoPlayer = goalSignatureNoPlayer(c.event);
+      const isPlayerFillin = (oldFeed ?? []).some(
+        (oe) =>
+          isRegularPlayMatchGoalForNotification(oe, inShootout) &&
+          !hasScorer(oe) &&
+          goalSignatureNoPlayer(oe) === sigNoPlayer &&
+          resolveEventTeamSide(oe, newFixture) === side
+      );
+      const phantomEmittedSide =
+        side === "home"
+          ? oldState?.phantomGoalsHome ?? 0
+          : side === "away"
+            ? oldState?.phantomGoalsAway ?? 0
+            : 0;
+
+      if (prevCountInOld === 0 && side && phantomEmittedSide === 0) {
+        emissionQueue.push({ event: c.event, nth: c.nth, side });
+      } else if (isPlayerFillin && side) {
+        // Caso (b): emitimos con anchor a marcador API (no bump) porque el score ya está bien.
+        emissionQueue.push({ event: c.event, nth: c.nth, side });
+      }
+      // En el caso (c) no agregamos nada: el phantom previo ya cubrió la notificación.
+    }
+
+    // Player fillin (else-if): el marcador YA refleja el gol — nos anclamos al snapshot
+    // de la API para no inventar un score inflado por bump.
+    const isPlayerFillinEmission =
+      emissionQueue.length === 1 &&
+      netGoalDelta === 0 &&
+      emissionQueue[0]!.event != null &&
+      (oldFeed ?? []).some(
+        (oe) =>
+          isRegularPlayMatchGoalForNotification(oe, inShootout) &&
+          !hasScorer(oe) &&
+          goalSignatureNoPlayer(oe) === goalSignatureNoPlayer(emissionQueue[0]!.event!)
+      );
+
+    const useApiSnapshotAnchor =
+      (emissionQueue.length === 1 && netGoalDelta === 1) || isPlayerFillinEmission;
     let rh = oldScoreHome;
     let ra = oldScoreAway;
 
-    for (let i = 0; i < goalsToEmit.length; i++) {
-      const { event: e, nth } = goalsToEmit[i]!;
-      const playerName = scorerFromEvent(e);
-      const [bumpedH, bumpedA] = bumpScoreForGoal(e, newFixture, rh, ra);
-      const anchorToApiSnapshot = goalsToEmit.length === 1 && netGoalDelta === 1;
-      const nh = anchorToApiSnapshot ? newScoreHome : bumpedH;
-      const na = anchorToApiSnapshot ? newScoreAway : bumpedA;
+    for (const item of emissionQueue) {
+      const event = item.event;
+      let bh: number;
+      let ba: number;
+
+      if (event && netGoalDelta === 0 && !isPlayerFillinEmission) {
+        // Rama "score implied by event": bump por equipo del evento (la API publicó el
+        // evento antes que el snapshot de `goals`).
+        [bh, ba] = bumpScoreForGoal(event, newFixture, rh, ra);
+      } else {
+        bh = item.side === "home" ? rh + 1 : rh;
+        ba = item.side === "away" ? ra + 1 : ra;
+      }
+
+      const nh = useApiSnapshotAnchor ? newScoreHome : bh;
+      const na = useApiSnapshotAnchor ? newScoreAway : ba;
+
+      const teamName = event
+        ? teamFromEvent(event, newFixture)
+        : item.side === "home"
+          ? homeTeam
+          : awayTeam;
+      const playerName = event ? scorerFromEvent(event) : null;
+      const assistName = event ? assistFromEvent(event) : null;
+      const minute = event ? minuteFromEvent(event) : "?";
+
+      // Real → sig+nth (mantiene la dedup nth>=2 post-VAR del test existente).
+      // Phantom → score-anchored: si en el siguiente poll aparece el evento real con otro
+      // nth, su eventKey va a diferir y emitirá un mensaje real (mejor que perder el gol).
+      const eventKey =
+        event && item.nth != null
+          ? `goal:${goalSignature(event)}:${item.nth}`
+          : `goal:phantom:${item.side}:${item.side === "home" ? bh : ba}`;
+
       triggers.push({
         fixtureId,
         type: "GOAL",
-        eventKey: `goal:${goalSignature(e)}:${nth}`,
+        eventKey,
         scoreHome: nh,
         scoreAway: na,
         message: templates.goal({
@@ -501,14 +689,14 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
           matchUrl,
           scoreHome: nh,
           scoreAway: na,
-          teamName: teamFromEvent(e, newFixture),
+          teamName,
           playerName,
-          assistName: assistFromEvent(e),
-          minute: minuteFromEvent(e),
+          assistName,
+          minute,
         }),
       });
-      rh = nh;
-      ra = na;
+      rh = bh;
+      ra = ba;
     }
 
     const penScore = parsePenaltyShootoutScore(newFixture);
@@ -625,6 +813,12 @@ export function computeDiffTriggers(oldState: StoredMatchState | null, newFixtur
   }
 
   const newState = buildStoredState(newFixture);
+  // Heredamos los phantom counts y sumamos los emitidos en este poll, para que polls
+  // posteriores puedan suprimir notificaciones retroactivas (caso "evento histórico llega
+  // tarde después de phantom").
+  newState.phantomGoalsHome = (oldState?.phantomGoalsHome ?? 0) + phantomGoalsAddedHome;
+  newState.phantomGoalsAway = (oldState?.phantomGoalsAway ?? 0) + phantomGoalsAddedAway;
+
   const oldEventKeys = oldState?.eventKeys ?? [];
   const newEventKeys = newState.eventKeys ?? [];
   const hasRelevantChanges =

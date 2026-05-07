@@ -197,41 +197,39 @@ async function dispatchTriggers(input: {
   const baselineBySubscriberId = new Map<string, SubscriptionBaseline | null>(baselineEntries);
 
   const jobs: Parameters<typeof enqueueWhatsappNotificationsBulk>[0] = [];
-  let triggersDedupSkipped = 0;
-  let triggersEmitted = 0;
+  let perSubDedupSkipped = 0;
+  // Antes había un ledger global por fixture (`shouldEmitTrigger`) que cortaba el trigger
+  // ANTES del loop de suscriptores. Eso bloqueaba a usuarios que se sumaban entre polls
+  // (favorito mid-match): el trigger ya estaba marcado como "emitido" y nadie nuevo lo recibía.
+  // Ahora dedupeamos solo por suscriptor: cada uno tiene su propio `match_msg:` con TTL,
+  // que cubre re-emisiones del mismo trigger en polls subsiguientes.
   for (const trigger of input.triggers) {
-    const ok = await shouldEmitTrigger(input.fixtureId, `${trigger.type}:${trigger.eventKey}`);
-    if (!ok) {
-      triggersDedupSkipped++;
-      continue;
-    }
-    triggersEmitted++;
-
     for (const sub of subsBySubscriberId.values()) {
       if (!isLiveTriggerEnabled(sub.subscriber, trigger.type)) continue;
       const baseline = baselineBySubscriberId.get(sub.subscriberId) ?? null;
       if (isBaselineTriggerAlreadyCovered(baseline, trigger, input.newState)) continue;
+      if (!canReceiveWhatsappNotifications(sub.subscriber)) continue;
 
-      if (canReceiveWhatsappNotifications(sub.subscriber)) {
-        const msgOk = await shouldEmitMessage(
-          sub.subscriberId,
-          input.fixtureId,
-          trigger.type,
-          trigger.eventKey
-        );
-        if (msgOk) {
-          jobs.push({
-            phone: sub.subscriber.phoneNumber,
-            message: trigger.message,
-            fixtureId: input.fixtureId,
-            triggerType: trigger.type,
-            subscriberId: sub.subscriberId,
-            eventKey: trigger.eventKey,
-            scoreHome: trigger.scoreHome,
-            scoreAway: trigger.scoreAway,
-          });
-        }
+      const msgOk = await shouldEmitMessage(
+        sub.subscriberId,
+        input.fixtureId,
+        trigger.type,
+        trigger.eventKey
+      );
+      if (!msgOk) {
+        perSubDedupSkipped++;
+        continue;
       }
+      jobs.push({
+        phone: sub.subscriber.phoneNumber,
+        message: trigger.message,
+        fixtureId: input.fixtureId,
+        triggerType: trigger.type,
+        subscriberId: sub.subscriberId,
+        eventKey: trigger.eventKey,
+        scoreHome: trigger.scoreHome,
+        scoreAway: trigger.scoreAway,
+      });
     }
   }
 
@@ -241,8 +239,7 @@ async function dispatchTriggers(input: {
     logInfo("whatsapp.notifications.enqueued", {
       fixtureId: input.fixtureId,
       triggers: input.triggers.length,
-      triggersEmitted,
-      triggersDedupSkipped,
+      perSubDedupSkipped,
       subs: subs.length,
       activeSubscribers: subsBySubscriberId.size,
       jobs: jobs.length,

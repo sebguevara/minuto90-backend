@@ -414,6 +414,66 @@ describe("diff-engine", () => {
     expect(b.triggers[0]?.message).toContain("Valencia 1 - 2 Celta Vigo");
   });
 
+  it("emite goles fantasma cuando el marcador subió N pero la API publicó menos eventos (caso 'recibo 2-0 sin haber visto el 1-0')", () => {
+    const old = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 10 } } });
+    const a = apply(null, old);
+
+    // Poll donde el marcador llegó a 2-0 pero la API solo publicó UN evento
+    // (el segundo). El primer gol todavía no aparece en el feed.
+    const scoreJumpedWithLateEvents = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 25 } },
+      goals: { home: 2, away: 0 },
+      teams: { home: { id: 100, name: "Boca" }, away: { id: 200, name: "River" } },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { id: 100, name: "Boca" },
+          player: { name: "Segundo Goleador" },
+          time: { elapsed: 24 },
+        },
+      ],
+    });
+    const b = apply(a.state, scoreJumpedWithLateEvents);
+    // Debemos emitir DOS triggers: phantom (1-0) + real (2-0). El usuario no se queda
+    // sin la notificación del primer gol solo porque la API tarde en publicarlo.
+    expect(b.triggers.map((t) => t.type)).toEqual(["GOAL", "GOAL"]);
+    expect(b.triggers[0]?.message).toContain("Boca 1 - 0 River");
+    expect(b.triggers[1]?.message).toContain("Boca 2 - 0 River");
+    expect(b.triggers[1]?.message).toContain("Segundo Goleador");
+    // El phantom usa eventKey score-anchored (no debería conflictuar con un evento
+    // real que aparezca después con otro nth).
+    expect(b.triggers[0]?.eventKey).toContain("phantom");
+
+    // Poll siguiente: la API ya publica AMBOS goles. No debe duplicar el phantom
+    // ni re-emitir el segundo gol.
+    const fullFeed = fixtureBase({
+      fixture: { id: 1, status: { short: "1H", elapsed: 30 } },
+      goals: { home: 2, away: 0 },
+      teams: { home: { id: 100, name: "Boca" }, away: { id: 200, name: "River" } },
+      events: [
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { id: 100, name: "Boca" },
+          player: { name: "Primer Goleador" },
+          time: { elapsed: 18 },
+        },
+        {
+          type: "Goal",
+          detail: "Normal Goal",
+          team: { id: 100, name: "Boca" },
+          player: { name: "Segundo Goleador" },
+          time: { elapsed: 24 },
+        },
+      ],
+    });
+    const c = apply(b.state, fullFeed);
+    // Idealmente 0 triggers; aceptamos hasta 1 si el feed retroactivo dispara la rama
+    // event-only, pero NUNCA debería emitir dos goles más (eso era el bug original).
+    expect(c.triggers.length).toBeLessThanOrEqual(1);
+  });
+
   it("fires multiple GOAL triggers when multiple new goal events appear in one poll", () => {
     const old = fixtureBase({ fixture: { id: 1, status: { short: "1H", elapsed: 10 } } });
     const a = apply(null, old);

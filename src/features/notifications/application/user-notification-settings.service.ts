@@ -3,13 +3,41 @@ import { userService } from "../../users/application/user.service";
 import { footballService } from "../../sports/application/football.service";
 import type { ApiFootballFixtureItem } from "../../sports/domain/football.types";
 import type { ToggleFavoriteInput } from "../../favorites/domain/favorites.types";
-import { logWarn } from "../../../shared/logging/logger";
+import { logInfo, logWarn } from "../../../shared/logging/logger";
 import {
   captureSubscriptionBaseline,
   deleteSubscriptionBaseline,
   moveSubscriptionBaseline,
+  type SubscriptionBaseline,
 } from "./subscription-baseline";
 import { normalizePhoneNumber } from "../infrastructure/evolution-api.client";
+import { templates } from "./templates";
+import { buildMatchUrl } from "./match-url";
+import { enqueueWhatsappNotificationsBulk } from "../whatsapp/notification.queue";
+import {
+  canReceiveWhatsappNotifications,
+  isLiveTriggerEnabled,
+} from "./subscriber-preferences";
+import { areNotificationsEnabled } from "../../../shared/config/notifications";
+
+const LIVE_STATUSES = new Set(["1H", "HT", "BT", "INT", "2H", "ET", "P"]);
+const TERMINAL_STATUSES = new Set(["FT", "AET", "PEN"]);
+
+function statusLabel(short: string | null): string {
+  switch (short) {
+    case "1H": return "1ra etapa";
+    case "HT": return "Descanso";
+    case "2H": return "2da etapa";
+    case "ET": return "Tiempo extra";
+    case "BT": return "Descanso (prórroga)";
+    case "INT": return "Interrumpido";
+    case "P": return "Tanda de penales";
+    case "FT": return "Final";
+    case "AET": return "Final (prórroga)";
+    case "PEN": return "Final (penales)";
+    default: return short ?? "En curso";
+  }
+}
 
 const FOOTBALL_TIMEZONE = "UTC";
 const TEAM_FAVORITE_LOOKAHEAD = Number(
@@ -416,7 +444,7 @@ async function upsertMatchSubscription(
   };
 
   if (existing) {
-    return minutoPrismaClient.matchSubscription.update({
+    const subscription = await minutoPrismaClient.matchSubscription.update({
       where: {
         subscriberId_fixtureId: {
           subscriberId: input.subscriberId,
@@ -425,6 +453,7 @@ async function upsertMatchSubscription(
       },
       data,
     });
+    return { subscription, baseline: null, wasCreated: false as const };
   }
 
   const subscription = await minutoPrismaClient.matchSubscription.create({
@@ -435,15 +464,121 @@ async function upsertMatchSubscription(
     },
   });
 
-  captureSubscriptionBaseline(input.subscriberId, input.fixture.fixtureId).catch((error: any) => {
+  // CRÍTICO: el baseline DEBE existir antes de devolver. Si lo dejábamos en fire-and-forget,
+  // el siguiente poll del live worker podía correr antes de que el baseline se persistiera
+  // y, sin baseline, el suscriptor recibía triggers de eventos previos a su suscripción
+  // (o, peor, los perdía si el ledger global ya los marcaba como emitidos).
+  let capturedBaseline: SubscriptionBaseline | null = null;
+  try {
+    capturedBaseline = await captureSubscriptionBaseline(
+      input.subscriberId,
+      input.fixture.fixtureId
+    );
+  } catch (error: any) {
     logWarn("notifications.subscription_baseline.capture_failed", {
       subscriberId: input.subscriberId,
       fixtureId: input.fixture.fixtureId,
       err: error?.message ?? String(error),
     });
+  }
+
+  return { subscription, baseline: capturedBaseline, wasCreated: true as const };
+}
+
+/**
+ * Cuando un usuario marca como favorito un partido que ya está en curso (o ya terminó),
+ * los triggers normales del poller no le van a llegar (los goles/HT/FT pasaron antes
+ * de su suscripción). Enviamos un mensaje "estado actual" para confirmar el seguimiento
+ * y dejar al usuario al día con el resultado/minuto vigente.
+ */
+async function dispatchJoinedInProgressNotification(input: {
+  subscriber: {
+    id: string;
+    isActive: boolean;
+    phoneNumber: string | null;
+    notifyKickoff: boolean;
+    notifyGoals: boolean;
+    notifyRedCards: boolean;
+    notifyVarCancelled: boolean;
+    notifyHalftime: boolean;
+    notifySecondHalf: boolean;
+    notifyFullTime: boolean;
+    notifyPreMatch30m: boolean;
+  };
+  fixture: SubscriptionFixtureData;
+  baseline: SubscriptionBaseline | null;
+}) {
+  if (!areNotificationsEnabled()) return;
+  if (!input.baseline) return;
+  const status = input.baseline.statusShort;
+  const isLive = status != null && LIVE_STATUSES.has(status);
+  const isFinished = status != null && TERMINAL_STATUSES.has(status);
+  if (!isLive && !isFinished) return;
+  if (!canReceiveWhatsappNotifications(input.subscriber)) return;
+
+  // Respetamos la preferencia del usuario: si tiene FULL_TIME/GOAL desactivados,
+  // no spamemos un mensaje "te uniste" que el usuario explícitamente no quiere.
+  // Heurística: si tiene activado *algún* trigger live, mandamos el aviso.
+  const wantsAnyLiveTrigger =
+    input.subscriber.notifyKickoff ||
+    input.subscriber.notifyGoals ||
+    input.subscriber.notifyHalftime ||
+    input.subscriber.notifySecondHalf ||
+    input.subscriber.notifyFullTime ||
+    input.subscriber.notifyRedCards;
+  if (!wantsAnyLiveTrigger) return;
+  if (isFinished && !isLiveTriggerEnabled(input.subscriber, "FULL_TIME")) return;
+
+  const matchUrl = buildMatchUrl({
+    fixtureId: input.fixture.fixtureId,
+    leagueName: input.fixture.leagueName ?? "Liga",
+    homeTeam: input.fixture.homeTeam,
+    awayTeam: input.fixture.awayTeam,
   });
 
-  return subscription;
+  const message = isFinished
+    ? templates.joinedFinished({
+        homeTeam: input.fixture.homeTeam,
+        awayTeam: input.fixture.awayTeam,
+        leagueName: input.fixture.leagueName ?? "Liga",
+        matchUrl,
+        scoreHome: input.baseline.goalsHome,
+        scoreAway: input.baseline.goalsAway,
+      })
+    : templates.joinedInProgress({
+        homeTeam: input.fixture.homeTeam,
+        awayTeam: input.fixture.awayTeam,
+        leagueName: input.fixture.leagueName ?? "Liga",
+        matchUrl,
+        scoreHome: input.baseline.goalsHome,
+        scoreAway: input.baseline.goalsAway,
+        statusLabel: statusLabel(status),
+        minute: null,
+      });
+
+  // EventKey único por suscripción: si el usuario quita y vuelve a poner el favorito
+  // mientras el partido sigue, el TTL de match_msg (30 min) puede o no haber expirado
+  // — usamos el timestamp de captura del baseline para diferenciar suscripciones.
+  const eventKey = `joined:${input.fixture.fixtureId}:${input.baseline.capturedAtMs}`;
+
+  await enqueueWhatsappNotificationsBulk([
+    {
+      phone: input.subscriber.phoneNumber!,
+      message,
+      fixtureId: input.fixture.fixtureId,
+      triggerType: isFinished ? "FULL_TIME" : "KICKOFF",
+      subscriberId: input.subscriber.id,
+      eventKey,
+    },
+  ]);
+
+  logInfo("notifications.joined_in_progress.enqueued", {
+    subscriberId: input.subscriber.id,
+    fixtureId: input.fixture.fixtureId,
+    status,
+    scoreHome: input.baseline.goalsHome,
+    scoreAway: input.baseline.goalsAway,
+  });
 }
 
 async function removeSubscriptionIfUncovered(input: {
@@ -485,7 +620,7 @@ async function removeSubscriptionIfUncovered(input: {
 
 async function syncMatchFavoriteNotification(input: {
   userId: string;
-  subscriberId: string;
+  subscriber: Awaited<ReturnType<typeof getOrCreateSubscriberByUserId>>;
   fixtureId: number;
   metadata?: Record<string, unknown>;
   action: "added" | "removed";
@@ -493,17 +628,27 @@ async function syncMatchFavoriteNotification(input: {
   const fixture = await resolveFixtureData(input.fixtureId, input.metadata);
 
   if (input.action === "added") {
-    await upsertMatchSubscription({
-      subscriberId: input.subscriberId,
+    const result = await upsertMatchSubscription({
+      subscriberId: input.subscriber.id,
       userId: input.userId,
       fixture,
       source: { sourceType: "match_favorite", sourceEntityId: input.fixtureId },
     });
+    if (result.wasCreated) {
+      // Solo notificamos "te uniste" para suscripciones nuevas. No queremos disparar el
+      // mensaje al re-tocar el corazón (que cae en update) ni cuando una fuente más
+      // débil (ej. league_favorite) ya había creado la suscripción.
+      await dispatchJoinedInProgressNotification({
+        subscriber: input.subscriber,
+        fixture,
+        baseline: result.baseline,
+      });
+    }
     return;
   }
 
   await removeSubscriptionIfUncovered({
-    subscriberId: input.subscriberId,
+    subscriberId: input.subscriber.id,
     userId: input.userId,
     fixture,
   });
@@ -720,7 +865,7 @@ export const userNotificationSettingsService = {
     if (input.favorite.entityType === "match") {
       await syncMatchFavoriteNotification({
         userId: input.userId,
-        subscriberId: subscriber.id,
+        subscriber,
         fixtureId: input.favorite.entityId,
         metadata: input.favorite.metadata,
         action: input.action,

@@ -136,6 +136,39 @@ export const templates = {
       matchLinkLine(input.matchUrl),
     ].join("\n"),
 
+  /** Aviso al suscribirse a un partido que ya está en juego: confirma seguimiento + estado actual. */
+  joinedInProgress: (
+    input: TemplateCommon & {
+      statusLabel: string;
+      minute: number | string | null;
+    }
+  ) =>
+    [
+      "🔔 *Te uniste a este partido*",
+      "",
+      `*${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}*`,
+      input.minute != null
+        ? `_${input.statusLabel} · ${input.minute}′_`
+        : `_${input.statusLabel}_`,
+      "",
+      "Te avisamos goles, tarjetas y final.",
+      "",
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
+    ].join("\n"),
+
+  /** Aviso al suscribirse a un partido ya finalizado: confirma seguimiento + resultado. */
+  joinedFinished: (input: TemplateCommon) =>
+    [
+      "🔔 *Te uniste a este partido*",
+      "",
+      "_Ya terminó:_",
+      `*${input.homeTeam} ${input.scoreHome} - ${input.scoreAway} ${input.awayTeam}*`,
+      "",
+      `_${input.leagueName}_`,
+      matchLinkLine(input.matchUrl),
+    ].join("\n"),
+
   /**
    * Cada lanzamiento en tanda: acierto o error explícitos.
    * Solo se muestra la *serie* de penales (API `score.penalty`); no el marcador global del partido.
