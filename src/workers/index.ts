@@ -1,6 +1,7 @@
 import { logInfo } from "../shared/logging/logger";
 import "./football-featured-matches.worker";
 import "./football-odds-today.worker";
+import "./odds-prewarm.worker";
 import "./daily-prewarm.worker";
 import "./live-fixtures-poller";
 import "./pre-match-notifications.worker";
@@ -12,6 +13,7 @@ logInfo("worker.bundle.started", {
   services: [
     "football-featured-matches",
     "football-odds-today",
+    "odds-prewarm",
     "daily-prewarm",
     "live-fixtures-poller",
     "pre-match-notifications",

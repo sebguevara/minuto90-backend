@@ -64,6 +64,9 @@ export const ModelName = {
   MundialPronostico: 'MundialPronostico',
   FixtureStatsPeriod: 'FixtureStatsPeriod',
   FixturePlayerStatsPeriod: 'FixturePlayerStatsPeriod',
+  OddsTournamentMapping: 'OddsTournamentMapping',
+  OddsEventMapping: 'OddsEventMapping',
+  OddsTeamAlias: 'OddsTeamAlias',
   MatchMomentumInsight: 'MatchMomentumInsight'
 } as const
 
@@ -294,6 +297,59 @@ export const FixturePlayerStatsPeriodScalarFieldEnum = {
 } as const
 
 export type FixturePlayerStatsPeriodScalarFieldEnum = (typeof FixturePlayerStatsPeriodScalarFieldEnum)[keyof typeof FixturePlayerStatsPeriodScalarFieldEnum]
+
+
+export const OddsTournamentMappingScalarFieldEnum = {
+  id: 'id',
+  source: 'source',
+  sportId: 'sportId',
+  countryId: 'countryId',
+  tournamentId: 'tournamentId',
+  apifootballLeagueId: 'apifootballLeagueId',
+  apifootballSeason: 'apifootballSeason',
+  status: 'status',
+  confidence: 'confidence',
+  notes: 'notes',
+  verifiedBy: 'verifiedBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OddsTournamentMappingScalarFieldEnum = (typeof OddsTournamentMappingScalarFieldEnum)[keyof typeof OddsTournamentMappingScalarFieldEnum]
+
+
+export const OddsEventMappingScalarFieldEnum = {
+  id: 'id',
+  source: 'source',
+  sportId: 'sportId',
+  externalEventId: 'externalEventId',
+  apifootballFixtureId: 'apifootballFixtureId',
+  matchDate: 'matchDate',
+  confidence: 'confidence',
+  status: 'status',
+  matchedBy: 'matchedBy',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OddsEventMappingScalarFieldEnum = (typeof OddsEventMappingScalarFieldEnum)[keyof typeof OddsEventMappingScalarFieldEnum]
+
+
+export const OddsTeamAliasScalarFieldEnum = {
+  id: 'id',
+  source: 'source',
+  sportId: 'sportId',
+  externalName: 'externalName',
+  normalizedName: 'normalizedName',
+  apifootballTeamId: 'apifootballTeamId',
+  confidence: 'confidence',
+  verifiedBy: 'verifiedBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OddsTeamAliasScalarFieldEnum = (typeof OddsTeamAliasScalarFieldEnum)[keyof typeof OddsTeamAliasScalarFieldEnum]
 
 
 export const MatchMomentumInsightScalarFieldEnum = {

@@ -28,6 +28,9 @@ import { favoritesRoutes } from "./features/favorites/presentation/favorites.rou
 import { uploadRoutes } from "./features/uploads/presentation/upload.routes";
 import { teamColorRoutes } from "./shared/colors/team-color.routes";
 import { mundialRoutes } from "./features/mundial/presentation/mundial.routes";
+import { kickertechRoutes } from "./features/kickertech/presentation/kickertech.routes";
+import { oddsIntegrationRoutes } from "./features/odds-integration/presentation/odds-integration.routes";
+import { oddsIntegrationAdminRoutes } from "./features/odds-integration/presentation/odds-integration-admin.routes";
 
 const SITEMAP_REQUEST_PURPOSE = "sitemap";
 
@@ -179,6 +182,16 @@ const swaggerTags = [
   { name: "Uploads", description: "Uploads administrativos" },
   { name: "Team Colors", description: "Colores y branding de equipos" },
   { name: "Mundial", description: "Sección Mundial 2026 — pronósticos y ranking" },
+  {
+    name: "Kickertech",
+    description:
+      "Cuotas de apuestas (odds), mercados y betslip de afiliado provistos por Kickertech",
+  },
+  {
+    name: "Odds",
+    description:
+      "Cuotas unificadas por fixture de api-football (resuelve mapping interno y degrada gracefully)",
+  },
 ];
 
 const swaggerTagGroups = [
@@ -205,6 +218,7 @@ const swaggerTagGroups = [
   { name: "AI", tags: ["Insights", "Chat"] },
   { name: "Evolution API", tags: ["Evolution API"] },
   { name: "Content", tags: ["News", "Posts", "Uploads"] },
+  { name: "Odds", tags: ["Odds", "Kickertech"] },
   { name: "Notifications", tags: ["Notifications"] },
 ];
 
@@ -283,6 +297,9 @@ const app = new Elysia()
   .use(uploadRoutes)
   .use(teamColorRoutes)
   .use(mundialRoutes)
+  .use(kickertechRoutes)
+  .use(oddsIntegrationRoutes)
+  .use(oddsIntegrationAdminRoutes)
   .listen(
     process.env.NODE_ENV !== "development"
       ? Number(process.env.PORT ?? 4500)

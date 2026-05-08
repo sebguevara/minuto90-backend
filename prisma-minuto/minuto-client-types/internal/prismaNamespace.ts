@@ -397,6 +397,9 @@ export const ModelName = {
   MundialPronostico: 'MundialPronostico',
   FixtureStatsPeriod: 'FixtureStatsPeriod',
   FixturePlayerStatsPeriod: 'FixturePlayerStatsPeriod',
+  OddsTournamentMapping: 'OddsTournamentMapping',
+  OddsEventMapping: 'OddsEventMapping',
+  OddsTeamAlias: 'OddsTeamAlias',
   MatchMomentumInsight: 'MatchMomentumInsight'
 } as const
 
@@ -413,7 +416,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "pushSubscription" | "user" | "favorite" | "notificationSubscriber" | "matchSubscription" | "evolutionInstance" | "newsCategory" | "news" | "newsTag" | "post" | "mundialPronostico" | "fixtureStatsPeriod" | "fixturePlayerStatsPeriod" | "matchMomentumInsight"
+    modelProps: "pushSubscription" | "user" | "favorite" | "notificationSubscriber" | "matchSubscription" | "evolutionInstance" | "newsCategory" | "news" | "newsTag" | "post" | "mundialPronostico" | "fixtureStatsPeriod" | "fixturePlayerStatsPeriod" | "oddsTournamentMapping" | "oddsEventMapping" | "oddsTeamAlias" | "matchMomentumInsight"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1379,6 +1382,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OddsTournamentMapping: {
+      payload: Prisma.$OddsTournamentMappingPayload<ExtArgs>
+      fields: Prisma.OddsTournamentMappingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OddsTournamentMappingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OddsTournamentMappingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload>
+        }
+        findFirst: {
+          args: Prisma.OddsTournamentMappingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OddsTournamentMappingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload>
+        }
+        findMany: {
+          args: Prisma.OddsTournamentMappingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload>[]
+        }
+        create: {
+          args: Prisma.OddsTournamentMappingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload>
+        }
+        createMany: {
+          args: Prisma.OddsTournamentMappingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OddsTournamentMappingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload>[]
+        }
+        delete: {
+          args: Prisma.OddsTournamentMappingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload>
+        }
+        update: {
+          args: Prisma.OddsTournamentMappingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload>
+        }
+        deleteMany: {
+          args: Prisma.OddsTournamentMappingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OddsTournamentMappingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OddsTournamentMappingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload>[]
+        }
+        upsert: {
+          args: Prisma.OddsTournamentMappingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTournamentMappingPayload>
+        }
+        aggregate: {
+          args: Prisma.OddsTournamentMappingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOddsTournamentMapping>
+        }
+        groupBy: {
+          args: Prisma.OddsTournamentMappingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OddsTournamentMappingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OddsTournamentMappingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OddsTournamentMappingCountAggregateOutputType> | number
+        }
+      }
+    }
+    OddsEventMapping: {
+      payload: Prisma.$OddsEventMappingPayload<ExtArgs>
+      fields: Prisma.OddsEventMappingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OddsEventMappingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OddsEventMappingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload>
+        }
+        findFirst: {
+          args: Prisma.OddsEventMappingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OddsEventMappingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload>
+        }
+        findMany: {
+          args: Prisma.OddsEventMappingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload>[]
+        }
+        create: {
+          args: Prisma.OddsEventMappingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload>
+        }
+        createMany: {
+          args: Prisma.OddsEventMappingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OddsEventMappingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload>[]
+        }
+        delete: {
+          args: Prisma.OddsEventMappingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload>
+        }
+        update: {
+          args: Prisma.OddsEventMappingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload>
+        }
+        deleteMany: {
+          args: Prisma.OddsEventMappingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OddsEventMappingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OddsEventMappingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload>[]
+        }
+        upsert: {
+          args: Prisma.OddsEventMappingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsEventMappingPayload>
+        }
+        aggregate: {
+          args: Prisma.OddsEventMappingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOddsEventMapping>
+        }
+        groupBy: {
+          args: Prisma.OddsEventMappingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OddsEventMappingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OddsEventMappingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OddsEventMappingCountAggregateOutputType> | number
+        }
+      }
+    }
+    OddsTeamAlias: {
+      payload: Prisma.$OddsTeamAliasPayload<ExtArgs>
+      fields: Prisma.OddsTeamAliasFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OddsTeamAliasFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OddsTeamAliasFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload>
+        }
+        findFirst: {
+          args: Prisma.OddsTeamAliasFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OddsTeamAliasFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload>
+        }
+        findMany: {
+          args: Prisma.OddsTeamAliasFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload>[]
+        }
+        create: {
+          args: Prisma.OddsTeamAliasCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload>
+        }
+        createMany: {
+          args: Prisma.OddsTeamAliasCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OddsTeamAliasCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload>[]
+        }
+        delete: {
+          args: Prisma.OddsTeamAliasDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload>
+        }
+        update: {
+          args: Prisma.OddsTeamAliasUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload>
+        }
+        deleteMany: {
+          args: Prisma.OddsTeamAliasDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OddsTeamAliasUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OddsTeamAliasUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload>[]
+        }
+        upsert: {
+          args: Prisma.OddsTeamAliasUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OddsTeamAliasPayload>
+        }
+        aggregate: {
+          args: Prisma.OddsTeamAliasAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOddsTeamAlias>
+        }
+        groupBy: {
+          args: Prisma.OddsTeamAliasGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OddsTeamAliasGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OddsTeamAliasCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OddsTeamAliasCountAggregateOutputType> | number
+        }
+      }
+    }
     MatchMomentumInsight: {
       payload: Prisma.$MatchMomentumInsightPayload<ExtArgs>
       fields: Prisma.MatchMomentumInsightFieldRefs
@@ -1705,6 +1930,59 @@ export const FixturePlayerStatsPeriodScalarFieldEnum = {
 export type FixturePlayerStatsPeriodScalarFieldEnum = (typeof FixturePlayerStatsPeriodScalarFieldEnum)[keyof typeof FixturePlayerStatsPeriodScalarFieldEnum]
 
 
+export const OddsTournamentMappingScalarFieldEnum = {
+  id: 'id',
+  source: 'source',
+  sportId: 'sportId',
+  countryId: 'countryId',
+  tournamentId: 'tournamentId',
+  apifootballLeagueId: 'apifootballLeagueId',
+  apifootballSeason: 'apifootballSeason',
+  status: 'status',
+  confidence: 'confidence',
+  notes: 'notes',
+  verifiedBy: 'verifiedBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OddsTournamentMappingScalarFieldEnum = (typeof OddsTournamentMappingScalarFieldEnum)[keyof typeof OddsTournamentMappingScalarFieldEnum]
+
+
+export const OddsEventMappingScalarFieldEnum = {
+  id: 'id',
+  source: 'source',
+  sportId: 'sportId',
+  externalEventId: 'externalEventId',
+  apifootballFixtureId: 'apifootballFixtureId',
+  matchDate: 'matchDate',
+  confidence: 'confidence',
+  status: 'status',
+  matchedBy: 'matchedBy',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OddsEventMappingScalarFieldEnum = (typeof OddsEventMappingScalarFieldEnum)[keyof typeof OddsEventMappingScalarFieldEnum]
+
+
+export const OddsTeamAliasScalarFieldEnum = {
+  id: 'id',
+  source: 'source',
+  sportId: 'sportId',
+  externalName: 'externalName',
+  normalizedName: 'normalizedName',
+  apifootballTeamId: 'apifootballTeamId',
+  confidence: 'confidence',
+  verifiedBy: 'verifiedBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OddsTeamAliasScalarFieldEnum = (typeof OddsTeamAliasScalarFieldEnum)[keyof typeof OddsTeamAliasScalarFieldEnum]
+
+
 export const MatchMomentumInsightScalarFieldEnum = {
   id: 'id',
   fixtureId: 'fixtureId',
@@ -1961,6 +2239,9 @@ export type GlobalOmitConfig = {
   mundialPronostico?: Prisma.MundialPronosticoOmit
   fixtureStatsPeriod?: Prisma.FixtureStatsPeriodOmit
   fixturePlayerStatsPeriod?: Prisma.FixturePlayerStatsPeriodOmit
+  oddsTournamentMapping?: Prisma.OddsTournamentMappingOmit
+  oddsEventMapping?: Prisma.OddsEventMappingOmit
+  oddsTeamAlias?: Prisma.OddsTeamAliasOmit
   matchMomentumInsight?: Prisma.MatchMomentumInsightOmit
 }
 

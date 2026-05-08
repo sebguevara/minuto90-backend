@@ -1,0 +1,32 @@
+{
+  "$schema": "./odds-mappings.seed.schema.json",
+  "_comment": "Seed de mappings entre Kickertech y api-football. Idempotente: re-ejecutar es seguro. Para iniciar, copiar a 'odds-mappings.seed.json' (gitignored) o renombrar y commitear si los IDs son seguros para compartir.",
+  "tournaments": [
+    {
+      "_label": "Premier League (Inglaterra)",
+      "source": "kickertech",
+      "sportId": 2,
+      "countryId": 21,
+      "tournamentId": 1234,
+      "apifootballLeagueId": 39,
+      "apifootballSeason": null,
+      "notes": "Wildcard de season — aplica a todas"
+    },
+    {
+      "_label": "La Liga (España)",
+      "source": "kickertech",
+      "sportId": 2,
+      "countryId": 22,
+      "tournamentId": 1235,
+      "apifootballLeagueId": 140,
+      "apifootballSeason": null
+    }
+  ],
+  "aliases": [
+    { "_label": "Manchester United", "source": "kickertech", "sportId": 2, "externalName": "Manchester Utd", "apifootballTeamId": 33 },
+    { "_label": "Manchester City",   "source": "kickertech", "sportId": 2, "externalName": "Man City",       "apifootballTeamId": 50 },
+    { "_label": "Bayern Munich",     "source": "kickertech", "sportId": 2, "externalName": "Bayern Munchen", "apifootballTeamId": 157 },
+    { "_label": "Atlético Madrid",   "source": "kickertech", "sportId": 2, "externalName": "Atletico Madrid","apifootballTeamId": 530 },
+    { "_label": "Paris Saint-Germain", "source": "kickertech", "sportId": 2, "externalName": "PSG",           "apifootballTeamId": 85 }
+  ]
+}

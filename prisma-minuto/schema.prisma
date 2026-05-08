@@ -255,6 +255,69 @@ model FixturePlayerStatsPeriod {
   @@index([fixtureId])
 }
 
+// ─── Odds integration (Kickertech ↔ api-football) ───────────────────────────
+// Tablas de mapeo independientes: no tocan los modelos existentes.
+// Las 3 capas de mapeo (tournament/event/team-alias) viven acá para que el
+// resto del sistema pueda consumir cuotas unificadas por fixtureId.
+
+model OddsTournamentMapping {
+  id                  String   @id @default(uuid())
+  source              String
+  sportId             Int
+  countryId           Int
+  tournamentId        Int
+  apifootballLeagueId Int
+  apifootballSeason   Int?
+  status              String   @default("confirmed")
+  confidence          Float?
+  notes               String?
+  verifiedBy          String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([source, tournamentId, apifootballSeason])
+  @@index([source, apifootballLeagueId])
+  @@index([source, sportId, countryId])
+  @@index([status])
+}
+
+model OddsEventMapping {
+  id                   String   @id @default(uuid())
+  source               String
+  sportId              Int
+  externalEventId      Int
+  apifootballFixtureId Int
+  matchDate            DateTime
+  confidence           Float
+  status               String   @default("auto")
+  matchedBy            String
+  expiresAt            DateTime
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([source, externalEventId])
+  @@unique([source, apifootballFixtureId])
+  @@index([apifootballFixtureId])
+  @@index([source, sportId, expiresAt])
+}
+
+model OddsTeamAlias {
+  id                String   @id @default(uuid())
+  source            String
+  sportId           Int
+  externalName      String
+  normalizedName    String
+  apifootballTeamId Int
+  confidence        Float    @default(1.0)
+  verifiedBy        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([source, sportId, normalizedName])
+  @@index([apifootballTeamId])
+  @@index([source, sportId])
+}
+
 // Insights de momentum generados durante el partido.
 // Se persisten para que sobrevivan a recargas/navegación y estén
 // disponibles aunque el usuario entre después del live.

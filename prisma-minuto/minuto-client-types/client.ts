@@ -105,6 +105,21 @@ export type FixtureStatsPeriod = Prisma.FixtureStatsPeriodModel
  */
 export type FixturePlayerStatsPeriod = Prisma.FixturePlayerStatsPeriodModel
 /**
+ * Model OddsTournamentMapping
+ * 
+ */
+export type OddsTournamentMapping = Prisma.OddsTournamentMappingModel
+/**
+ * Model OddsEventMapping
+ * 
+ */
+export type OddsEventMapping = Prisma.OddsEventMappingModel
+/**
+ * Model OddsTeamAlias
+ * 
+ */
+export type OddsTeamAlias = Prisma.OddsTeamAliasModel
+/**
  * Model MatchMomentumInsight
  * 
  */
