@@ -18,7 +18,9 @@ export const kickertechTournamentsParamSchema = t.Object({
 
 export const kickertechEventsParamSchema = t.Object({
   sportId: t.String({ pattern: "^[0-9]+$" }),
-  countryId: t.String({ pattern: "^[0-9]+$" }),
+  // Debe llamarse igual que en la ruta de tournaments para evitar colisión en el router
+  // (memoirist rechaza dos nombres de param distintos en la misma posición del árbol).
+  countryIds: t.String({ pattern: "^[0-9]+$" }),
   tournamentId: t.String({ pattern: "^[0-9]+$" }),
 });
 

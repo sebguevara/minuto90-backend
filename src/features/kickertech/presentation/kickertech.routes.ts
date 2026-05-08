@@ -131,11 +131,11 @@ export const createKickertechRoutes = (deps: KickertechRoutesDependencies = {}) 
      * Se usa para construir grids y para matchear contra fixtures de api-football.
      */
     .get(
-      "/sports/:sportId/countries/:countryId/tournaments/:tournamentId/events",
+      "/sports/:sportId/countries/:countryIds/tournaments/:tournamentId/events",
       async ({ params, set }) => {
         try {
           const sportId = parseInt10(params.sportId, "sportId");
-          const countryId = parseInt10(params.countryId, "countryId");
+          const countryId = parseInt10(params.countryIds, "countryId");
           const tournamentId = parseInt10(params.tournamentId, "tournamentId");
           return await discovery.getEvents(sportId, countryId, tournamentId);
         } catch (error) {
