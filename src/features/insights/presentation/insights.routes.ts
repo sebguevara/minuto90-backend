@@ -88,13 +88,18 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
     async ({ query, set }) => {
       try {
         const limit = Math.min(30, Math.max(1, Number(query.limit) || 10));
-        const featured = await insightsService.getFeaturedMatches(
+        const featured = await insightsService.getFeaturedMatchesResponse(
           query.date,
           limit,
           query.userCountry ?? null,
           query.timezone ?? null
         );
-        return { success: true, data: featured };
+        set.headers["Server-Timing"] = [
+          `featuredFixturesFetch;dur=${featured.timings.featuredFixturesFetchMs}`,
+          `featuredStandingsFetch;dur=${featured.timings.featuredStandingsFetchMs}`,
+          `total;dur=${featured.timings.totalMs}`,
+        ].join(", ");
+        return { success: true, data: featured.data, meta: featured.meta };
       } catch (error: any) {
         set.status = 500;
         return { success: false, error: error.message };

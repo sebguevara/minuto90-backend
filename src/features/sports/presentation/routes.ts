@@ -741,6 +741,7 @@ export function createFootballRoutes(service: FootballServiceContract = football
   return new Elysia({ prefix: "/football" })
     .get("/live/home", async ({ query, set }) => {
       try {
+        const requestStartedAt = performance.now();
         const date =
           typeof query.date === "string" && query.date.trim().length > 0
             ? query.date.trim()
@@ -749,14 +750,30 @@ export function createFootballRoutes(service: FootballServiceContract = football
           typeof query.timezone === "string" && query.timezone.trim().length > 0
             ? query.timezone.trim()
             : "America/Argentina/Buenos_Aires";
+        const mode =
+          query.mode === "full" || query.mode === "fast"
+            ? query.mode
+            : "fast";
 
         if (!date) {
           throw createFootballValidationError("El parametro date es obligatorio");
         }
 
+        let baseFetchMs = 0;
+        let snapshotReadMs = 0;
         const [baseEnvelope, snapshot] = await Promise.all([
-          service.getFixtures({ date, timezone }),
-          getFootballLiveSnapshot(),
+          (async () => {
+            const startedAt = performance.now();
+            const result = await service.getFixtures({ date, timezone });
+            baseFetchMs = Math.max(0, Math.round(performance.now() - startedAt));
+            return result;
+          })(),
+          (async () => {
+            const startedAt = performance.now();
+            const result = await getFootballLiveSnapshot();
+            snapshotReadMs = Math.max(0, Math.round(performance.now() - startedAt));
+            return result;
+          })(),
         ]);
 
         const liveFixtures = Array.isArray(snapshot?.response) ? snapshot.response : [];
@@ -788,6 +805,7 @@ export function createFootballRoutes(service: FootballServiceContract = football
           results: baseResponse.length,
         });
 
+        let missingIdsBackfillMs = 0;
         const missingLiveIds = liveFixtures
           .map((fixture) => fixture?.fixture?.id)
           .filter(
@@ -795,7 +813,8 @@ export function createFootballRoutes(service: FootballServiceContract = football
               typeof fixtureId === "number" && !mergedMap.has(fixtureId)
           );
 
-        if (missingLiveIds.length > 0) {
+        if (mode === "full" && missingLiveIds.length > 0) {
+          const missingIdsStartedAt = performance.now();
           const missingEnvelope = await service.getFixtures({
             ids: missingLiveIds.join("-"),
             timezone,
@@ -814,6 +833,10 @@ export function createFootballRoutes(service: FootballServiceContract = football
               mergedMap.set(fixture.fixture.id, fixture as Record<string, any>);
             }
           }
+          missingIdsBackfillMs = Math.max(
+            0,
+            Math.round(performance.now() - missingIdsStartedAt)
+          );
         }
 
         for (const liveFixture of liveFixtures) {
@@ -821,40 +844,48 @@ export function createFootballRoutes(service: FootballServiceContract = football
           if (typeof fixtureId !== "number") continue;
 
           const baseFixture = mergedMap.get(fixtureId);
-        if (!baseFixture) continue;
+          if (!baseFixture) continue;
 
-        if (shouldApplyLiveOverlay(baseFixture, liveFixture)) {
-          mergedMap.set(fixtureId, mergeLiveIntoFixture(baseFixture, liveFixture));
-        } else if (
-          Array.isArray(liveFixture.events) &&
-          liveFixture.events.length > 0 &&
-          (!Array.isArray(baseFixture.events) || baseFixture.events.length === 0)
-        ) {
-          // Match is no longer live in base data but snapshot still has events
-          // (brief window between FT and snapshot expiry) — apply events only.
-          mergedMap.set(fixtureId, { ...baseFixture, events: liveFixture.events });
+          if (shouldApplyLiveOverlay(baseFixture, liveFixture)) {
+            mergedMap.set(fixtureId, mergeLiveIntoFixture(baseFixture, liveFixture));
+          } else if (
+            Array.isArray(liveFixture.events) &&
+            liveFixture.events.length > 0 &&
+            (!Array.isArray(baseFixture.events) || baseFixture.events.length === 0)
+          ) {
+            // Match is no longer live in base data but snapshot still has events
+            // (brief window between FT and snapshot expiry) — apply events only.
+            mergedMap.set(fixtureId, { ...baseFixture, events: liveFixture.events });
+          }
         }
-      }
 
+        let eventsHydrationMs = 0;
         // For finished fixtures that have no events in the base data, hydrate from
         // the per-fixture events cache written by the live poller (6h TTL).
-        const TERMINAL_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
-        const fixturesNeedingEvents = Array.from(mergedMap.values()).filter((f) => {
-          const status = f?.fixture?.status?.short;
-          return (
-            TERMINAL_STATUSES.has(status) &&
-            (!Array.isArray(f.events) || f.events.length === 0)
-          );
-        });
+        if (mode === "full") {
+          const TERMINAL_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO"]);
+          const fixturesNeedingEvents = Array.from(mergedMap.values()).filter((f) => {
+            const status = f?.fixture?.status?.short;
+            return (
+              TERMINAL_STATUSES.has(status) &&
+              (!Array.isArray(f.events) || f.events.length === 0)
+            );
+          });
 
-        if (fixturesNeedingEvents.length > 0) {
-          const ids = fixturesNeedingEvents
-            .map((f) => f?.fixture?.id)
-            .filter((id): id is number => typeof id === "number");
-          const eventsMap = await getFixtureEventsMap(ids);
-          for (const [fixtureId, events] of eventsMap) {
-            const base = mergedMap.get(fixtureId);
-            if (base) mergedMap.set(fixtureId, { ...base, events });
+          if (fixturesNeedingEvents.length > 0) {
+            const eventsStartedAt = performance.now();
+            const ids = fixturesNeedingEvents
+              .map((f) => f?.fixture?.id)
+              .filter((id): id is number => typeof id === "number");
+            const eventsMap = await getFixtureEventsMap(ids);
+            for (const [fixtureId, events] of eventsMap) {
+              const base = mergedMap.get(fixtureId);
+              if (base) mergedMap.set(fixtureId, { ...base, events });
+            }
+            eventsHydrationMs = Math.max(
+              0,
+              Math.round(performance.now() - eventsStartedAt)
+            );
           }
         }
 
@@ -863,22 +894,52 @@ export function createFootballRoutes(service: FootballServiceContract = football
           const rightTs = Number(right?.fixture?.timestamp ?? 0);
           return leftTs - rightTs;
         });
+        const totalMs = Math.max(0, Math.round(performance.now() - requestStartedAt));
 
         logInfo("football.live_home.merge_results", {
           date,
           timezone,
+          mode,
           baseResults: baseResponse.length,
           liveResults: liveFixtures.length,
           missingLiveIds: missingLiveIds.length,
           mergedResults: mergedResponse.length,
+          baseFetchMs,
+          snapshotReadMs,
+          missingIdsBackfillMs,
+          eventsHydrationMs,
+          totalMs,
         });
+        if (mode === "fast" && totalMs > 1500) {
+          logWarn("football.live_home.slow", {
+            date,
+            timezone,
+            mode,
+            totalMs,
+            baseFetchMs,
+            snapshotReadMs,
+            missingIdsBackfillMs,
+            eventsHydrationMs,
+          });
+        }
 
         set.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30";
+        set.headers["Server-Timing"] = [
+          `baseFetch;dur=${baseFetchMs}`,
+          `snapshotRead;dur=${snapshotReadMs}`,
+          `missingIdsBackfill;dur=${missingIdsBackfillMs}`,
+          `eventsHydration;dur=${eventsHydrationMs}`,
+          `total;dur=${totalMs}`,
+        ].join(", ");
         return {
           source: "redis+base",
+          completeness: mode,
           date,
           timezone,
           updatedAt: snapshot?.updatedAt ?? new Date().toISOString(),
+          snapshotUpdatedAt: snapshot?.updatedAt ?? null,
+          baseResults: baseResponse.length,
+          liveResults: liveFixtures.length,
           results: mergedResponse.length,
           response: mergedResponse,
         };

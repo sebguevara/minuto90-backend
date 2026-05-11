@@ -24,7 +24,11 @@ export function buildDailyInsightsCacheKey(date: string) {
 export function buildFeaturedMatchesCacheKey(date: string, userCountry?: string | null) {
   const normalizedCountry =
     userCountry?.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "global";
-  return `minuto90:${ENV}:insights:featured:${date}:${normalizedCountry}:v2`;
+  return `minuto90:${ENV}:insights:featured:${date}:${normalizedCountry}:v3`;
+}
+
+export function buildFeaturedMatchesLastGoodCacheKey(cacheKey: string) {
+  return `${cacheKey}:last_good`;
 }
 
 export function buildInsightsLockKey(cacheKey: string) {

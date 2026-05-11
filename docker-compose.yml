@@ -52,7 +52,7 @@ services:
         "--maxmemory",
         "400mb",
         "--maxmemory-policy",
-        "allkeys-lru",
+        "noeviction",
       ]
     volumes:
       - minuto90-redis-data:/data

@@ -1,4 +1,4 @@
-import { logInfo } from "../../../shared/logging/logger";
+import { logInfo, logWarn } from "../../../shared/logging/logger";
 import { footballService } from "../../sports/application/football.service";
 import type { ApiFootballFixtureItem } from "../../sports/domain/football.types";
 import {
@@ -10,6 +10,7 @@ import { getFixtureStatsByPeriodResponse } from "../../../workers/halftime-snaps
 import {
   buildDailyInsightsCacheKey,
   buildFeaturedMatchesCacheKey,
+  buildFeaturedMatchesLastGoodCacheKey,
   buildInsightsLockKey,
   buildMatchInsightsCacheKey,
   buildMatchSummaryStateCacheKey,
@@ -42,6 +43,11 @@ const LIVE_MATCH_STATUS = new Set([
 const LOCK_TTL_SECONDS = 25;
 const LOCK_MAX_RETRIES = 10;
 const LOCK_WAIT_MS = 180;
+const FEATURED_MATCHES_COMPUTE_BUDGET_MS = 1500;
+const FEATURED_MATCHES_WARN_MS = 1200;
+const FEATURED_STANDINGS_MAX_LEAGUES = 6;
+const FEATURED_STANDINGS_TIMEOUT_MS = 2500;
+const FEATURED_LAST_GOOD_TTL_SECONDS = 60 * 60 * 24;
 
 type MatchStreakResult = "W" | "D" | "L";
 
@@ -92,8 +98,67 @@ type TeamDbContext = {
   winPercentage: number | null;
 };
 
+type FeaturedMatchesCacheStatus = "fresh" | "stale" | "miss_partial";
+
+type FeaturedMatchesCachePayload = {
+  data: FeaturedMatch[];
+  computedAt: string;
+};
+
+export type FeaturedMatchesMeta = {
+  cacheStatus: FeaturedMatchesCacheStatus;
+  computedAt: string;
+};
+
+type FeaturedMatchesTimings = {
+  featuredFixturesFetchMs: number;
+  featuredStandingsFetchMs: number;
+  totalMs: number;
+};
+
+export type FeaturedMatchesResponse = {
+  data: FeaturedMatch[];
+  meta: FeaturedMatchesMeta;
+  timings: FeaturedMatchesTimings;
+};
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function toDurationMs(startMs: number) {
+  return Math.max(0, Math.round(performance.now() - startMs));
+}
+
+function normalizeFeaturedMatchesCachePayload(
+  value: FeaturedMatchesCachePayload | FeaturedMatch[] | null
+): FeaturedMatchesCachePayload | null {
+  if (!value) return null;
+  if (Array.isArray(value)) {
+    return {
+      data: value,
+      computedAt: new Date().toISOString(),
+    };
+  }
+  if (!Array.isArray(value.data)) return null;
+  return {
+    data: value.data,
+    computedAt: value.computedAt || new Date().toISOString(),
+  };
+}
+
+async function withSoftTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race<T | null>([
+      promise,
+      new Promise<null>((resolve) => {
+        timeoutId = setTimeout(() => resolve(null), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 }
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 2, delayMs = 600): Promise<T> {
@@ -1224,43 +1289,183 @@ Formato:
     userCountry?: string | null,
     timezone?: string | null
   ): Promise<FeaturedMatch[]> {
-    const cacheKey = buildFeaturedMatchesCacheKey(date, userCountry);
+    const result = await this.getFeaturedMatchesResponse(date, limit, userCountry, timezone);
+    return result.data;
+  }
 
-    const cached = await redisInsightsCacheStore.get<FeaturedMatch[]>(cacheKey);
+  async getFeaturedMatchesResponse(
+    date: string,
+    limit = 10,
+    userCountry?: string | null,
+    timezone?: string | null
+  ): Promise<FeaturedMatchesResponse> {
+    const requestStartedAt = performance.now();
+    const cacheKey = buildFeaturedMatchesCacheKey(date, userCountry);
+    const lastGoodKey = buildFeaturedMatchesLastGoodCacheKey(cacheKey);
+
+    const cached = normalizeFeaturedMatchesCachePayload(
+      await redisInsightsCacheStore.get<FeaturedMatchesCachePayload | FeaturedMatch[]>(cacheKey)
+    );
     if (cached !== null) {
       logInfo("insights.featured.cache_hit", { date, userCountry, cacheKey });
-      return cached;
+      return {
+        data: cached.data,
+        meta: {
+          cacheStatus: "fresh",
+          computedAt: cached.computedAt,
+        },
+        timings: {
+          featuredFixturesFetchMs: 0,
+          featuredStandingsFetchMs: 0,
+          totalMs: toDurationMs(requestStartedAt),
+        },
+      };
     }
 
+    const fallback = normalizeFeaturedMatchesCachePayload(
+      await redisInsightsCacheStore.get<FeaturedMatchesCachePayload | FeaturedMatch[]>(lastGoodKey)
+    );
     const lockKey = buildInsightsLockKey(cacheKey);
     const lockAcquired = await redisInsightsCacheStore.setNx(lockKey, "1", LOCK_TTL_SECONDS);
 
-    const computeAndCache = async (): Promise<FeaturedMatch[]> => {
-      const data = await this.computeFeaturedMatches(date, limit, userCountry, timezone);
-      const hasLive = data.some((m) =>
+    const computeAndCache = async (): Promise<FeaturedMatchesResponse> => {
+      const computed = await this.computeFeaturedMatches(date, limit, userCountry, timezone);
+      const hasLive = computed.data.some((m) =>
         LIVE_MATCH_STATUS.has((m.status ?? "").toUpperCase())
       );
       const ttlSeconds = hasLive ? 60 : getFeaturedMatchesTtlSeconds(date);
-      await redisInsightsCacheStore.set(cacheKey, data, ttlSeconds);
-      logInfo("insights.featured.computed", { date, userCountry, hasLive, ttlSeconds });
-      return data;
+      const payload: FeaturedMatchesCachePayload = {
+        data: computed.data,
+        computedAt: new Date().toISOString(),
+      };
+
+      await redisInsightsCacheStore.set(cacheKey, payload, ttlSeconds);
+      await redisInsightsCacheStore.set(lastGoodKey, payload, FEATURED_LAST_GOOD_TTL_SECONDS);
+
+      logInfo("insights.featured.computed", {
+        date,
+        userCountry,
+        hasLive,
+        ttlSeconds,
+        featuredFixturesFetchMs: computed.timings.featuredFixturesFetchMs,
+        featuredStandingsFetchMs: computed.timings.featuredStandingsFetchMs,
+        totalMs: computed.timings.totalMs,
+      });
+
+      if (computed.timings.totalMs > FEATURED_MATCHES_WARN_MS) {
+        logWarn("insights.featured.slow", {
+          date,
+          userCountry,
+          totalMs: computed.timings.totalMs,
+          featuredFixturesFetchMs: computed.timings.featuredFixturesFetchMs,
+          featuredStandingsFetchMs: computed.timings.featuredStandingsFetchMs,
+        });
+      }
+
+      return {
+        data: payload.data,
+        meta: {
+          cacheStatus: "fresh",
+          computedAt: payload.computedAt,
+        },
+        timings: computed.timings,
+      };
     };
 
     if (lockAcquired) {
-      try {
-        return await computeAndCache();
-      } finally {
+      const computePromise = computeAndCache().finally(async () => {
         await redisInsightsCacheStore.del(lockKey);
+      });
+      const timedResult = await withSoftTimeout(
+        computePromise,
+        FEATURED_MATCHES_COMPUTE_BUDGET_MS
+      );
+      if (timedResult) {
+        return timedResult;
       }
+      void computePromise.catch((error) => {
+        logWarn("insights.featured.background_compute_failed", {
+          date,
+          userCountry,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+      if (fallback) {
+        return {
+          data: fallback.data,
+          meta: {
+            cacheStatus: "stale",
+            computedAt: fallback.computedAt,
+          },
+          timings: {
+            featuredFixturesFetchMs: 0,
+            featuredStandingsFetchMs: 0,
+            totalMs: toDurationMs(requestStartedAt),
+          },
+        };
+      }
+      return {
+        data: [],
+        meta: {
+          cacheStatus: "miss_partial",
+          computedAt: new Date().toISOString(),
+        },
+        timings: {
+          featuredFixturesFetchMs: 0,
+          featuredStandingsFetchMs: 0,
+          totalMs: toDurationMs(requestStartedAt),
+        },
+      };
     }
 
     for (let retry = 0; retry < LOCK_MAX_RETRIES; retry++) {
       await sleep(LOCK_WAIT_MS);
-      const fromCache = await redisInsightsCacheStore.get<FeaturedMatch[]>(cacheKey);
-      if (fromCache !== null) return fromCache;
+      const fromCache = normalizeFeaturedMatchesCachePayload(
+        await redisInsightsCacheStore.get<FeaturedMatchesCachePayload | FeaturedMatch[]>(cacheKey)
+      );
+      if (fromCache !== null) {
+        return {
+          data: fromCache.data,
+          meta: {
+            cacheStatus: "fresh",
+            computedAt: fromCache.computedAt,
+          },
+          timings: {
+            featuredFixturesFetchMs: 0,
+            featuredStandingsFetchMs: 0,
+            totalMs: toDurationMs(requestStartedAt),
+          },
+        };
+      }
     }
 
-    return computeAndCache();
+    if (fallback) {
+      return {
+        data: fallback.data,
+        meta: {
+          cacheStatus: "stale",
+          computedAt: fallback.computedAt,
+        },
+        timings: {
+          featuredFixturesFetchMs: 0,
+          featuredStandingsFetchMs: 0,
+          totalMs: toDurationMs(requestStartedAt),
+        },
+      };
+    }
+
+    return {
+      data: [],
+      meta: {
+        cacheStatus: "miss_partial",
+        computedAt: new Date().toISOString(),
+      },
+      timings: {
+        featuredFixturesFetchMs: 0,
+        featuredStandingsFetchMs: 0,
+        totalMs: toDurationMs(requestStartedAt),
+      },
+    };
   }
 
   private async computeFeaturedMatches(
@@ -1268,11 +1473,14 @@ Formato:
     limit: number,
     userCountry?: string | null,
     timezone?: string | null
-  ): Promise<FeaturedMatch[]> {
+  ): Promise<{ data: FeaturedMatch[]; timings: FeaturedMatchesTimings }> {
+    const startedAt = performance.now();
+    const fixturesFetchStartedAt = performance.now();
     const fixturesRes = await footballService.getFixtures({
       date,
       ...(timezone ? { timezone } : {}),
     });
+    const featuredFixturesFetchMs = toDurationMs(fixturesFetchStartedAt);
 
     // During the World Cup window, featured matches are ONLY World Cup fixtures
     const WC_LEAGUE_ID = 1;
@@ -1287,23 +1495,35 @@ Formato:
       ? allFeatured.filter((f) => f.league.id === WC_LEAGUE_ID)
       : allFeatured;
 
-    if (fixtures.length === 0) return [];
+    if (fixtures.length === 0) {
+      return {
+        data: [],
+        timings: {
+          featuredFixturesFetchMs,
+          featuredStandingsFetchMs: 0,
+          totalMs: toDurationMs(startedAt),
+        },
+      };
+    }
 
     // Group fixtures by league to batch-fetch standings
     const leagueIds = [...new Set(fixtures.map((f) => f.league.id))];
     const standingsMap = new Map<number, Array<{ team?: { id?: number }; rank?: number }>>();
 
-    // Fetch standings for all leagues in parallel (max 15 to avoid overload)
-    const leaguesToFetch = leagueIds.slice(0, 15);
+    // Keep standings fan-out bounded so featured can return quickly even on cold caches.
+    const leaguesToFetch = leagueIds.slice(0, FEATURED_STANDINGS_MAX_LEAGUES);
+    const standingsFetchStartedAt = performance.now();
     const standingsResults = await Promise.all(
       leaguesToFetch.map((leagueId) => {
         const season = fixtures.find((f) => f.league.id === leagueId)?.league.season;
         if (!season) return Promise.resolve({ leagueId, standings: [] });
-        return footballService
-          .getStandings({ league: leagueId, season })
+        return withSoftTimeout(
+          footballService.getStandings({ league: leagueId, season }),
+          FEATURED_STANDINGS_TIMEOUT_MS
+        )
           .then((res) => ({
             leagueId,
-            standings: (res.response?.[0]?.league?.standings?.[0] ?? []) as Array<{
+            standings: (res?.response?.[0]?.league?.standings?.[0] ?? []) as Array<{
               team?: { id?: number };
               rank?: number;
             }>,
@@ -1311,6 +1531,7 @@ Formato:
           .catch(() => ({ leagueId, standings: [] as Array<{ team?: { id?: number }; rank?: number }> }));
       })
     );
+    const featuredStandingsFetchMs = toDurationMs(standingsFetchStartedAt);
 
     for (const { leagueId, standings } of standingsResults) {
       if (standings.length > 0) standingsMap.set(leagueId, standings);
@@ -1510,7 +1731,14 @@ Formato:
       selectedFixtureIds.add(item.fixtureId);
     }
 
-    return selected;
+    return {
+      data: selected,
+      timings: {
+        featuredFixturesFetchMs,
+        featuredStandingsFetchMs,
+        totalMs: toDurationMs(startedAt),
+      },
+    };
   }
 }
 
