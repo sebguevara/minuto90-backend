@@ -23,6 +23,10 @@ import {
   getFootballOddsHistoryPastDays,
 } from '../features/sports/infrastructure/football-cache-ttl';
 import { DEFAULT_ODDS_BET } from '../features/sports/infrastructure/football-odds-cache';
+import {
+  getDateRangeForTimezone,
+  getFeaturedInsightsPrewarmVariants,
+} from './featured-insights-prewarm';
 
 const DEFAULT_TIMEZONE = 'UTC';
 const CURRENT_SEASON = new Date().getFullYear() - 1; // 2025 for most European leagues in 2026
@@ -99,28 +103,6 @@ function getHomeFeedPrewarmTimezones(): string[] {
     return raw.split(',').map((z) => z.trim()).filter(Boolean);
   }
   return [...DEFAULT_HOME_FEED_PREWARM_TIMEZONES];
-}
-
-/** Fechas calendario yyyy-MM-dd tal como las ve cada IANA zone (ventana alrededor de "ahora"). */
-function getDateRangeForTimezone(timeZone: string, pastDays: number, futureDays: number): string[] {
-  const formatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const seen = new Set<string>();
-  const dates: string[] = [];
-  const dayMs = 24 * 60 * 60 * 1000;
-  const base = Date.now();
-  for (let offset = -pastDays; offset <= futureDays; offset++) {
-    const ymd = formatter.format(new Date(base + offset * dayMs));
-    if (!seen.has(ymd)) {
-      seen.add(ymd);
-      dates.push(ymd);
-    }
-  }
-  return dates;
 }
 
 async function prewarmTeamColors(
@@ -338,7 +320,16 @@ async function prewarmFootballStandings(): Promise<void> {
 }
 
 async function prewarmFootballInsights(): Promise<void> {
-  logInfo('prewarm.football.insights.start', {});
+  const timezones = getHomeFeedPrewarmTimezones();
+  const variants = getFeaturedInsightsPrewarmVariants(timezones);
+  const variantDateSets = variants.map((variant) => ({
+    ...variant,
+    dates:
+      variant.timezone === DEFAULT_TIMEZONE
+        ? null
+        : new Set(getDateRangeForTimezone(variant.timezone, 1, 10)),
+  }));
+  logInfo('prewarm.football.insights.start', { variants: variants.map((variant) => variant.label) });
   const dates = getDatesRange(1, 10);
 
   try {
@@ -361,13 +352,21 @@ async function prewarmFootballInsights(): Promise<void> {
         }
       }
 
-      try {
-        await insightsService.getFeaturedMatches(date, 8);
-      } catch (err) {
-        logWarn('prewarm.football.insights.featured_failed', {
-          date,
-          error: err instanceof Error ? err.message : String(err),
-        });
+      for (const variant of variantDateSets) {
+        if (variant.dates && !variant.dates.has(date)) {
+          continue;
+        }
+
+        try {
+          await insightsService.getFeaturedMatches(date, 8, variant.userCountry, variant.timezone);
+        } catch (err) {
+          logWarn('prewarm.football.insights.featured_failed', {
+            date,
+            timezone: variant.timezone,
+            userCountry: variant.userCountry,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
       }
     }
 

@@ -99,6 +99,9 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
           `featuredStandingsFetch;dur=${featured.timings.featuredStandingsFetchMs}`,
           `total;dur=${featured.timings.totalMs}`,
         ].join(", ");
+        set.headers["x-minuto90-featured-cache-status"] = featured.meta.cacheStatus;
+        set.headers["x-minuto90-featured-computed-at"] = featured.meta.computedAt;
+        set.headers["x-minuto90-featured-variant"] = `${query.date}:${query.userCountry ?? "global"}:${query.timezone ?? "UTC"}`;
         return { success: true, data: featured.data, meta: featured.meta };
       } catch (error: any) {
         set.status = 500;

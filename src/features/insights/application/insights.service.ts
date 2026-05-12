@@ -1307,7 +1307,7 @@ Formato:
       await redisInsightsCacheStore.get<FeaturedMatchesCachePayload | FeaturedMatch[]>(cacheKey)
     );
     if (cached !== null) {
-      logInfo("insights.featured.cache_hit", { date, userCountry, cacheKey });
+      logInfo("insights.featured.cache_hit", { date, userCountry, timezone, cacheKey });
       return {
         data: cached.data,
         meta: {
@@ -1345,6 +1345,7 @@ Formato:
       logInfo("insights.featured.computed", {
         date,
         userCountry,
+        timezone,
         hasLive,
         ttlSeconds,
         featuredFixturesFetchMs: computed.timings.featuredFixturesFetchMs,
@@ -1356,6 +1357,7 @@ Formato:
         logWarn("insights.featured.slow", {
           date,
           userCountry,
+          timezone,
           totalMs: computed.timings.totalMs,
           featuredFixturesFetchMs: computed.timings.featuredFixturesFetchMs,
           featuredStandingsFetchMs: computed.timings.featuredStandingsFetchMs,
@@ -1387,6 +1389,7 @@ Formato:
         logWarn("insights.featured.background_compute_failed", {
           date,
           userCountry,
+          timezone,
           error: error instanceof Error ? error.message : String(error),
         });
       });
