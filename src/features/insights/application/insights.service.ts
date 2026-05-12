@@ -1488,12 +1488,13 @@ Formato:
     const WC_END = "2026-07-19";
     const isWorldCupWindow = date >= WC_START && date <= WC_END;
 
-    const allFeatured = (fixturesRes.response ?? []).filter((fixture) =>
-      isFeaturedCompetitionId(fixture.league.id)
-    );
+    const allFixtures = fixturesRes.response ?? [];
+    const allFeatured = allFixtures.filter((fixture) => isFeaturedCompetitionId(fixture.league.id));
     const fixtures = isWorldCupWindow
       ? allFeatured.filter((f) => f.league.id === WC_LEAGUE_ID)
-      : allFeatured;
+      : allFeatured.length > 0
+        ? allFeatured
+        : allFixtures;
 
     if (fixtures.length === 0) {
       return {
