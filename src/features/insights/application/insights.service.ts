@@ -1300,14 +1300,15 @@ Formato:
     timezone?: string | null
   ): Promise<FeaturedMatchesResponse> {
     const requestStartedAt = performance.now();
-    const cacheKey = buildFeaturedMatchesCacheKey(date, userCountry);
+    void userCountry;
+    const cacheKey = buildFeaturedMatchesCacheKey(date, timezone);
     const lastGoodKey = buildFeaturedMatchesLastGoodCacheKey(cacheKey);
 
     const cached = normalizeFeaturedMatchesCachePayload(
       await redisInsightsCacheStore.get<FeaturedMatchesCachePayload | FeaturedMatch[]>(cacheKey)
     );
     if (cached !== null) {
-      logInfo("insights.featured.cache_hit", { date, userCountry, timezone, cacheKey });
+      logInfo("insights.featured.cache_hit", { date, timezone, cacheKey });
       return {
         data: cached.data,
         meta: {
@@ -1329,7 +1330,7 @@ Formato:
     const lockAcquired = await redisInsightsCacheStore.setNx(lockKey, "1", LOCK_TTL_SECONDS);
 
     const computeAndCache = async (): Promise<FeaturedMatchesResponse> => {
-      const computed = await this.computeFeaturedMatches(date, limit, userCountry, timezone);
+      const computed = await this.computeFeaturedMatches(date, limit, timezone);
       const hasLive = computed.data.some((m) =>
         LIVE_MATCH_STATUS.has((m.status ?? "").toUpperCase())
       );
@@ -1344,7 +1345,6 @@ Formato:
 
       logInfo("insights.featured.computed", {
         date,
-        userCountry,
         timezone,
         hasLive,
         ttlSeconds,
@@ -1356,7 +1356,6 @@ Formato:
       if (computed.timings.totalMs > FEATURED_MATCHES_WARN_MS) {
         logWarn("insights.featured.slow", {
           date,
-          userCountry,
           timezone,
           totalMs: computed.timings.totalMs,
           featuredFixturesFetchMs: computed.timings.featuredFixturesFetchMs,
@@ -1388,7 +1387,6 @@ Formato:
       void computePromise.catch((error) => {
         logWarn("insights.featured.background_compute_failed", {
           date,
-          userCountry,
           timezone,
           error: error instanceof Error ? error.message : String(error),
         });
@@ -1474,7 +1472,6 @@ Formato:
   private async computeFeaturedMatches(
     date: string,
     limit: number,
-    userCountry?: string | null,
     timezone?: string | null
   ): Promise<{ data: FeaturedMatch[]; timings: FeaturedMatchesTimings }> {
     const startedAt = performance.now();
@@ -1546,7 +1543,6 @@ Formato:
       const competitionGroup = getFeaturedCompetitionGroup({
         leagueId: f.league.id,
         leagueCountry: f.league.country,
-        userCountry,
       });
       const leaguePriority = getFeaturedLeaguePriority(f.league.id);
       const competitionType = getFeaturedCompetitionType(f.league.id);
@@ -1646,28 +1642,8 @@ Formato:
     };
 
     const sorted = scored.sort(compareFeaturedItems);
+    const userCountry = null;
     const allowedUserCountryLeagueIds = new Set<number>();
-
-    if (userCountry) {
-      const userCountryCandidates = sorted.filter(
-        (item) =>
-          item._meta.competitionGroup === "user_country" &&
-          item._meta.competitionType !== null &&
-          item._meta.leaguePriority !== null
-      );
-
-      const bestLeague = userCountryCandidates
-        .filter((item) => item._meta.competitionType === "League")
-        .sort(compareFeaturedItems)[0];
-
-      const bestCup = userCountryCandidates
-        .filter((item) => item._meta.competitionType === "Cup")
-        .sort(compareFeaturedItems)[0];
-
-      if (bestLeague) allowedUserCountryLeagueIds.add(bestLeague.league.id);
-      if (bestCup) allowedUserCountryLeagueIds.add(bestCup.league.id);
-    }
-
     const perCountryCount = new Map<string, number>();
     const selected: FeaturedMatch[] = [];
     const selectedFixtureIds = new Set<number>();

@@ -358,12 +358,11 @@ async function prewarmFootballInsights(): Promise<void> {
         }
 
         try {
-          await insightsService.getFeaturedMatches(date, 8, variant.userCountry, variant.timezone);
+          await insightsService.getFeaturedMatches(date, 8, null, variant.timezone);
         } catch (err) {
           logWarn('prewarm.football.insights.featured_failed', {
             date,
             timezone: variant.timezone,
-            userCountry: variant.userCountry,
             error: err instanceof Error ? err.message : String(err),
           });
         }

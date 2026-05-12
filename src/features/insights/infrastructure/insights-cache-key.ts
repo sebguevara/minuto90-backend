@@ -21,10 +21,10 @@ export function buildDailyInsightsCacheKey(date: string) {
   return `minuto90:${ENV}:insights:daily:${date}:v1`;
 }
 
-export function buildFeaturedMatchesCacheKey(date: string, userCountry?: string | null) {
-  const normalizedCountry =
-    userCountry?.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "global";
-  return `minuto90:${ENV}:insights:featured:${date}:${normalizedCountry}:v3`;
+export function buildFeaturedMatchesCacheKey(date: string, timezone?: string | null) {
+  const normalizedTimezone =
+    timezone?.trim().replace(/[^A-Za-z0-9/_-]+/g, "-").replace(/\//g, "__") || "UTC";
+  return `minuto90:${ENV}:insights:featured:${date}:${normalizedTimezone}:v4`;
 }
 
 export function buildFeaturedMatchesLastGoodCacheKey(cacheKey: string) {

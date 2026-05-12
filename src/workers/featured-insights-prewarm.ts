@@ -103,14 +103,10 @@ export function getFeaturedInsightsPrewarmVariants(timezones: string[]) {
     )
   );
   return [
-    { timezone: DEFAULT_TIMEZONE, userCountry: null as string | null, label: "global" },
-    ...normalized.map((timezone) => {
-      const userCountry = getCountryForTimezone(timezone);
-      return {
-        timezone,
-        userCountry,
-        label: `${timezone}:${userCountry ?? "global"}`,
-      };
-    }),
+    { timezone: DEFAULT_TIMEZONE, label: "UTC" },
+    ...normalized.map((timezone) => ({
+      timezone,
+      label: timezone,
+    })),
   ];
 }

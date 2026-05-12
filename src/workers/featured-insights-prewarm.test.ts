@@ -20,17 +20,9 @@ describe("featured insights prewarm helpers", () => {
     ]);
 
     expect(variants).toEqual([
-      { timezone: "UTC", userCountry: null, label: "global" },
-      {
-        timezone: "America/Bogota",
-        userCountry: "Colombia",
-        label: "America/Bogota:Colombia",
-      },
-      {
-        timezone: "America/Argentina/Buenos_Aires",
-        userCountry: "Argentina",
-        label: "America/Argentina/Buenos_Aires:Argentina",
-      },
+      { timezone: "UTC", label: "UTC" },
+      { timezone: "America/Bogota", label: "America/Bogota" },
+      { timezone: "America/Argentina/Buenos_Aires", label: "America/Argentina/Buenos_Aires" },
     ]);
   });
 });
