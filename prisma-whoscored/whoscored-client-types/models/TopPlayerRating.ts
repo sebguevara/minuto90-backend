@@ -251,7 +251,7 @@ export type TopPlayerRatingGroupByOutputType = {
   _max: TopPlayerRatingMaxAggregateOutputType | null
 }
 
-type GetTopPlayerRatingGroupByPayload<T extends TopPlayerRatingGroupByArgs> = Prisma.PrismaPromise<
+export type GetTopPlayerRatingGroupByPayload<T extends TopPlayerRatingGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TopPlayerRatingGroupByOutputType, T['by']> &
       {
@@ -1823,6 +1823,11 @@ export type TopPlayerRatingFindManyArgs<ExtArgs extends runtime.Types.Extensions
    * Skip the first `n` TopPlayerRatings.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TopPlayerRatings.
+   */
   distinct?: Prisma.TopPlayerRatingScalarFieldEnum | Prisma.TopPlayerRatingScalarFieldEnum[]
 }
 

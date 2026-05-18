@@ -185,7 +185,7 @@ export type TableCategoryGroupByOutputType = {
   _max: TableCategoryMaxAggregateOutputType | null
 }
 
-type GetTableCategoryGroupByPayload<T extends TableCategoryGroupByArgs> = Prisma.PrismaPromise<
+export type GetTableCategoryGroupByPayload<T extends TableCategoryGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TableCategoryGroupByOutputType, T['by']> &
       {
@@ -3634,6 +3634,11 @@ export type TableCategoryFindManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * Skip the first `n` TableCategories.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TableCategories.
+   */
   distinct?: Prisma.TableCategoryScalarFieldEnum | Prisma.TableCategoryScalarFieldEnum[]
 }
 

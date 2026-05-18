@@ -244,7 +244,7 @@ export type TopPlayerAssistGroupByOutputType = {
   _max: TopPlayerAssistMaxAggregateOutputType | null
 }
 
-type GetTopPlayerAssistGroupByPayload<T extends TopPlayerAssistGroupByArgs> = Prisma.PrismaPromise<
+export type GetTopPlayerAssistGroupByPayload<T extends TopPlayerAssistGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TopPlayerAssistGroupByOutputType, T['by']> &
       {
@@ -1770,6 +1770,11 @@ export type TopPlayerAssistFindManyArgs<ExtArgs extends runtime.Types.Extensions
    * Skip the first `n` TopPlayerAssists.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TopPlayerAssists.
+   */
   distinct?: Prisma.TopPlayerAssistScalarFieldEnum | Prisma.TopPlayerAssistScalarFieldEnum[]
 }
 

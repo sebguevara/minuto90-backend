@@ -317,7 +317,7 @@ export type TableXGGroupByOutputType = {
   _max: TableXGMaxAggregateOutputType | null
 }
 
-type GetTableXGGroupByPayload<T extends TableXGGroupByArgs> = Prisma.PrismaPromise<
+export type GetTableXGGroupByPayload<T extends TableXGGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TableXGGroupByOutputType, T['by']> &
       {
@@ -2362,6 +2362,11 @@ export type TableXGFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Skip the first `n` TableXGS.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TableXGS.
+   */
   distinct?: Prisma.TableXGScalarFieldEnum | Prisma.TableXGScalarFieldEnum[]
 }
 

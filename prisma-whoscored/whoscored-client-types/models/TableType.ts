@@ -185,7 +185,7 @@ export type TableTypeGroupByOutputType = {
   _max: TableTypeMaxAggregateOutputType | null
 }
 
-type GetTableTypeGroupByPayload<T extends TableTypeGroupByArgs> = Prisma.PrismaPromise<
+export type GetTableTypeGroupByPayload<T extends TableTypeGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TableTypeGroupByOutputType, T['by']> &
       {
@@ -11122,6 +11122,11 @@ export type TableTypeFindManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Skip the first `n` TableTypes.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TableTypes.
+   */
   distinct?: Prisma.TableTypeScalarFieldEnum | Prisma.TableTypeScalarFieldEnum[]
 }
 

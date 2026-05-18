@@ -233,7 +233,7 @@ export type BestXIPlayerGroupByOutputType = {
   _max: BestXIPlayerMaxAggregateOutputType | null
 }
 
-type GetBestXIPlayerGroupByPayload<T extends BestXIPlayerGroupByArgs> = Prisma.PrismaPromise<
+export type GetBestXIPlayerGroupByPayload<T extends BestXIPlayerGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<BestXIPlayerGroupByOutputType, T['by']> &
       {
@@ -1584,6 +1584,11 @@ export type BestXIPlayerFindManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Skip the first `n` BestXIPlayers.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of BestXIPlayers.
+   */
   distinct?: Prisma.BestXIPlayerScalarFieldEnum | Prisma.BestXIPlayerScalarFieldEnum[]
 }
 

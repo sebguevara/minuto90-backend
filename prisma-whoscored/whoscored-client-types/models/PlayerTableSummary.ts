@@ -354,7 +354,7 @@ export type PlayerTableSummaryGroupByOutputType = {
   _max: PlayerTableSummaryMaxAggregateOutputType | null
 }
 
-type GetPlayerTableSummaryGroupByPayload<T extends PlayerTableSummaryGroupByArgs> = Prisma.PrismaPromise<
+export type GetPlayerTableSummaryGroupByPayload<T extends PlayerTableSummaryGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<PlayerTableSummaryGroupByOutputType, T['by']> &
       {
@@ -2360,6 +2360,11 @@ export type PlayerTableSummaryFindManyArgs<ExtArgs extends runtime.Types.Extensi
    * Skip the first `n` PlayerTableSummaries.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of PlayerTableSummaries.
+   */
   distinct?: Prisma.PlayerTableSummaryScalarFieldEnum | Prisma.PlayerTableSummaryScalarFieldEnum[]
 }
 

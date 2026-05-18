@@ -7,6 +7,14 @@ const ROOT = "minuto90:odds";
 export const buildUnifiedFixtureOddsCacheKey = (fixtureId: number): string =>
   `${ROOT}:fixture:${fixtureId}`;
 
+/**
+ * Espejo del positivo con TTL largo. Se escribe junto al positivo y se usa
+ * para servir cuotas "viejas" cuando el proveedor falla, evitando que el home
+ * quede en blanco por un hiccup transitorio.
+ */
+export const buildUnifiedFixtureOddsStaleCacheKey = (fixtureId: number): string =>
+  `${ROOT}:fixture:${fixtureId}:stale`;
+
 export const buildUnifiedFixtureMainMarketCacheKey = (fixtureId: number): string =>
   `${ROOT}:fixture:${fixtureId}:main`;
 

@@ -10,7 +10,11 @@ import { logError, logInfo, logWarn } from "../shared/logging/logger";
 import { templates } from "../features/notifications/application/templates";
 import { createHash } from "crypto";
 import { buildMatchUrl } from "../features/notifications/application/match-url";
-import { getSubscriptionBaseline, type SubscriptionBaseline } from "../features/notifications/application/subscription-baseline";
+import {
+  captureSubscriptionBaseline,
+  getSubscriptionBaseline,
+  type SubscriptionBaseline,
+} from "../features/notifications/application/subscription-baseline";
 import { updateLiveFixturesCache, invalidateStandingsCache, saveFixtureEvents } from "./live-cache-updater";
 import { captureFixtureStatsPeriodSnapshot } from "./halftime-snapshot";
 import { areNotificationsEnabled } from "../shared/config/notifications";
@@ -19,17 +23,20 @@ import {
   isLiveTriggerEnabled,
 } from "../features/notifications/application/subscriber-preferences";
 import { footballApiClient } from "../features/sports/infrastructure/football-api.client";
+import {
+  FT_DISAPPEARED_SKIP_STATUSES,
+  MIN_ELAPSED_FOR_FT_DISAPPEARED,
+  isLikelyHalftime,
+  missingPollThresholdFor,
+} from "./live-fixtures-poller.policy";
 
 /** Por defecto 5s: notificaciones en vivo (p. ej. final) dependen del siguiente poll. Subir vía env si hay límite de API. */
 const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 5000);
 const REDIS_TTL_SECONDS = 60 * 60 * 4;
 const LIVE_SET_KEY = "live_fixtures:last";
-const EVENT_LEDGER_PREFIX = "match_event:";
 const MISSING_PREFIX = "match_missing:";
-/** Encuestas seguidas sin el fixture en la lista live antes de asumir final (fallback si no hubo transición FT en diff). */
-const MISSING_POLLS_BEFORE_FULL_TIME = Number(process.env.LIVE_FULL_TIME_MISSING_POLLS ?? 3);
-const MESSAGE_DEDUP_TTL_SECONDS = Number(process.env.LIVE_MESSAGE_DEDUP_TTL_SECONDS ?? 1800);
-const DISAPPEARANCE_FALLBACK_MAX_AGE_MS = Number(process.env.LIVE_DISAPPEARANCE_FALLBACK_MAX_AGE_MS ?? 20 * 60 * 1000);
+const EVENT_LEDGER_PREFIX = "match_event:";
+const DISAPPEARANCE_FALLBACK_MAX_AGE_MS = Number(process.env.LIVE_DISAPPEARANCE_FALLBACK_MAX_AGE_MS ?? 10 * 60 * 1000);
 const terminalStatuses = new Set(["FT", "AET", "PEN"]);
 const breakStatuses = new Set(["HT", "BT", "INT"]);
 
@@ -44,39 +51,6 @@ function ledgerKey(fixtureId: number, eventKey: string) {
 
 function missingKey(fixtureId: number) {
   return `${MISSING_PREFIX}${fixtureId}`;
-}
-
-function isLikelyHalftime(statusShort: string, elapsed: number | null) {
-  return (
-    statusShort === "HT" ||
-    statusShort === "BT" ||
-    statusShort === "INT" ||
-    (statusShort === "1H" && typeof elapsed === "number" && elapsed >= 40 && elapsed <= 55)
-  );
-}
-
-function missingPollThresholdFor(oldStatus: string, elapsed: number | null) {
-  if (isLikelyHalftime(oldStatus, elapsed)) return Math.max(6, MISSING_POLLS_BEFORE_FULL_TIME);
-  // Cerca del final: el proveedor suele sacar el partido del listado live antes de que veamos FT en diff.
-  if (oldStatus === "2H" && typeof elapsed === "number" && elapsed >= 70) return 2;
-  return Math.max(2, MISSING_POLLS_BEFORE_FULL_TIME);
-}
-
-function messageKey(subscriberId: string, fixtureId: number, triggerType: string, dedupeHash: string) {
-  return `match_msg:${subscriberId}:${fixtureId}:${triggerType}:${dedupeHash}`;
-}
-
-/** Dedup por `eventKey` del diff (no por texto): mismo gol con minuto corregido no reenvía. */
-async function shouldEmitMessage(
-  subscriberId: string,
-  fixtureId: number,
-  triggerType: string,
-  dedupeId: string
-): Promise<boolean> {
-  const dedupeHash = createHash("sha1").update(dedupeId).digest("hex");
-  const key = messageKey(subscriberId, fixtureId, triggerType, dedupeHash);
-  const res = await redisConnection.set(key, "1", "EX", MESSAGE_DEDUP_TTL_SECONDS, "NX");
-  return res === "OK";
 }
 
 async function assertRedisReady() {
@@ -188,38 +162,104 @@ async function dispatchTriggers(input: {
   }
   if (!subsBySubscriberId.size) return;
 
+  // Recuperación defensiva: si una subscription existe SIN baseline (p. ej. la captura
+  // falló durante el upsert), capturarlo ahora y marcar al suscriptor como "recién unido".
+  // Sin baseline no podemos diferenciar evento histórico vs nuevo: enviar todos los triggers
+  // del poll actual spamearía 90 min de historial. Mejor skip los triggers de este poll
+  // para ese suscriptor — desde el próximo poll ya operamos normal.
+  const justRecoveredBaseline = new Set<string>();
   const baselineEntries = await Promise.all(
-    Array.from(subsBySubscriberId.values()).map(async (sub) => [
-      sub.subscriberId,
-      await getSubscriptionBaseline(sub.subscriberId, input.fixtureId),
-    ] as const)
+    Array.from(subsBySubscriberId.values()).map(async (sub) => {
+      let baseline = await getSubscriptionBaseline(sub.subscriberId, input.fixtureId);
+      if (!baseline) {
+        try {
+          baseline = await captureSubscriptionBaseline(sub.subscriberId, input.fixtureId);
+          justRecoveredBaseline.add(sub.subscriberId);
+          logWarn("whatsapp.dispatch.baseline_recovered", {
+            fixtureId: input.fixtureId,
+            subscriberId: sub.subscriberId,
+            recoveredStatus: baseline?.statusShort ?? null,
+            recoveredGoals: baseline ? `${baseline.goalsHome}-${baseline.goalsAway}` : null,
+          });
+        } catch (err: any) {
+          logWarn("whatsapp.dispatch.baseline_recovery_failed", {
+            fixtureId: input.fixtureId,
+            subscriberId: sub.subscriberId,
+            err: err?.message ?? String(err),
+          });
+          // baseline sigue null. Igual marcamos al suscriptor como recién recuperado para
+          // skip — preferimos no notificar (riesgo de spam histórico) que arriesgar.
+          justRecoveredBaseline.add(sub.subscriberId);
+        }
+      }
+      return [sub.subscriberId, baseline] as const;
+    })
   );
   const baselineBySubscriberId = new Map<string, SubscriptionBaseline | null>(baselineEntries);
 
   const jobs: Parameters<typeof enqueueWhatsappNotificationsBulk>[0] = [];
-  let perSubDedupSkipped = 0;
-  // Antes había un ledger global por fixture (`shouldEmitTrigger`) que cortaba el trigger
-  // ANTES del loop de suscriptores. Eso bloqueaba a usuarios que se sumaban entre polls
-  // (favorito mid-match): el trigger ya estaba marcado como "emitido" y nadie nuevo lo recibía.
-  // Ahora dedupeamos solo por suscriptor: cada uno tiene su propio `match_msg:` con TTL,
-  // que cubre re-emisiones del mismo trigger en polls subsiguientes.
+  let baselineSkipped = 0;
+  let baselineRecoverySkipped = 0;
+  let triggerDisabled = 0;
+  let noPhone = 0;
+  // El dedup por suscriptor (`match_msg:`) se aplica AHORA en el worker, después del send exitoso.
+  // Anteriormente se seteaba antes del enqueue, lo que dejaba un fantasma de "ya enviado" si el
+  // job fallaba permanentemente (Evolution API caído) → el gol se perdía silenciosamente para
+  // ese suscriptor por 30 min. BullMQ ya dedupea por jobId mientras el job vive en la cola.
   for (const trigger of input.triggers) {
     for (const sub of subsBySubscriberId.values()) {
-      if (!isLiveTriggerEnabled(sub.subscriber, trigger.type)) continue;
-      const baseline = baselineBySubscriberId.get(sub.subscriberId) ?? null;
-      if (isBaselineTriggerAlreadyCovered(baseline, trigger, input.newState)) continue;
-      if (!canReceiveWhatsappNotifications(sub.subscriber)) continue;
-
-      const msgOk = await shouldEmitMessage(
-        sub.subscriberId,
-        input.fixtureId,
-        trigger.type,
-        trigger.eventKey
-      );
-      if (!msgOk) {
-        perSubDedupSkipped++;
+      if (justRecoveredBaseline.has(sub.subscriberId)) {
+        // Baseline recién recuperado en este poll: no podemos distinguir triggers
+        // históricos de nuevos. Skip este poll; el próximo opera normal.
+        baselineRecoverySkipped++;
+        if (process.env.NOTIFICATIONS_DEBUG === "true") {
+          logInfo("whatsapp.dispatch.baseline_recovery_skip", {
+            fixtureId: input.fixtureId,
+            triggerType: trigger.type,
+            subscriberId: sub.subscriberId,
+          });
+        }
         continue;
       }
+      if (!isLiveTriggerEnabled(sub.subscriber, trigger.type)) {
+        triggerDisabled++;
+        if (process.env.NOTIFICATIONS_DEBUG === "true") {
+          logInfo("whatsapp.dispatch.trigger_disabled", {
+            fixtureId: input.fixtureId,
+            triggerType: trigger.type,
+            subscriberId: sub.subscriberId,
+          });
+        }
+        continue;
+      }
+      const baseline = baselineBySubscriberId.get(sub.subscriberId) ?? null;
+      if (isBaselineTriggerAlreadyCovered(baseline, trigger, input.newState)) {
+        baselineSkipped++;
+        if (process.env.NOTIFICATIONS_DEBUG === "true") {
+          logInfo("whatsapp.dispatch.baseline_skip", {
+            fixtureId: input.fixtureId,
+            triggerType: trigger.type,
+            eventKey: trigger.eventKey,
+            subscriberId: sub.subscriberId,
+            baselineStatus: baseline?.statusShort ?? null,
+            baselineGoals: baseline ? `${baseline.goalsHome}-${baseline.goalsAway}` : null,
+            newGoals: `${input.newState.goalsHome}-${input.newState.goalsAway}`,
+          });
+        }
+        continue;
+      }
+      if (!canReceiveWhatsappNotifications(sub.subscriber)) {
+        noPhone++;
+        if (process.env.NOTIFICATIONS_DEBUG === "true") {
+          logInfo("whatsapp.dispatch.no_phone", {
+            fixtureId: input.fixtureId,
+            triggerType: trigger.type,
+            subscriberId: sub.subscriberId,
+          });
+        }
+        continue;
+      }
+
       jobs.push({
         phone: sub.subscriber.phoneNumber,
         message: trigger.message,
@@ -239,7 +279,10 @@ async function dispatchTriggers(input: {
     logInfo("whatsapp.notifications.enqueued", {
       fixtureId: input.fixtureId,
       triggers: input.triggers.length,
-      perSubDedupSkipped,
+      baselineSkipped,
+      baselineRecoverySkipped,
+      triggerDisabled,
+      noPhone,
       subs: subs.length,
       activeSubscribers: subsBySubscriberId.size,
       jobs: jobs.length,
@@ -368,10 +411,18 @@ async function handleDisappearances(currentIds: number[]) {
       if (!lastIds.length && ageMs > DISAPPEARANCE_FALLBACK_MAX_AGE_MS) continue;
 
       const s = oldState.statusShort ?? "";
-      if (s === "FT" || s === "AET" || s === "PEN") continue;
+      if (FT_DISAPPEARED_SKIP_STATUSES.has(s)) continue;
 
       const fixture = oldState.fixture;
       const elapsed = fixture.fixture.status?.elapsed ?? null;
+
+      // Guarda absoluta: nunca disparar FT por desaparición si el partido está en primer tiempo
+      // o early-second-half. El proveedor a veces saca fixtures temporalmente del listado live.
+      if (typeof elapsed === "number" && elapsed < MIN_ELAPSED_FOR_FT_DISAPPEARED) {
+        stillPending.push(fixtureId);
+        continue;
+      }
+
       const threshold = missingPollThresholdFor(s, elapsed);
       if (missingCount < threshold) {
         stillPending.push(fixtureId);
@@ -413,8 +464,8 @@ async function handleDisappearances(currentIds: number[]) {
         }
         const phone = sub.subscriber.phoneNumber;
         if (!phone) continue;
-        const msgOk = await shouldEmitMessage(sub.subscriberId, fixtureId, "FULL_TIME", "disappeared");
-        if (!msgOk) continue;
+        // Dedup per-subscriber se hace en el worker (post-send). El `shouldEmitTrigger` global
+        // de arriba (línea ~390) ya garantiza que FT_DISAPPEARED se emite una sola vez por fixture.
         jobs.push({
           phone,
           message,

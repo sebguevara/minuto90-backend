@@ -266,7 +266,7 @@ export type TopPlayerGoalContributionGroupByOutputType = {
   _max: TopPlayerGoalContributionMaxAggregateOutputType | null
 }
 
-type GetTopPlayerGoalContributionGroupByPayload<T extends TopPlayerGoalContributionGroupByArgs> = Prisma.PrismaPromise<
+export type GetTopPlayerGoalContributionGroupByPayload<T extends TopPlayerGoalContributionGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TopPlayerGoalContributionGroupByOutputType, T['by']> &
       {
@@ -1888,6 +1888,11 @@ export type TopPlayerGoalContributionFindManyArgs<ExtArgs extends runtime.Types.
    * Skip the first `n` TopPlayerGoalContributions.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TopPlayerGoalContributions.
+   */
   distinct?: Prisma.TopPlayerGoalContributionScalarFieldEnum | Prisma.TopPlayerGoalContributionScalarFieldEnum[]
 }
 

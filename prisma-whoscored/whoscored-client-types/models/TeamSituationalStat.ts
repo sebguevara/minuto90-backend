@@ -361,7 +361,7 @@ export type TeamSituationalStatGroupByOutputType = {
   _max: TeamSituationalStatMaxAggregateOutputType | null
 }
 
-type GetTeamSituationalStatGroupByPayload<T extends TeamSituationalStatGroupByArgs> = Prisma.PrismaPromise<
+export type GetTeamSituationalStatGroupByPayload<T extends TeamSituationalStatGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TeamSituationalStatGroupByOutputType, T['by']> &
       {
@@ -2415,6 +2415,11 @@ export type TeamSituationalStatFindManyArgs<ExtArgs extends runtime.Types.Extens
    * Skip the first `n` TeamSituationalStats.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TeamSituationalStats.
+   */
   distinct?: Prisma.TeamSituationalStatScalarFieldEnum | Prisma.TeamSituationalStatScalarFieldEnum[]
 }
 

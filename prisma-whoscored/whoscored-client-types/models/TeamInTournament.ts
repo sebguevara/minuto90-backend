@@ -222,7 +222,7 @@ export type TeamInTournamentGroupByOutputType = {
   _max: TeamInTournamentMaxAggregateOutputType | null
 }
 
-type GetTeamInTournamentGroupByPayload<T extends TeamInTournamentGroupByArgs> = Prisma.PrismaPromise<
+export type GetTeamInTournamentGroupByPayload<T extends TeamInTournamentGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TeamInTournamentGroupByOutputType, T['by']> &
       {
@@ -1653,6 +1653,11 @@ export type TeamInTournamentFindManyArgs<ExtArgs extends runtime.Types.Extension
    * Skip the first `n` TeamInTournaments.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TeamInTournaments.
+   */
   distinct?: Prisma.TeamInTournamentScalarFieldEnum | Prisma.TeamInTournamentScalarFieldEnum[]
 }
 

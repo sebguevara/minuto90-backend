@@ -332,7 +332,7 @@ export type TableSummaryGroupByOutputType = {
   _max: TableSummaryMaxAggregateOutputType | null
 }
 
-type GetTableSummaryGroupByPayload<T extends TableSummaryGroupByArgs> = Prisma.PrismaPromise<
+export type GetTableSummaryGroupByPayload<T extends TableSummaryGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TableSummaryGroupByOutputType, T['by']> &
       {
@@ -2432,6 +2432,11 @@ export type TableSummaryFindManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Skip the first `n` TableSummaries.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TableSummaries.
+   */
   distinct?: Prisma.TableSummaryScalarFieldEnum | Prisma.TableSummaryScalarFieldEnum[]
 }
 

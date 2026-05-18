@@ -262,7 +262,7 @@ export type TopTeamStatGroupByOutputType = {
   _max: TopTeamStatMaxAggregateOutputType | null
 }
 
-type GetTopTeamStatGroupByPayload<T extends TopTeamStatGroupByArgs> = Prisma.PrismaPromise<
+export type GetTopTeamStatGroupByPayload<T extends TopTeamStatGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TopTeamStatGroupByOutputType, T['by']> &
       {
@@ -1729,6 +1729,11 @@ export type TopTeamStatFindManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Skip the first `n` TopTeamStats.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TopTeamStats.
+   */
   distinct?: Prisma.TopTeamStatScalarFieldEnum | Prisma.TopTeamStatScalarFieldEnum[]
 }
 

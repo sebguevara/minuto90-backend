@@ -361,7 +361,7 @@ export type TournamentPlayerTablePassingGroupByOutputType = {
   _max: TournamentPlayerTablePassingMaxAggregateOutputType | null
 }
 
-type GetTournamentPlayerTablePassingGroupByPayload<T extends TournamentPlayerTablePassingGroupByArgs> = Prisma.PrismaPromise<
+export type GetTournamentPlayerTablePassingGroupByPayload<T extends TournamentPlayerTablePassingGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TournamentPlayerTablePassingGroupByOutputType, T['by']> &
       {
@@ -3038,6 +3038,11 @@ export type TournamentPlayerTablePassingFindManyArgs<ExtArgs extends runtime.Typ
    * Skip the first `n` TournamentPlayerTablePassings.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TournamentPlayerTablePassings.
+   */
   distinct?: Prisma.TournamentPlayerTablePassingScalarFieldEnum | Prisma.TournamentPlayerTablePassingScalarFieldEnum[]
 }
 

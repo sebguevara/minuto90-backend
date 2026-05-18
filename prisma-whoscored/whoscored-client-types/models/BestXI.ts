@@ -210,7 +210,7 @@ export type BestXIGroupByOutputType = {
   _max: BestXIMaxAggregateOutputType | null
 }
 
-type GetBestXIGroupByPayload<T extends BestXIGroupByArgs> = Prisma.PrismaPromise<
+export type GetBestXIGroupByPayload<T extends BestXIGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<BestXIGroupByOutputType, T['by']> &
       {
@@ -1380,6 +1380,11 @@ export type BestXIFindManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Skip the first `n` BestXIS.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of BestXIS.
+   */
   distinct?: Prisma.BestXIScalarFieldEnum | Prisma.BestXIScalarFieldEnum[]
 }
 

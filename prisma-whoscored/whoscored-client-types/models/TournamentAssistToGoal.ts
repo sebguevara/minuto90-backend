@@ -269,7 +269,7 @@ export type TournamentAssistToGoalGroupByOutputType = {
   _max: TournamentAssistToGoalMaxAggregateOutputType | null
 }
 
-type GetTournamentAssistToGoalGroupByPayload<T extends TournamentAssistToGoalGroupByArgs> = Prisma.PrismaPromise<
+export type GetTournamentAssistToGoalGroupByPayload<T extends TournamentAssistToGoalGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TournamentAssistToGoalGroupByOutputType, T['by']> &
       {
@@ -2097,6 +2097,11 @@ export type TournamentAssistToGoalFindManyArgs<ExtArgs extends runtime.Types.Ext
    * Skip the first `n` TournamentAssistToGoals.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TournamentAssistToGoals.
+   */
   distinct?: Prisma.TournamentAssistToGoalScalarFieldEnum | Prisma.TournamentAssistToGoalScalarFieldEnum[]
 }
 

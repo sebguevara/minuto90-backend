@@ -26,6 +26,14 @@ export const getUnifiedFixtureLiveTtlSeconds = (): number =>
 export const getUnifiedFixturePrematchTtlSeconds = (): number =>
   readSecondsEnv("ODDS_INTEGRATION_TTL_PREMATCH_SECONDS", 3 * MINUTE, 30, 30 * MINUTE);
 
+/**
+ * TTL del espejo `:stale`. Se escribe junto al positivo y sirve de fallback
+ * cuando el proveedor falla. 24h por defecto: lo suficiente para sobrevivir
+ * caídas transitorias sin mostrar líneas de hace varios días.
+ */
+export const getUnifiedFixtureStaleTtlSeconds = (): number =>
+  readSecondsEnv("ODDS_INTEGRATION_TTL_STALE_SECONDS", 24 * HOUR, HOUR, 7 * DAY);
+
 /** Cache negativo: "no hay match" o "torneo no mapeado". */
 export const getUnifiedFixtureNegativeTtlSeconds = (): number =>
   readSecondsEnv("ODDS_INTEGRATION_TTL_NEGATIVE_SECONDS", 10 * MINUTE, MINUTE, 6 * HOUR);

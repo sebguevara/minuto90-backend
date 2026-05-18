@@ -76,6 +76,12 @@ export interface AvailableOddsResult {
   fetchedAt: string;
   markets: KickertechMarket[];
   /**
+   * True cuando estos datos provienen del mirror :stale (servidos porque el
+   * fetch fresco al proveedor falló). El front puede mostrar un indicador,
+   * pero por defecto se pintan igual que un positivo normal.
+   */
+  stale?: boolean;
+  /**
    * URL final del betslip (sin placeholder); el frontend NO la necesita por defecto.
    * Para abrir un odd se usa el endpoint dedicado de betslip que valida el oddId.
    */

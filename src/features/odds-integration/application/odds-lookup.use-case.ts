@@ -22,12 +22,14 @@ import {
   buildUnifiedFixtureMainMarketCacheKey,
   buildUnifiedFixtureNegativeCacheKey,
   buildUnifiedFixtureOddsCacheKey,
+  buildUnifiedFixtureOddsStaleCacheKey,
 } from "../infrastructure/odds-integration-cache-key";
 import {
   getEventMappingExpiryDate,
   getUnifiedFixtureLiveTtlSeconds,
   getUnifiedFixtureNegativeTtlSeconds,
   getUnifiedFixturePrematchTtlSeconds,
+  getUnifiedFixtureStaleTtlSeconds,
 } from "../infrastructure/odds-integration-cache-ttl";
 import {
   redisOddsIntegrationCacheStore,
@@ -192,7 +194,27 @@ export class OddsLookupUseCase {
     const negative = await this.cache.get<UnavailableOddsResult>(negativeKey);
     if (negative) return negative;
 
-    return this.resolveAndCache(fixtureId);
+    try {
+      return await this.resolveAndCache(fixtureId);
+    } catch (error) {
+      const fallback = await this.readStaleOdds(fixtureId);
+      if (fallback) {
+        logWarn("odds_integration.served_stale_after_failure", {
+          fixtureId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return fallback;
+      }
+      throw error;
+    }
+  }
+
+  private async readStaleOdds(fixtureId: number): Promise<AvailableOddsResult | null> {
+    const stale = await this.cache.get<AvailableOddsResult>(
+      buildUnifiedFixtureOddsStaleCacheKey(fixtureId)
+    );
+    if (!stale) return null;
+    return { ...stale, stale: true };
   }
 
   async getMainMarket(fixtureId: number): Promise<MainMarketResult> {
@@ -389,6 +411,14 @@ export class OddsLookupUseCase {
       ? getUnifiedFixtureLiveTtlSeconds()
       : getUnifiedFixturePrematchTtlSeconds();
     await this.cache.set(buildUnifiedFixtureOddsCacheKey(fixtureId), unified, ttl);
+    // Espejo de vida larga para servir como fallback si una llamada futura al
+    // proveedor falla. Redis expira el positivo pero conservamos esta copia
+    // (24h por defecto) para no dejar el home en blanco ante un hiccup.
+    await this.cache.set(
+      buildUnifiedFixtureOddsStaleCacheKey(fixtureId),
+      unified,
+      getUnifiedFixtureStaleTtlSeconds()
+    );
 
     return unified;
   }

@@ -332,7 +332,7 @@ export type PlayerTablePassingGroupByOutputType = {
   _max: PlayerTablePassingMaxAggregateOutputType | null
 }
 
-type GetPlayerTablePassingGroupByPayload<T extends PlayerTablePassingGroupByArgs> = Prisma.PrismaPromise<
+export type GetPlayerTablePassingGroupByPayload<T extends PlayerTablePassingGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<PlayerTablePassingGroupByOutputType, T['by']> &
       {
@@ -2242,6 +2242,11 @@ export type PlayerTablePassingFindManyArgs<ExtArgs extends runtime.Types.Extensi
    * Skip the first `n` PlayerTablePassings.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of PlayerTablePassings.
+   */
   distinct?: Prisma.PlayerTablePassingScalarFieldEnum | Prisma.PlayerTablePassingScalarFieldEnum[]
 }
 

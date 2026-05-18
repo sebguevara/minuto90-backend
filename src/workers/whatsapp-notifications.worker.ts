@@ -14,9 +14,40 @@ import { logError, logInfo } from "../shared/logging/logger";
 const WHATSAPP_SEND_DEDUPE_TTL_SECONDS = Number(
   process.env.WHATSAPP_SEND_DEDUPE_TTL_SECONDS ?? 180
 );
+/** TTL del marcador "ya entregado" por suscriptor. Se setea recién después del send exitoso.
+ *  Antes se seteaba en el poller ANTES del enqueue, lo que dejaba un fantasma de "enviado"
+ *  cuando el worker fallaba permanentemente → el gol se perdía silenciosamente. */
+const MATCH_MSG_DELIVERED_TTL_SECONDS = Number(
+  process.env.LIVE_MESSAGE_DEDUP_TTL_SECONDS ?? 1800
+);
 
 function normalizePhoneForDedupe(phone: string) {
   return String(phone ?? "").replace(/\D/g, "");
+}
+
+function deliveredKey(subscriberId: string, fixtureId: number, triggerType: string, eventKey: string) {
+  const h = createHash("sha1").update(eventKey).digest("hex");
+  return `match_msg:${subscriberId}:${fixtureId}:${triggerType}:${h}`;
+}
+
+async function isAlreadyDelivered(
+  subscriberId: string,
+  fixtureId: number,
+  triggerType: string,
+  eventKey: string
+): Promise<boolean> {
+  const key = deliveredKey(subscriberId, fixtureId, triggerType, eventKey);
+  return (await redisConnection.get(key)) !== null;
+}
+
+async function markDelivered(
+  subscriberId: string,
+  fixtureId: number,
+  triggerType: string,
+  eventKey: string
+) {
+  const key = deliveredKey(subscriberId, fixtureId, triggerType, eventKey);
+  await redisConnection.set(key, "1", "EX", MATCH_MSG_DELIVERED_TTL_SECONDS);
 }
 
 function whatsappSendDedupeKey(phone: string, fixtureId: number, triggerType: string, eventKey: string) {
@@ -114,6 +145,20 @@ const worker = new Worker<WhatsappNotificationJob>(
       }
     }
 
+    // Si ya entregamos exitosamente esta combinación (fixture+trigger+subscriber+eventKey)
+    // en los últimos 30 min, no reenviar. Esto cubre re-enqueues después de removeOnComplete.
+    if (await isAlreadyDelivered(subscriberId, fixtureId, triggerType, eventKey)) {
+      if (process.env.NOTIFICATIONS_DEBUG === "true") {
+        logInfo("whatsapp.send.already_delivered", {
+          jobId: job.id,
+          fixtureId,
+          triggerType,
+          subscriberId,
+        });
+      }
+      return;
+    }
+
     const claimed = await tryClaimWhatsappSend(phone, fixtureId, triggerType, eventKey);
     if (!claimed) {
       if (process.env.NOTIFICATIONS_DEBUG === "true") {
@@ -135,6 +180,10 @@ const worker = new Worker<WhatsappNotificationJob>(
       await releaseWhatsappSendClaim(phone, fixtureId, triggerType, eventKey);
       throw sendErr;
     }
+
+    // Marcar como entregado SÓLO tras send exitoso. Si falla, BullMQ reintenta;
+    // si todos los intentos fallan, no queda fantasma de "ya enviado" en Redis.
+    await markDelivered(subscriberId, fixtureId, triggerType, eventKey);
 
     if (process.env.NOTIFICATIONS_DEBUG === "true") {
       logInfo("whatsapp.send.ok", {
@@ -168,11 +217,27 @@ worker.on("failed", (job, err) => {
     triggerType: job?.data?.triggerType,
     subscriberId: job?.data?.subscriberId,
     phone: job?.data?.phone,
+    eventKey: job?.data?.eventKey,
     attemptsMade,
     attempts,
     willRetry,
     err: err?.message ?? String(err),
   });
+
+  // Fallo permanente: trigger perdido para este suscriptor. Loguear con eventKey para poder
+  // diagnosticar (o reenviar manualmente). Sin esta señal, el gol/aviso se pierde silenciosamente.
+  if (willRetry === false) {
+    logError("whatsapp.send.permanently_failed", {
+      jobId: job?.id,
+      fixtureId: job?.data?.fixtureId,
+      triggerType: job?.data?.triggerType,
+      subscriberId: job?.data?.subscriberId,
+      phone: job?.data?.phone,
+      eventKey: job?.data?.eventKey,
+      attemptsMade,
+      err: err?.message ?? String(err),
+    });
+  }
 });
 
 worker.on("completed", (job) => {

@@ -265,7 +265,7 @@ export type TeamStreakStatGroupByOutputType = {
   _max: TeamStreakStatMaxAggregateOutputType | null
 }
 
-type GetTeamStreakStatGroupByPayload<T extends TeamStreakStatGroupByArgs> = Prisma.PrismaPromise<
+export type GetTeamStreakStatGroupByPayload<T extends TeamStreakStatGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TeamStreakStatGroupByOutputType, T['by']> &
       {
@@ -1772,6 +1772,11 @@ export type TeamStreakStatFindManyArgs<ExtArgs extends runtime.Types.Extensions.
    * Skip the first `n` TeamStreakStats.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TeamStreakStats.
+   */
   distinct?: Prisma.TeamStreakStatScalarFieldEnum | Prisma.TeamStreakStatScalarFieldEnum[]
 }
 

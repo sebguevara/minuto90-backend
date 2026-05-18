@@ -185,7 +185,7 @@ export type TableSectionGroupByOutputType = {
   _max: TableSectionMaxAggregateOutputType | null
 }
 
-type GetTableSectionGroupByPayload<T extends TableSectionGroupByArgs> = Prisma.PrismaPromise<
+export type GetTableSectionGroupByPayload<T extends TableSectionGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TableSectionGroupByOutputType, T['by']> &
       {
@@ -3228,6 +3228,11 @@ export type TableSectionFindManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Skip the first `n` TableSections.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TableSections.
+   */
   distinct?: Prisma.TableSectionScalarFieldEnum | Prisma.TableSectionScalarFieldEnum[]
 }
 

@@ -310,7 +310,7 @@ export type TableDefensiveGroupByOutputType = {
   _max: TableDefensiveMaxAggregateOutputType | null
 }
 
-type GetTableDefensiveGroupByPayload<T extends TableDefensiveGroupByArgs> = Prisma.PrismaPromise<
+export type GetTableDefensiveGroupByPayload<T extends TableDefensiveGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TableDefensiveGroupByOutputType, T['by']> &
       {
@@ -2302,6 +2302,11 @@ export type TableDefensiveFindManyArgs<ExtArgs extends runtime.Types.Extensions.
    * Skip the first `n` TableDefensives.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TableDefensives.
+   */
   distinct?: Prisma.TableDefensiveScalarFieldEnum | Prisma.TableDefensiveScalarFieldEnum[]
 }
 
