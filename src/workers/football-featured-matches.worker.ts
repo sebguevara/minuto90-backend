@@ -14,8 +14,11 @@ const DEFAULT_TIMEZONE = "UTC";
 const FEATURED_MATCHES_LIMIT = 8;
 const FEATURED_MATCHES_CRON_TIMEZONE =
   process.env.FOOTBALL_FEATURED_MATCHES_CRON_TIMEZONE?.trim() || DEFAULT_TIMEZONE;
+// Default: true. La precarga al arrancar es lo que garantiza que la primera
+// request del frontend encuentre destacados en caché. Sólo se desactiva si
+// FOOTBALL_FEATURED_MATCHES_RUN_ON_STARTUP="false" se setea explícitamente.
 const FEATURED_MATCHES_RUN_ON_STARTUP =
-  process.env.FOOTBALL_FEATURED_MATCHES_RUN_ON_STARTUP?.trim() === "true";
+  (process.env.FOOTBALL_FEATURED_MATCHES_RUN_ON_STARTUP?.trim() || "true") !== "false";
 
 function formatUtcDateKey(offsetDays = 0) {
   const date = new Date();

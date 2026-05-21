@@ -1,4 +1,4 @@
-import { logInfo, logWarn } from "../../../shared/logging/logger";
+import { logError, logInfo, logWarn } from "../../../shared/logging/logger";
 import { footballService } from "../../sports/application/football.service";
 import type { ApiFootballFixtureItem } from "../../sports/domain/football.types";
 import {
@@ -47,7 +47,8 @@ const FEATURED_MATCHES_COMPUTE_BUDGET_MS = 1500;
 const FEATURED_MATCHES_WARN_MS = 1200;
 const FEATURED_STANDINGS_MAX_LEAGUES = 6;
 const FEATURED_STANDINGS_TIMEOUT_MS = 2500;
-const FEATURED_LAST_GOOD_TTL_SECONDS = 60 * 60 * 24;
+const FEATURED_LAST_GOOD_TTL_SECONDS = 60 * 60 * 24 * 7;
+const FEATURED_NEIGHBOR_DAY_OFFSETS = [-1, 1, -2, 2, -3, 3];
 
 type MatchStreakResult = "W" | "D" | "L";
 
@@ -98,7 +99,7 @@ type TeamDbContext = {
   winPercentage: number | null;
 };
 
-type FeaturedMatchesCacheStatus = "fresh" | "stale" | "miss_partial";
+type FeaturedMatchesCacheStatus = "fresh" | "stale" | "neighbor_day" | "miss_partial";
 
 type FeaturedMatchesCachePayload = {
   data: FeaturedMatch[];
@@ -128,6 +129,43 @@ function sleep(ms: number) {
 
 function toDurationMs(startMs: number) {
   return Math.max(0, Math.round(performance.now() - startMs));
+}
+
+function shiftDateKey(date: string, offsetDays: number): string | null {
+  // Espera "YYYY-MM-DD". Devuelve null si el input no es válido.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  const baseMs = Date.parse(`${date}T00:00:00Z`);
+  if (!Number.isFinite(baseMs)) return null;
+  const shifted = new Date(baseMs);
+  shifted.setUTCDate(shifted.getUTCDate() + offsetDays);
+  return shifted.toISOString().slice(0, 10);
+}
+
+async function findNeighborDayLastGood(
+  date: string,
+  timezone?: string | null
+): Promise<FeaturedMatchesCachePayload | null> {
+  for (const offset of FEATURED_NEIGHBOR_DAY_OFFSETS) {
+    const neighborDate = shiftDateKey(date, offset);
+    if (!neighborDate) continue;
+    const neighborKey = buildFeaturedMatchesCacheKey(neighborDate, timezone);
+    const neighborLastGoodKey = buildFeaturedMatchesLastGoodCacheKey(neighborKey);
+    const neighbor = normalizeFeaturedMatchesCachePayload(
+      await redisInsightsCacheStore.get<FeaturedMatchesCachePayload | FeaturedMatch[]>(
+        neighborLastGoodKey
+      )
+    );
+    if (neighbor && neighbor.data.length > 0) {
+      logInfo("insights.featured.neighbor_day_fallback", {
+        requestedDate: date,
+        usedDate: neighborDate,
+        offsetDays: offset,
+        timezone,
+      });
+      return neighbor;
+    }
+  }
+  return null;
 }
 
 function normalizeFeaturedMatchesCachePayload(
@@ -1331,6 +1369,42 @@ Formato:
 
     const computeAndCache = async (): Promise<FeaturedMatchesResponse> => {
       const computed = await this.computeFeaturedMatches(date, limit, timezone);
+
+      // Si el cómputo no produjo destacados, no cacheamos vacío como fresh:
+      // intentamos un neighbor-day para no romper el contrato "siempre hay destacados".
+      if (computed.data.length === 0) {
+        const neighbor = await findNeighborDayLastGood(date, timezone);
+        if (neighbor && neighbor.data.length > 0) {
+          logWarn("insights.featured.empty_compute_neighbor_fallback", {
+            date,
+            timezone,
+            totalMs: computed.timings.totalMs,
+          });
+          return {
+            data: neighbor.data,
+            meta: {
+              cacheStatus: "neighbor_day",
+              computedAt: neighbor.computedAt,
+            },
+            timings: computed.timings,
+          };
+        }
+        // No hay vecinos tampoco: devolvemos vacío pero NO cacheamos para reintentar pronto.
+        logError("insights.featured.empty_compute_no_neighbor", {
+          date,
+          timezone,
+          totalMs: computed.timings.totalMs,
+        });
+        return {
+          data: [],
+          meta: {
+            cacheStatus: "miss_partial",
+            computedAt: new Date().toISOString(),
+          },
+          timings: computed.timings,
+        };
+      }
+
       const hasLive = computed.data.some((m) =>
         LIVE_MATCH_STATUS.has((m.status ?? "").toUpperCase())
       );
@@ -1405,6 +1479,22 @@ Formato:
           },
         };
       }
+      const neighbor = await findNeighborDayLastGood(date, timezone);
+      if (neighbor) {
+        return {
+          data: neighbor.data,
+          meta: {
+            cacheStatus: "neighbor_day",
+            computedAt: neighbor.computedAt,
+          },
+          timings: {
+            featuredFixturesFetchMs: 0,
+            featuredStandingsFetchMs: 0,
+            totalMs: toDurationMs(requestStartedAt),
+          },
+        };
+      }
+      logError("insights.featured.no_fallback_available", { date, timezone });
       return {
         data: [],
         meta: {
@@ -1455,6 +1545,23 @@ Formato:
       };
     }
 
+    const neighbor = await findNeighborDayLastGood(date, timezone);
+    if (neighbor) {
+      return {
+        data: neighbor.data,
+        meta: {
+          cacheStatus: "neighbor_day",
+          computedAt: neighbor.computedAt,
+        },
+        timings: {
+          featuredFixturesFetchMs: 0,
+          featuredStandingsFetchMs: 0,
+          totalMs: toDurationMs(requestStartedAt),
+        },
+      };
+    }
+
+    logError("insights.featured.no_fallback_available", { date, timezone });
     return {
       data: [],
       meta: {
