@@ -3,8 +3,8 @@ import { logError } from "../../../shared/logging/logger";
 
 const db = minutoPrismaClient;
 
-// Lockout: 1 day before first WC 2026 match (June 11, 2026 at 18:00 UTC)
-const WC_LOCKOUT_DATE = new Date("2026-06-10T18:00:00Z");
+// Lockout: end of June 16, 2026 (extended deadline)
+const WC_LOCKOUT_DATE = new Date("2026-06-16T23:59:59Z");
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

@@ -124,6 +124,44 @@ export const insightsRoutes = new Elysia({ prefix: "/api/insights" })
     }
   )
   .get(
+    "/live-insights",
+    async ({ query, set }) => {
+      try {
+        const ids = (query.ids ?? "")
+          .split(",")
+          .map((raw) => Number(raw.trim()))
+          .filter((id) => Number.isInteger(id) && id > 0)
+          .slice(0, 50);
+        if (ids.length === 0) {
+          return { success: true, data: {} };
+        }
+        const data = await insightsService.getCachedKeyInsightsByIds(ids);
+        set.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60";
+        return { success: true, data };
+      } catch (error: any) {
+        set.status = 500;
+        return {
+          success: false,
+          error: error.message ?? "No se pudieron obtener los insights en vivo",
+        };
+      }
+    },
+    {
+      query: t.Object({
+        ids: t.String({
+          description: "Comma-separated fixture IDs (max 50)",
+          examples: ["123,456"],
+        }),
+      }),
+      detail: {
+        tags: ["Insights"],
+        summary: "Obtener key insights cacheados para partidos en vivo",
+        description:
+          "Lectura pura de caché: devuelve el insight clave pre-generado de cada fixture en vivo. No genera con IA.",
+      },
+    }
+  )
+  .get(
     "/match/:fixtureId/momentum",
     async ({ params, set }) => {
       try {

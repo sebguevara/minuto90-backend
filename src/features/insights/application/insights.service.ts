@@ -9,6 +9,7 @@ import { openai } from "../infrastructure/openai.client";
 import { getFixtureStatsByPeriodResponse } from "../../../workers/halftime-snapshot";
 import {
   buildDailyInsightsCacheKey,
+  buildFeaturedMatchesAiRankedCacheKey,
   buildFeaturedMatchesCacheKey,
   buildFeaturedMatchesLastGoodCacheKey,
   buildInsightsLockKey,
@@ -19,6 +20,7 @@ import {
 import {
   getDailyInsightsTtlSeconds,
   getFeaturedMatchesTtlSeconds,
+  getKeyInsightTtlSeconds,
   getMatchStreaksTtlSeconds,
   getMatchSummaryTtlSeconds,
   resolveMatchState,
@@ -40,6 +42,8 @@ const COMPLETED_MATCH_STATUS = new Set(["FT", "AET", "PEN"]);
 const LIVE_MATCH_STATUS = new Set([
   "1H", "2H", "ET", "P", "BT", "LIVE", "INT", "HT", "SUSP", "INTR",
 ]);
+// Partidos que NO se juegan: no deben aparecer como "partidos del día" / destacados.
+const NON_PLAYABLE_MATCH_STATUS = new Set(["CANC", "PST", "ABD", "WO"]);
 const LOCK_TTL_SECONDS = 25;
 const LOCK_MAX_RETRIES = 10;
 const LOCK_WAIT_MS = 180;
@@ -49,6 +53,10 @@ const FEATURED_STANDINGS_MAX_LEAGUES = 6;
 const FEATURED_STANDINGS_TIMEOUT_MS = 2500;
 const FEATURED_LAST_GOOD_TTL_SECONDS = 60 * 60 * 24 * 7;
 const FEATURED_NEIGHBOR_DAY_OFFSETS = [-1, 1, -2, 2, -3, 3];
+
+function isFeaturedAiRankingEnabled() {
+  return (process.env.FEATURED_AI_RANKING_ENABLED?.trim() || "false") === "true";
+}
 
 type MatchStreakResult = "W" | "D" | "L";
 
@@ -92,6 +100,14 @@ export type MatchStreaksResponse = {
     ttlSeconds: number;
     cacheHit: boolean;
   };
+};
+
+export type KeyInsight = {
+  fixtureId: number;
+  text: string; // one short Spanish sentence shown on the live card
+  emoji: string | null; // optional UI accent
+  category: "goals" | "form" | "h2h" | "standings" | "odds" | "general";
+  computedAt: string;
 };
 
 type TeamDbContext = {
@@ -538,6 +554,39 @@ export class InsightsService {
     return { value: computed, cacheHit: false };
   }
 
+  private async computeTeamStreakSnapshots(
+    fixtureData: ApiFootballFixtureItem
+  ): Promise<{ home: MatchStreaksTeamSnapshot; away: MatchStreaksTeamSnapshot }> {
+    const homeTeam = fixtureData.teams.home;
+    const awayTeam = fixtureData.teams.away;
+
+    const [homeFixturesRes, awayFixturesRes, homeDbContext, awayDbContext] =
+      await Promise.all([
+        footballService.getFixtures({ team: homeTeam.id, last: 10 }),
+        footballService.getFixtures({ team: awayTeam.id, last: 10 }),
+        loadTeamDbContext(homeTeam.id, fixtureData.league.id),
+        loadTeamDbContext(awayTeam.id, fixtureData.league.id),
+      ]);
+
+    const home = buildTeamStreakSnapshot({
+      teamId: homeTeam.id,
+      teamName: homeTeam.name,
+      teamLogo: homeTeam.logo ?? null,
+      fixtures: homeFixturesRes.response ?? [],
+      dbContext: homeDbContext,
+    });
+
+    const away = buildTeamStreakSnapshot({
+      teamId: awayTeam.id,
+      teamName: awayTeam.name,
+      teamLogo: awayTeam.logo ?? null,
+      fixtures: awayFixturesRes.response ?? [],
+      dbContext: awayDbContext,
+    });
+
+    return { home, away };
+  }
+
   async getMatchStreaks(fixtureId: number): Promise<MatchStreaksResponse> {
     const fixtureData = await this.getFixtureById(fixtureId);
     if (!fixtureData) {
@@ -555,32 +604,7 @@ export class InsightsService {
       cacheKey,
       ttlSeconds,
       compute: async () => {
-        const homeTeam = fixtureData.teams.home;
-        const awayTeam = fixtureData.teams.away;
-
-        const [homeFixturesRes, awayFixturesRes, homeDbContext, awayDbContext] =
-          await Promise.all([
-            footballService.getFixtures({ team: homeTeam.id, last: 10 }),
-            footballService.getFixtures({ team: awayTeam.id, last: 10 }),
-            loadTeamDbContext(homeTeam.id, fixtureData.league.id),
-            loadTeamDbContext(awayTeam.id, fixtureData.league.id),
-          ]);
-
-        const home = buildTeamStreakSnapshot({
-          teamId: homeTeam.id,
-          teamName: homeTeam.name,
-          teamLogo: homeTeam.logo ?? null,
-          fixtures: homeFixturesRes.response ?? [],
-          dbContext: homeDbContext,
-        });
-
-        const away = buildTeamStreakSnapshot({
-          teamId: awayTeam.id,
-          teamName: awayTeam.name,
-          teamLogo: awayTeam.logo ?? null,
-          fixtures: awayFixturesRes.response ?? [],
-          dbContext: awayDbContext,
-        });
+        const { home, away } = await this.computeTeamStreakSnapshots(fixtureData);
 
         return {
           fixtureId,
@@ -613,6 +637,184 @@ export class InsightsService {
         ttlSeconds,
       },
     };
+  }
+
+  /**
+   * Distills the SINGLE most compelling, data-driven one-liner for a fixture from all
+   * available pre-match stats. Pre-generated before kickoff and shown on live cards.
+   * Reuses gatherPreMatchContext + computeTeamStreakSnapshots + buildInterestingFacts.
+   */
+  private async computeKeyInsight(
+    fixtureId: number,
+    fixtureData: ApiFootballFixtureItem
+  ): Promise<KeyInsight> {
+    const { teams, league } = fixtureData;
+
+    const [gathered, streaks] = await Promise.all([
+      this.gatherPreMatchContext(fixtureId, fixtureData).catch(() => null),
+      this.computeTeamStreakSnapshots(fixtureData).catch(() => null),
+    ]);
+
+    const preMatchContext = (gathered?.preMatchContext ?? {}) as Record<string, unknown>;
+    const candidateFacts = streaks ? buildInterestingFacts(streaks) : [];
+
+    const insightContext = {
+      tournament: league.name,
+      round: league.round,
+      homeTeam: teams.home.name,
+      awayTeam: teams.away.name,
+      candidateFacts,
+      standings: preMatchContext.standings ?? null,
+      h2h: preMatchContext.h2h ?? null,
+      prediction: preMatchContext.prediction ?? null,
+      odds: preMatchContext.odds ?? null,
+      homeFormLast5: preMatchContext.homeFormLast5 ?? null,
+      awayFormLast5: preMatchContext.awayFormLast5 ?? null,
+      streaks: streaks
+        ? {
+            home: {
+              team: streaks.home.teamName,
+              form: streaks.home.form,
+              over25Pct: streaks.home.over25Pct,
+              bttsPct: streaks.home.bttsPct,
+              currentRun: streaks.home.currentRun,
+              goalsForPg: streaks.home.goalsForPg,
+              goalsAgainstPg: streaks.home.goalsAgainstPg,
+            },
+            away: {
+              team: streaks.away.teamName,
+              form: streaks.away.form,
+              over25Pct: streaks.away.over25Pct,
+              bttsPct: streaks.away.bttsPct,
+              currentRun: streaks.away.currentRun,
+              goalsForPg: streaks.away.goalsForPg,
+              goalsAgainstPg: streaks.away.goalsAgainstPg,
+            },
+          }
+        : null,
+    };
+
+    const systemPrompt = `Eres un analista de fútbol. A partir de TODOS los datos de un partido, eliges UN SOLO insight: el dato más sorprendente, relevante y atractivo para enganchar al hincha (rachas, tendencia de +2.5 goles, BTTS, historial directo, posición en la tabla, cuotas).
+
+Reglas:
+- Devuelve EXCLUSIVAMENTE un JSON válido, sin markdown ni texto extra, con esta forma exacta:
+{"text": string, "emoji": string, "category": "goals"|"form"|"h2h"|"standings"|"odds"|"general"}
+- "text": UNA sola oración en español, concreta, con el dato numérico integrado de forma natural (ej: "6 de los últimos 7 partidos de Bucaramanga terminaron con más de 2.5 goles."). Máximo ~140 caracteres.
+- Usa SOLO datos provistos. NUNCA inventes números. Si los "candidateFacts" ya traen un dato fuerte, priorízalo.
+- "emoji": un único emoji acorde (⚡🔥🎯📊🥅) o cadena vacía.
+- "category": la dimensión del dato elegido.`;
+
+    const fallbackText =
+      candidateFacts[0] ??
+      `${teams.home.name} vs ${teams.away.name}: duelo a seguir en ${league.name}.`;
+
+    let parsed: { text?: unknown; emoji?: unknown; category?: unknown } | null = null;
+    try {
+      const completion = await withRetry(() =>
+        openai.responses.create({
+          model: "gpt-4o-mini",
+          instructions: systemPrompt,
+          input: `Datos del partido:\n\n${JSON.stringify(insightContext, null, 2)}`,
+        })
+      );
+      const raw = completion.output_text?.trim() ?? "";
+      const jsonText = raw
+        .replace(/^```(?:json)?/i, "")
+        .replace(/```$/i, "")
+        .trim();
+      parsed = JSON.parse(jsonText);
+    } catch (error) {
+      logWarn("insights.key_insight.generate_failed", {
+        fixtureId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    const allowedCategories = new Set([
+      "goals",
+      "form",
+      "h2h",
+      "standings",
+      "odds",
+      "general",
+    ]);
+    const text =
+      typeof parsed?.text === "string" && parsed.text.trim().length > 0
+        ? parsed.text.trim()
+        : fallbackText;
+    const emoji =
+      typeof parsed?.emoji === "string" && parsed.emoji.trim().length > 0
+        ? parsed.emoji.trim()
+        : null;
+    const category =
+      typeof parsed?.category === "string" && allowedCategories.has(parsed.category)
+        ? (parsed.category as KeyInsight["category"])
+        : "general";
+
+    return {
+      fixtureId,
+      text,
+      emoji,
+      category,
+      computedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Returns (and lazily computes + caches) the key insight for a fixture. Used by the
+   * background prewarm worker. The distributed lock in getOrComputeCachedValue prevents
+   * duplicate LLM spend across concurrent worker dates / request races.
+   */
+  async getKeyInsight(fixtureId: number): Promise<KeyInsight | null> {
+    const fixtureData = await this.getFixtureById(fixtureId);
+    if (!fixtureData) {
+      return null;
+    }
+
+    const state = resolveMatchState({
+      statusShort: fixtureData.fixture.status.short,
+      kickoffAt: getFixtureKickoffDate(fixtureData),
+    });
+
+    // No gastamos IA en partidos finalizados: el insight es pre-match y ya no se muestra.
+    if (state === "finished_recent" || state === "finished_old") {
+      return null;
+    }
+
+    const ttlSeconds = getKeyInsightTtlSeconds(state);
+    const cacheKey = buildMatchInsightsCacheKey("key_insight", fixtureId);
+
+    const result = await this.getOrComputeCachedValue<KeyInsight>({
+      cacheKey,
+      ttlSeconds,
+      compute: () => this.computeKeyInsight(fixtureId, fixtureData),
+    });
+
+    return result.value;
+  }
+
+  /**
+   * Pure cache read for the live request path: returns only fixtures that already have a
+   * cached key insight. Never computes, never locks, never calls the LLM.
+   */
+  async getCachedKeyInsightsByIds(
+    fixtureIds: number[]
+  ): Promise<Record<number, KeyInsight>> {
+    const uniqueIds = [
+      ...new Set(fixtureIds.filter((id) => Number.isInteger(id) && id > 0)),
+    ];
+    const out: Record<number, KeyInsight> = {};
+    await Promise.all(
+      uniqueIds.map(async (id) => {
+        const cached = await redisInsightsCacheStore.get<KeyInsight>(
+          buildMatchInsightsCacheKey("key_insight", id)
+        );
+        if (cached) {
+          out[id] = cached;
+        }
+      })
+    );
+    return out;
   }
 
   /**
@@ -794,10 +996,16 @@ REGLAS:
     return completion.output_text || "No se pudo generar el resumen del partido.";
   }
 
-  private async computePreMatchAnalysis(
+  private async gatherPreMatchContext(
     fixtureId: number,
     fixtureData: ApiFootballFixtureItem
-  ): Promise<string> {
+  ): Promise<{
+    preMatchContext: Record<string, unknown>;
+    hasLineups: boolean;
+    knockoutContext: Record<string, unknown> | null;
+    secondLeg: boolean;
+    firstLeg: boolean;
+  }> {
     const { league, teams } = fixtureData;
     const homeId = teams.home.id;
     const awayId = teams.away.id;
@@ -973,6 +1181,16 @@ REGLAS:
     };
 
     const hasLineups = lineups.length > 0;
+
+    return { preMatchContext, hasLineups, knockoutContext, secondLeg, firstLeg };
+  }
+
+  private async computePreMatchAnalysis(
+    fixtureId: number,
+    fixtureData: ApiFootballFixtureItem
+  ): Promise<string> {
+    const { preMatchContext, hasLineups, knockoutContext, secondLeg, firstLeg } =
+      await this.gatherPreMatchContext(fixtureId, fixtureData);
 
     // Build knockout-specific prompt section
     let knockoutPromptSection = "";
@@ -1325,9 +1543,16 @@ Formato:
     date: string,
     limit = 10,
     userCountry?: string | null,
-    timezone?: string | null
+    timezone?: string | null,
+    options?: { skipAiRanked?: boolean }
   ): Promise<FeaturedMatch[]> {
-    const result = await this.getFeaturedMatchesResponse(date, limit, userCountry, timezone);
+    const result = await this.getFeaturedMatchesResponse(
+      date,
+      limit,
+      userCountry,
+      timezone,
+      options
+    );
     return result.data;
   }
 
@@ -1335,12 +1560,38 @@ Formato:
     date: string,
     limit = 10,
     userCountry?: string | null,
-    timezone?: string | null
+    timezone?: string | null,
+    options?: { skipAiRanked?: boolean }
   ): Promise<FeaturedMatchesResponse> {
     const requestStartedAt = performance.now();
     void userCountry;
     const cacheKey = buildFeaturedMatchesCacheKey(date, timezone);
     const lastGoodKey = buildFeaturedMatchesLastGoodCacheKey(cacheKey);
+
+    // AI-reranked variant (worker-populated). One extra Redis GET on the request path,
+    // never an LLM call. Missing key → silent fallback to the deterministic order below.
+    if (isFeaturedAiRankingEnabled() && !options?.skipAiRanked) {
+      const aiRanked = normalizeFeaturedMatchesCachePayload(
+        await redisInsightsCacheStore.get<FeaturedMatchesCachePayload | FeaturedMatch[]>(
+          buildFeaturedMatchesAiRankedCacheKey(date, timezone)
+        )
+      );
+      if (aiRanked !== null) {
+        logInfo("insights.featured.ai_ranked_cache_hit", { date, timezone });
+        return {
+          data: aiRanked.data,
+          meta: {
+            cacheStatus: "fresh",
+            computedAt: aiRanked.computedAt,
+          },
+          timings: {
+            featuredFixturesFetchMs: 0,
+            featuredStandingsFetchMs: 0,
+            totalMs: toDurationMs(requestStartedAt),
+          },
+        };
+      }
+    }
 
     const cached = normalizeFeaturedMatchesCachePayload(
       await redisInsightsCacheStore.get<FeaturedMatchesCachePayload | FeaturedMatch[]>(cacheKey)
@@ -1595,7 +1846,12 @@ Formato:
     const WC_END = "2026-07-19";
     const isWorldCupWindow = date >= WC_START && date <= WC_END;
 
-    const allFixtures = fixturesRes.response ?? [];
+    const allFixtures = (fixturesRes.response ?? []).filter(
+      (fixture) =>
+        !NON_PLAYABLE_MATCH_STATUS.has(
+          (fixture.fixture.status.short ?? "").toUpperCase()
+        )
+    );
     const allFeatured = allFixtures.filter((fixture) => isFeaturedCompetitionId(fixture.league.id));
     const fixtures = isWorldCupWindow
       ? allFeatured.filter((f) => f.league.id === WC_LEAGUE_ID)
@@ -1826,6 +2082,118 @@ Formato:
         totalMs: toDurationMs(startedAt),
       },
     };
+  }
+
+  /**
+   * Worker-only. Takes the deterministic featured list as candidates and lets the LLM
+   * reorder AND reselect them (drop/promote), then caches the result on a separate
+   * ai_ranked key. NEVER called from the request path. On any LLM failure it writes the
+   * deterministic order to the ai_ranked key so the request-path read always succeeds.
+   */
+  async computeAndCacheAiRankedFeatured(
+    date: string,
+    limit = 10,
+    timezone?: string | null
+  ): Promise<FeaturedMatch[]> {
+    const deterministic = await this.getFeaturedMatches(date, limit, null, timezone, {
+      skipAiRanked: true,
+    });
+    if (deterministic.length === 0) {
+      return [];
+    }
+
+    const aiRankedKey = buildFeaturedMatchesAiRankedCacheKey(date, timezone);
+    const hasLive = deterministic.some((m) =>
+      LIVE_MATCH_STATUS.has((m.status ?? "").toUpperCase())
+    );
+    const ttlSeconds = hasLive ? 60 : getFeaturedMatchesTtlSeconds(date);
+
+    const storeAndReturn = async (data: FeaturedMatch[]) => {
+      const payload: FeaturedMatchesCachePayload = {
+        data,
+        computedAt: new Date().toISOString(),
+      };
+      await redisInsightsCacheStore.set(aiRankedKey, payload, ttlSeconds);
+      return data;
+    };
+
+    try {
+      const byId = new Map(deterministic.map((m) => [m.fixtureId, m]));
+      const candidates = deterministic.map((m) => ({
+        fixtureId: m.fixtureId,
+        home: m.homeTeam.name,
+        away: m.awayTeam.name,
+        league: m.league.name,
+        country: m.league.country,
+        round: m.league.round,
+        homeRank: m.homeTeam.rank,
+        awayRank: m.awayTeam.rank,
+        relevanceScore: Math.round(m.relevanceScore),
+        tier: m.tier,
+        live: LIVE_MATCH_STATUS.has((m.status ?? "").toUpperCase()),
+      }));
+
+      const systemPrompt = `Eres el editor de fútbol de una app. Recibes una lista de partidos candidatos del día (ya prefiltrados por un algoritmo) y decides cuáles son REALMENTE los más importantes para el hincha hoy y en qué orden mostrarlos.
+
+Criterios: los partidos en vivo van primero; luego el peso del partido (rivalidad/clásico, lucha por el título o por el descenso, instancias decisivas, equipos grandes, cuotas parejas), la magnitud de la competición y el atractivo global. Puedes DEJAR FUERA los partidos poco relevantes.
+
+Devuelve EXCLUSIVAMENTE un JSON válido, sin markdown ni texto extra, con esta forma:
+{"order": number[]}
+donde "order" son los fixtureId ordenados de MÁS a MENOS importante. Incluí TODOS los candidatos relevantes (los partidos flojos van al final, no los borres salvo que sean claramente irrelevantes). Devuelve hasta ${limit} fixtureId, usando únicamente los presentes en la entrada.`;
+
+      const completion = await withRetry(() =>
+        openai.responses.create({
+          model: "gpt-4o-mini",
+          instructions: systemPrompt,
+          input: `Partidos candidatos:\n\n${JSON.stringify(candidates, null, 2)}`,
+        })
+      );
+
+      const raw = completion.output_text?.trim() ?? "";
+      const jsonText = raw
+        .replace(/^```(?:json)?/i, "")
+        .replace(/```$/i, "")
+        .trim();
+      const parsed = JSON.parse(jsonText) as { order?: unknown };
+
+      const toValidId = (v: unknown): number | null => {
+        const n = typeof v === "number" ? v : Number(v);
+        return Number.isInteger(n) && byId.has(n) ? n : null;
+      };
+      const aiOrder = [
+        ...new Set(
+          (Array.isArray(parsed.order) ? parsed.order : [])
+            .map(toValidId)
+            .filter((id): id is number => id !== null)
+        ),
+      ];
+
+      // Backfill: la IA prioriza arriba, pero NUNCA vaciamos la lista. Cualquier
+      // candidato que la IA omita se re-agrega en orden determinístico al final, así
+      // una respuesta corta o vacía degrada (a lo sumo) al orden determinístico.
+      const aiSet = new Set(aiOrder);
+      const backfill = deterministic
+        .map((m) => m.fixtureId)
+        .filter((id) => !aiSet.has(id));
+      const finalOrder = [...aiOrder, ...backfill].slice(0, limit);
+      const reranked = finalOrder.map((id) => byId.get(id)!);
+
+      logInfo("insights.featured.ai_ranked", {
+        date,
+        timezone,
+        candidates: candidates.length,
+        aiKept: aiOrder.length,
+        backfilled: Math.max(0, reranked.length - aiOrder.length),
+      });
+      return storeAndReturn(reranked);
+    } catch (error) {
+      logWarn("insights.featured.ai_rank_failed", {
+        date,
+        timezone,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return storeAndReturn(deterministic);
+    }
   }
 }
 

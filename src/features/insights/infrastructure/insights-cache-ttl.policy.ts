@@ -86,6 +86,24 @@ export function getMatchSummaryTtlSeconds(state: MatchState) {
   }
 }
 
+export function getKeyInsightTtlSeconds(state: MatchState) {
+  switch (state) {
+    case "live":
+      // Pre-match data is frozen at kickoff — keep the insight stable for the whole
+      // live match and never recompute while it's running.
+      return 60 * 60 * 4; // 4 hours
+    case "upcoming_near":
+      return 60 * 60 * 6; // 6 hours — persists through the pre-kickoff window
+    case "upcoming_far":
+      return 60 * 60 * 24; // 24 hours — regenerates once per day via prewarm
+    case "finished_recent":
+    case "finished_old":
+      return 60 * 10; // irrelevant post-match — let it expire
+    default:
+      return 60 * 10;
+  }
+}
+
 export function getDailyInsightsTtlSeconds(date: string, now: Date = new Date()) {
   const today = now.toISOString().slice(0, 10);
   return date === today ? 60 * 30 : 60 * 60 * 24 * 7;

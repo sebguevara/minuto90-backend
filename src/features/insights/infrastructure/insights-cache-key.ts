@@ -1,4 +1,4 @@
-type MatchInsightsCacheTarget = "match_summary" | "match_streaks";
+type MatchInsightsCacheTarget = "match_summary" | "match_streaks" | "key_insight";
 export type MatchSummaryStateSlot = "prematch" | "live" | "finished";
 
 const ENV = process.env.NODE_ENV ?? "dev";
@@ -29,6 +29,14 @@ export function buildFeaturedMatchesCacheKey(date: string, timezone?: string | n
 
 export function buildFeaturedMatchesLastGoodCacheKey(cacheKey: string) {
   return `${cacheKey}:last_good`;
+}
+
+/**
+ * AI-reranked variant of the featured matches cache. Kept on a separate key so the
+ * deterministic cache (the request-path safety net) is never overwritten by LLM output.
+ */
+export function buildFeaturedMatchesAiRankedCacheKey(date: string, timezone?: string | null) {
+  return `${buildFeaturedMatchesCacheKey(date, timezone)}:ai_ranked`;
 }
 
 export function buildInsightsLockKey(cacheKey: string) {
