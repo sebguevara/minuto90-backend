@@ -61,9 +61,9 @@ export async function generateMomentumNarrative(
 
 Reglas:
 - Escribe en español, tono profesional pero accesible.
-- Máximo 2 oraciones. Sé directo y concreto.
+- UNA sola oración, máximo 22 palabras. Sé directo y concreto.
 - Usa los datos proporcionados, NO inventes estadísticas.
-- Si hay una probabilidad, intégrala naturalmente en el texto.
+- Si hay una probabilidad, intégrala de forma breve.
 - NO uses emojis, encabezados, ni formato markdown.
 - Enfócate en qué significa tácticamente lo que está pasando.`;
 
