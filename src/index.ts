@@ -31,6 +31,7 @@ import { mundialRoutes } from "./features/mundial/presentation/mundial.routes";
 import { kickertechRoutes } from "./features/kickertech/presentation/kickertech.routes";
 import { oddsIntegrationRoutes } from "./features/odds-integration/presentation/odds-integration.routes";
 import { oddsIntegrationAdminRoutes } from "./features/odds-integration/presentation/odds-integration-admin.routes";
+import { calendarRoutes } from "./features/calendar/presentation/calendar.routes";
 
 const SITEMAP_REQUEST_PURPOSE = "sitemap";
 
@@ -192,6 +193,10 @@ const swaggerTags = [
     description:
       "Cuotas unificadas por fixture de api-football (resuelve mapping interno y degrada gracefully)",
   },
+  {
+    name: "Calendar",
+    description: "Feeds .ics suscribibles (webcal) — calendario del Mundial 2026",
+  },
 ];
 
 const swaggerTagGroups = [
@@ -214,7 +219,7 @@ const swaggerTagGroups = [
       "Comparador",
     ],
   },
-  { name: "Frontend", tags: ["Users", "Push", "Favorites", "Team Colors"] },
+  { name: "Frontend", tags: ["Users", "Push", "Favorites", "Team Colors", "Calendar"] },
   { name: "AI", tags: ["Insights", "Chat"] },
   { name: "Evolution API", tags: ["Evolution API"] },
   { name: "Content", tags: ["News", "Posts", "Uploads"] },
@@ -300,6 +305,7 @@ const app = new Elysia()
   .use(kickertechRoutes)
   .use(oddsIntegrationRoutes)
   .use(oddsIntegrationAdminRoutes)
+  .use(calendarRoutes)
   .listen(
     process.env.NODE_ENV !== "development"
       ? Number(process.env.PORT ?? 4500)
