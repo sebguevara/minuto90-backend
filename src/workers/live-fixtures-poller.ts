@@ -29,6 +29,7 @@ import {
   isLikelyHalftime,
   missingPollThresholdFor,
 } from "./live-fixtures-poller.policy";
+import { filterOutStaleLive } from "../features/sports/infrastructure/football-stale-live";
 
 /** Por defecto 5s: notificaciones en vivo (p. ej. final) dependen del siguiente poll. Subir vía env si hay límite de API. */
 const POLL_INTERVAL_MS = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 5000);
@@ -552,7 +553,24 @@ async function checkUpcomingFixtures() {
 
 async function pollOnce() {
   const startedAt = Date.now();
-  const { fixtures, envelope } = await apiFootballLiveClient.listLiveFixturesWithEnvelope();
+  const { fixtures: rawFixtures, envelope: rawEnvelope } =
+    await apiFootballLiveClient.listLiveFixturesWithEnvelope();
+
+  // Guard de "live rancio": API-Football a veces deja un fixture clavado en estado en juego
+  // (p. ej. 1H minuto 28) y lo sigue publicando en /fixtures?live=all horas después del kickoff.
+  // Lo sacamos del set en vivo para que no contamine snapshot, live=all, reloj ni notificaciones.
+  const fixtures = filterOutStaleLive(rawFixtures);
+  const staleDropped = rawFixtures.length - fixtures.length;
+  const envelope =
+    staleDropped > 0 ? { ...(rawEnvelope as object), response: fixtures } : rawEnvelope;
+  if (staleDropped > 0) {
+    logInfo("live.stale_live.dropped", {
+      dropped: staleDropped,
+      ids: rawFixtures
+        .filter((f) => !fixtures.includes(f))
+        .map((f) => f?.fixture?.id),
+    });
+  }
 
   await updateLiveFixturesCache(envelope);
 

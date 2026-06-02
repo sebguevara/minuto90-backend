@@ -45,6 +45,7 @@ import {
   getFootballLiveSnapshot,
 } from "../infrastructure/football-live.snapshot";
 import { getFixtureEventsMap } from "../../../workers/live-cache-updater";
+import { coerceStaleLiveFixture } from "../infrastructure/football-stale-live";
 import { getFixtureStatsByPeriodResponse } from "../../../workers/halftime-snapshot";
 import { DEFAULT_ODDS_BET, DEFAULT_ODDS_BOOKMAKER } from "../infrastructure/football-odds-cache";
 import {
@@ -889,11 +890,17 @@ export function createFootballRoutes(service: FootballServiceContract = football
           }
         }
 
-        const mergedResponse = Array.from(mergedMap.values()).sort((left, right) => {
-          const leftTs = Number(left?.fixture?.timestamp ?? 0);
-          const rightTs = Number(right?.fixture?.timestamp ?? 0);
-          return leftTs - rightTs;
-        });
+        const mergedNow = Date.now();
+        const mergedResponse = Array.from(mergedMap.values())
+          // Guard de "live rancio": si API-Football dejó un fixture clavado en estado en juego
+          // (p. ej. 1H, minuto 28) horas después del kickoff, lo mostramos como finalizado en
+          // lugar de "En vivo" para siempre. Ver football-stale-live.ts.
+          .map((fixture) => coerceStaleLiveFixture(fixture, mergedNow))
+          .sort((left, right) => {
+            const leftTs = Number(left?.fixture?.timestamp ?? 0);
+            const rightTs = Number(right?.fixture?.timestamp ?? 0);
+            return leftTs - rightTs;
+          });
         const totalMs = Math.max(0, Math.round(performance.now() - requestStartedAt));
 
         logInfo("football.live_home.merge_results", {
