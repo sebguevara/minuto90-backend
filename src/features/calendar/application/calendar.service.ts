@@ -7,7 +7,7 @@ import { renderCalendar, toIcsUtc } from "../infrastructure/ics-renderer";
 import type { CalendarEvent, CalendarEventStatus } from "../domain/calendar.types";
 
 /** Clave de caché del .ics renderizado. Subir el sufijo `vN` si cambia el formato del renderer. */
-const CACHE_KEY = "calendar:wc2026:ics:v1";
+const CACHE_KEY = "calendar:wc2026:ics:v2";
 const UID_DOMAIN = "minuto90score.com";
 
 /** Estados que marcan el partido como cancelado en el calendario. */
@@ -96,8 +96,19 @@ export class CalendarService implements CalendarServiceContract {
       .sort((a, b) => a.dtStartUtc.localeCompare(b.dtStartUtc));
 
     const ics = renderCalendar(events, cfg);
-    await redisFootballCacheStore.set(CACHE_KEY, ics, cfg.ttlSeconds);
-    logInfo("calendar.worldcup.built", { events: events.length });
+    // No cachear un calendario vacío: si la liga/temporada no devolvió fixtures
+    // (config errónea o error transitorio de la API), un `.ics` sin eventos
+    // quedaría pegado en Redis durante todo el TTL. Sólo cacheamos con eventos,
+    // así el próximo request reintenta hasta que haya partidos reales.
+    if (events.length > 0) {
+      await redisFootballCacheStore.set(CACHE_KEY, ics, cfg.ttlSeconds);
+    }
+    logInfo("calendar.worldcup.built", {
+      events: events.length,
+      leagueId: cfg.leagueId,
+      season: cfg.season,
+      cached: events.length > 0,
+    });
     return ics;
   }
 }
