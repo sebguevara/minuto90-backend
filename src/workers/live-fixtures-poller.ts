@@ -17,6 +17,8 @@ import {
 } from "../features/notifications/application/subscription-baseline";
 import { updateLiveFixturesCache, invalidateStandingsCache, saveFixtureEvents } from "./live-cache-updater";
 import { captureFixtureStatsPeriodSnapshot } from "./halftime-snapshot";
+import { enqueueMatchNewsGeneration } from "../features/news/application/match-news.queue";
+import { isFeaturedCompetitionId } from "../features/insights/infrastructure/featured-competition-priority";
 import { areNotificationsEnabled } from "../shared/config/notifications";
 import {
   canReceiveWhatsappNotifications,
@@ -323,6 +325,11 @@ async function processOneFixture(fixture: ApiFootballLiveFixture) {
       if (typeof leagueId === "number") {
         invalidateStandingsCache(leagueId, season).catch(() => {});
       }
+
+      // Crónica post-partido por IA (solo competiciones destacadas; no-op si el flag está off).
+      if (typeof leagueId === "number" && isFeaturedCompetitionId(leagueId)) {
+        enqueueMatchNewsGeneration({ fixtureId, leagueId, season }).catch(() => {});
+      }
     }
   }
 
@@ -485,6 +492,11 @@ async function handleDisappearances(currentIds: number[]) {
       const season = fixture.league?.season ?? CURRENT_SEASON;
       if (typeof leagueId === "number") {
         invalidateStandingsCache(leagueId, season).catch(() => {});
+      }
+
+      // Crónica post-partido por IA también para partidos que finalizan al desaparecer del live.
+      if (typeof leagueId === "number" && isFeaturedCompetitionId(leagueId)) {
+        enqueueMatchNewsGeneration({ fixtureId, leagueId, season }).catch(() => {});
       }
 
       logInfo("live.disappeared.full_time.enqueued", {

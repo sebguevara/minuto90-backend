@@ -146,6 +146,10 @@ model News {
   featured    Boolean       @default(false)
   isHidden    Boolean       @default(false)
   isMundial   Boolean       @default(false)
+  isAiGenerated   Boolean   @default(false)
+  // api-football fixture id de origen cuando la nota se generó por IA post-partido.
+  // @unique garantiza idempotencia: una sola nota por partido aunque el worker reintente.
+  sourceFixtureId Int?      @unique
   viewCount   Int           @default(0)
   clickCount  Int           @default(0)
   publishFrom DateTime?
@@ -164,6 +168,7 @@ model News {
   @@index([categoryId])
   @@index([viewCount])
   @@index([isMundial, publishedAt])
+  @@index([isAiGenerated, isHidden])
 
   tags NewsTag[]
 }

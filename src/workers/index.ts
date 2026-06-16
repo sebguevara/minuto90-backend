@@ -6,6 +6,7 @@ import "./daily-prewarm.worker";
 import "./live-fixtures-poller";
 import "./pre-match-notifications.worker";
 import "./news-publication-poller.worker";
+import "./match-news-generation.worker";
 import "./web-push-notifications.worker";
 import "./whatsapp-notifications.worker";
 
@@ -18,6 +19,7 @@ logInfo("worker.bundle.started", {
     "live-fixtures-poller",
     "pre-match-notifications",
     "news-publication-poller",
+    "match-news-generation",
     "web-push-notifications",
     "whatsapp-notifications",
   ],

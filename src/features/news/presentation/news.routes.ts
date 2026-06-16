@@ -4,6 +4,7 @@ import { pushService } from "../../push/application/push.service";
 import { requireAdmin } from "../../../shared/middleware/admin-guard";
 import { logError } from "../../../shared/logging/logger";
 import { openai } from "../../insights/infrastructure/openai.client";
+import { generateMatchNewsDraft } from "../application/match-news.service";
 
 export const newsRoutes = new Elysia({ prefix: "/api/news" })
   // Admin overview
@@ -431,6 +432,48 @@ Tags existentes en la base (elegí de acá cuando sirva): ${listPreview || "(nin
         ),
       }),
       detail: { tags: ["News"], summary: "Generate AI tag suggestions for a news article (admin only)" },
+    }
+  )
+
+  // AI post-match news draft generation from a fixture (admin only).
+  // Operational override for the automatic FULL_TIME pipeline: generate or regenerate
+  // a hidden draft on demand (e.g. a match the auto path missed). `force` bypasses the
+  // featured-competition gate and regenerates even if a note already exists.
+  .post(
+    "/ai-match-report",
+    async ({ body, request, set }) => {
+      try {
+        const clerkId = request.headers.get("x-clerk-user-id");
+        const guard = await requireAdmin(clerkId);
+        if (!guard.ok) {
+          set.status = guard.status;
+          return { error: guard.error };
+        }
+
+        const result = await generateMatchNewsDraft(body.fixtureId, {
+          force: body.force ?? false,
+        });
+        if (result.status === "skipped") {
+          set.status = 422;
+          return { error: `No se pudo generar la nota: ${result.reason}` };
+        }
+        const news = await newsService.getById(result.newsId);
+        return { data: { status: result.status, news } };
+      } catch (err: any) {
+        logError("news.aiMatchReport.failed", { err: err?.message ?? String(err) });
+        set.status = 500;
+        return { error: "No se pudo generar la noticia del partido" };
+      }
+    },
+    {
+      body: t.Object({
+        fixtureId: t.Number(),
+        force: t.Optional(t.Boolean()),
+      }),
+      detail: {
+        tags: ["News"],
+        summary: "Generate an AI post-match news draft from a fixture (admin only)",
+      },
     }
   )
 

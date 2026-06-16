@@ -9,6 +9,8 @@ export type CreateNewsInput = {
   featured?: boolean;
   isHidden?: boolean;
   isMundial?: boolean;
+  isAiGenerated?: boolean;
+  sourceFixtureId?: number | null;
   publishFrom?: Date | null;
   publishTo?: Date | null;
   publishedAt?: Date;

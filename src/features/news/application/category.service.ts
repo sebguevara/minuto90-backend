@@ -59,6 +59,35 @@ export const categoryService = {
     return db.newsCategory.findUnique({ where: { id } });
   },
 
+  /**
+   * Find an existing category by slug or create it. Used by the AI post-match
+   * news generator to ensure a default category exists (e.g. "resultados").
+   */
+  async findOrCreate(input: { name: string; slug: string; color?: string | null }) {
+    const slug = input.slug.trim();
+    if (!slug) throw new Error("CATEGORY_SLUG_EMPTY");
+
+    const existing = await db.newsCategory.findUnique({ where: { slug } });
+    if (existing) return existing;
+
+    try {
+      return await db.newsCategory.create({
+        data: {
+          name: input.name.trim() || slug,
+          slug,
+          color: input.color ?? null,
+          sortOrder: 0,
+        },
+      });
+    } catch (err: any) {
+      if (err?.code === "P2002") {
+        const again = await db.newsCategory.findUnique({ where: { slug } });
+        if (again) return again;
+      }
+      throw err;
+    }
+  },
+
   async create(input: CreateCategoryInput) {
     return db.newsCategory.create({
       data: {

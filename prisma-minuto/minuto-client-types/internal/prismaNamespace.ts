@@ -1843,6 +1843,8 @@ export const NewsScalarFieldEnum = {
   featured: 'featured',
   isHidden: 'isHidden',
   isMundial: 'isMundial',
+  isAiGenerated: 'isAiGenerated',
+  sourceFixtureId: 'sourceFixtureId',
   viewCount: 'viewCount',
   clickCount: 'clickCount',
   publishFrom: 'publishFrom',

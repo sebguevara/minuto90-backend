@@ -91,6 +91,16 @@ export const newsService = {
     });
   },
 
+  async getBySourceFixtureId(fixtureId: number) {
+    return db.news.findUnique({
+      where: { sourceFixtureId: fixtureId },
+      include: {
+        category: { select: { id: true, name: true, slug: true, color: true } },
+        tags: { select: { id: true, name: true, slug: true } },
+      },
+    });
+  },
+
   async getBySlug(slug: string) {
     return db.news.findFirst({
       where: { slug, ...buildPublicNewsWhere(new Date()) },
@@ -115,6 +125,8 @@ export const newsService = {
         featured: input.featured ?? false,
         isHidden: input.isHidden ?? false,
         isMundial: input.isMundial ?? false,
+        isAiGenerated: input.isAiGenerated ?? false,
+        sourceFixtureId: input.sourceFixtureId ?? null,
         publishFrom: input.publishFrom ?? null,
         publishTo: input.publishTo ?? null,
         publishedAt: input.publishedAt ?? new Date(),

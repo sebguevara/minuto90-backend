@@ -9,6 +9,7 @@
     "worker:poll-live": "bun run src/workers/live-fixtures-poller.ts",
     "worker:pre-match": "bun run src/workers/pre-match-notifications.worker.ts",
     "worker:news-push": "bun run src/workers/news-publication-poller.worker.ts",
+    "worker:match-news": "bun run src/workers/match-news-generation.worker.ts",
     "worker:web-push": "bun run src/workers/web-push-notifications.worker.ts",
     "worker:whatsapp": "bun run src/workers/whatsapp-notifications.worker.ts",
     "worker:daily-prewarm": "bun run src/workers/daily-prewarm.worker.ts",

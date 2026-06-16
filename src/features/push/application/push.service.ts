@@ -57,6 +57,7 @@ const newsPushSelect = {
   body: true,
   imageUrl: true,
   featured: true,
+  isAiGenerated: true,
   isHidden: true,
   isDeleted: true,
   publishedAt: true,
@@ -137,7 +138,9 @@ export const pushService = {
       return { status: "already-sent" as const, jobs: 0 };
     }
 
-    if (!news.featured) {
+    // Solo las noticias destacadas disparan push... salvo las crónicas post-partido
+    // generadas por IA, que SÍ deben notificarse aunque no estén marcadas como destacadas.
+    if (!news.featured && !news.isAiGenerated) {
       // Mark as sent so the poller doesn't keep re-checking this article
       await minutoPrismaClient.news.update({
         where: { id: news.id },
